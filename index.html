@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MA Senior Benefits Audit</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1c2530; --muted:#5b6876;
+    --brand:#1f6feb; --brand-d:#1857c0; --line:#dde3ea;
+    --green:#137a3b; --green-bg:#e7f6ec; --amber:#9a6700; --amber-bg:#fbf3da;
+    --blue:#1551a8; --blue-bg:#e6effb; --grey:#6b7480; --grey-bg:#eef1f5;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:19px;line-height:1.5;-webkit-text-size-adjust:100%;overflow-x:hidden}
+  .wrap{width:100%}
+  .wrap{max-width:680px;margin:0 auto;padding:18px 16px 60px}
+  header{display:flex;align-items:center;gap:10px;padding:6px 2px 14px}
+  header .dot{width:34px;height:34px;border-radius:9px;background:var(--brand);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px}
+  header h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.2px}
+  header small{display:block;color:var(--muted);font-weight:600;font-size:12.5px;margin-top:2px}
+  .bar{height:8px;background:#e4e9f0;border-radius:99px;overflow:hidden;margin:0 2px 18px}
+  .bar>i{display:block;height:100%;background:var(--brand);width:0;transition:width .25s ease}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:22px 20px;box-shadow:0 1px 2px rgba(20,30,45,.04)}
+  .q{font-size:24px;font-weight:800;line-height:1.3;margin:2px 0 6px}
+  .hint{color:var(--muted);font-size:15.5px;margin:0 0 18px}
+  .opts{display:flex;flex-direction:column;gap:11px}
+  button.opt{appearance:none;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:13px;padding:16px 16px;font-size:19px;font-weight:600;color:var(--ink);cursor:pointer;
+    transition:.12s;display:flex;align-items:center;gap:12px}
+  button.opt:hover{border-color:#bcd0f5}
+  button.opt.sel{border-color:var(--brand);background:#eef4ff}
+  button.opt .chk{width:24px;height:24px;border-radius:50%;border:2px solid #c3ccd8;flex:0 0 auto}
+  button.opt.sel .chk{border-color:var(--brand);background:var(--brand);box-shadow:inset 0 0 0 4px #fff}
+  .ms .chk{border-radius:6px}
+  input[type=text],input[type=number]{width:100%;font-size:21px;padding:15px 14px;border:2px solid var(--line);
+    border-radius:13px;font-weight:600;color:var(--ink);background:#fff}
+  input:focus{outline:none;border-color:var(--brand)}
+  .pre{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700}
+  .ipwrap{position:relative}
+  .ipwrap.cur input{padding-left:30px}
+  .nav{display:flex;gap:12px;margin-top:22px}
+  .btn{flex:1;appearance:none;border:none;border-radius:13px;padding:16px;font-size:19px;font-weight:800;cursor:pointer}
+  .btn.prim{background:var(--brand);color:#fff}
+  .btn.prim:active{background:var(--brand-d)}
+  .btn.ghost{background:#fff;color:var(--muted);border:2px solid var(--line);flex:0 0 96px}
+  .btn:disabled{opacity:.4;cursor:default}
+  .note{font-size:13px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.45}
+  /* results */
+  .headline{background:linear-gradient(135deg,#1f6feb,#3b8bff);color:#fff;border-radius:18px;padding:24px 22px;margin-bottom:18px}
+  .headline .big{font-size:42px;font-weight:900;letter-spacing:-.5px;line-height:1}
+  .headline .lbl{font-size:15px;font-weight:700;opacity:.92;margin-top:7px}
+  .headline .sub{font-size:13.5px;opacity:.85;margin-top:10px}
+  .sech{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:24px 4px 10px}
+  .prog{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px 17px;margin-bottom:12px}
+  .prog .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .prog h3{margin:0;font-size:19px;font-weight:800}
+  .prog .val{font-weight:800;font-size:16px;white-space:nowrap}
+  .badge{display:inline-block;font-size:12px;font-weight:800;padding:4px 9px;border-radius:99px;margin-top:7px}
+  .b-likely{color:var(--green);background:var(--green-bg)}
+  .b-maybe{color:var(--amber);background:var(--amber-bg)}
+  .b-refer{color:var(--blue);background:var(--blue-bg)}
+  .b-have{color:#0a5;background:#e3f5ee}
+  .b-no{color:var(--grey);background:var(--grey-bg)}
+  .prog .why{margin:11px 0 0;font-size:15px;color:var(--ink)}
+  details{margin-top:11px;border-top:1px dashed var(--line);padding-top:10px}
+  summary{font-size:14.5px;font-weight:700;color:var(--brand);cursor:pointer;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  details .body{font-size:15px;color:var(--ink);margin-top:9px}
+  details .body b{font-weight:800}
+  details .body ul{margin:6px 0 0;padding-left:20px}
+  details .body a{color:var(--brand);font-weight:700;word-break:break-word}
+  .disc{font-size:12.5px;color:var(--muted);line-height:1.5;background:#fff;border:1px solid var(--line);
+    border-radius:13px;padding:15px;margin-top:22px}
+  .acts{display:flex;gap:11px;margin-top:18px}
+  .acts .btn{font-size:16px;padding:14px}
+  .acts .btn.sec{background:#fff;color:var(--brand);border:2px solid var(--brand)}
+  .pill{display:inline-flex;align-items:center;gap:6px;background:#eef4ff;color:var(--brand);
+    font-size:12px;font-weight:800;padding:5px 10px;border-radius:99px;margin-bottom:12px}
+  @media print{.acts,.bar,header small,.note{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="dot">$</div>
+    <div>
+      <h1>Senior Benefits Audit</h1>
+      <small>Massachusetts &middot; find what you're owed</small>
+    </div>
+  </header>
+  <div class="bar"><i id="bar"></i></div>
+  <div id="app"></div>
+  <div class="note" id="privacy">🔒 Your answers stay on this device. Nothing is sent anywhere.</div>
+</div>
+
+<script>
+/* ---------- Adaptive question set (branching via showIf) ---------- */
+const Q = [
+  {id:"name", type:"text", q:"Whose benefits are we checking?", hint:"Just a first name, so the results read clearly.", placeholder:"e.g. Dad / Robert", optional:true},
+  {id:"age", type:"number", q:n=>`How old is ${who(n)}?`, hint:"Age as of December 31 this year. The 65 and 70 cutoffs are exact-date tests.", suffix:"years"},
+  {id:"marital", type:"single", q:n=>`${whoC(n)} marital status?`,
+    opts:[{v:"single",l:"Single"},{v:"married",l:"Married"},{v:"widowed",l:"Widowed"}]},
+  {id:"filing", type:"single", q:n=>`How does ${who(n)} file taxes?`, hint:"This sets the income limit for the Circuit Breaker credit.",
+    opts:[{v:"single",l:"Single"},{v:"hof",l:"Head of household"},{v:"joint",l:"Married — filing jointly"},{v:"mfs",l:"Married — filing separately"},{v:"none",l:"Doesn't file a return"}]},
+  {id:"dependent", type:"single", q:n=>`Is ${who(n)} claimed as a dependent by someone else?`, hint:"e.g., an adult child claims them on their taxes. This disqualifies some credits.",
+    opts:[{v:"no",l:"No"},{v:"yes",l:"Yes, claimed as a dependent"},{v:"unsure",l:"Not sure"}]},
+  {id:"citizen", type:"single", q:n=>`${whoC(n)} citizenship status?`, hint:"Needed for SNAP, SSI, and Medicare Savings.",
+    opts:[{v:"citizen",l:"U.S. citizen"},{v:"qualified",l:"Green card / qualified immigrant"},{v:"other",l:"Other / not sure"}]},
+  {id:"housing", type:"single", q:n=>`Does ${who(n)} own or rent?`,
+    opts:[{v:"own",l:"Owns the home"},{v:"rent",l:"Rents"},{v:"family",l:"Lives with family (no rent)"}]},
+  {id:"town", type:"text", q:"Which city or town in Massachusetts?", hint:"Property-tax breaks are set town-by-town, so we need this.", placeholder:"e.g. Framingham"},
+  {id:"ownYears", type:"number", q:"About how many years owned?", hint:"Some senior exemptions require owning ~5 years.", suffix:"years",
+    showIf:a=>a.housing==="own"},
+  {id:"titling", type:"single", q:"How is the home titled?", hint:"Trusts and life estates can change exemption eligibility.",
+    opts:[{v:"own_name",l:"In their own name"},{v:"trust",l:"In a trust"},{v:"life_estate",l:"Life estate"},{v:"multi",l:"Shared with others on the deed"},{v:"unsure",l:"Not sure"}],
+    showIf:a=>a.housing==="own"},
+  {id:"incomeSS", type:"currency", q:n=>`${whoC(n)} yearly Social Security income?`, hint:"Just Social Security. Best estimate is fine — enter 0 if none."},
+  {id:"incomeOther", type:"currency", q:"Other yearly income?", hint:"Everything except Social Security: pensions, wages, withdrawals, interest, rental income."},
+  {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Bank + investment accounts. Do NOT count the home or one car."},
+  {id:"medExpenses", type:"currency", q:"Yearly out-of-pocket medical costs?", hint:"Premiums, copays, meds not covered. Drives SNAP & Circuit Breaker math. Enter 0 if unsure.", optional:true},
+  {id:"propTax", type:"currency", q:"Yearly property tax bill?", hint:"From the tax bill — your best estimate is fine.", showIf:a=>a.housing==="own"},
+  {id:"assessed", type:"currency", q:"Assessed value of the home?", hint:"Also on the tax bill. There's a value ceiling for the Circuit Breaker, so this matters. Skip only if truly unknown.", showIf:a=>a.housing==="own", optional:true},
+  {id:"rent", type:"currency", q:"Monthly rent?", hint:"Your share of the rent each month.", showIf:a=>a.housing==="rent"},
+  {id:"subsidized", type:"single", q:"Is the rental public, subsidized, or tax-exempt housing?", hint:"Public housing, Section 8 project-based, or owned by a church/nonprofit. Affects the Circuit Breaker.",
+    opts:[{v:"no",l:"No — private market rental"},{v:"yes",l:"Yes, subsidized/public"},{v:"unsure",l:"Not sure"}], showIf:a=>a.housing==="rent"},
+  {id:"veteran", type:"single", q:n=>`Military service?`, hint:"Veterans qualify for extra programs.",
+    opts:[{v:"vet",l:"Is a veteran"},{v:"spouse",l:"Surviving spouse of a veteran"},{v:"no",l:"No military service"}]},
+  {id:"vaDis", type:"single", q:"Service-connected disability rating?", hint:"From the VA, if any.",
+    opts:[{v:"none",l:"None / not sure"},{v:"partial",l:"10% – 90%"},{v:"full",l:"100% or unable to work"}],
+    showIf:a=>a.veteran==="vet"||a.veteran==="spouse"},
+  {id:"disability", type:"single", q:n=>`Does ${who(n)} have a disability or get SSDI/SSI?`, hint:"Separate from veterans' disability — opens programs regardless of age.",
+    opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]},
+  {id:"blind", type:"single", q:n=>`Is ${who(n)} legally blind?`,
+    opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]},
+  {id:"medicare", type:"single", q:n=>`Is ${who(n)} on Medicare?`,
+    opts:[{v:"yes",l:"Yes"},{v:"no",l:"No / not yet"}]},
+  {id:"adl", type:"single", q:"Need help with daily activities?", hint:"Bathing, dressing, cooking, managing meds, getting around.",
+    opts:[{v:"yes",l:"Yes, needs some help"},{v:"no",l:"No, fully independent"}]},
+  {id:"already", type:"multi", q:n=>`Which of these does ${who(n)} ALREADY get?`, hint:"So we don't tell you to re-apply for something you already have. Pick all that apply.",
+    opts:[{v:"cb",l:"Senior Circuit Breaker credit"},{v:"exemption",l:"A property-tax exemption"},{v:"liheap",l:"Fuel Assistance"},{v:"snap",l:"SNAP / food assistance"},{v:"msp",l:"Help paying the Medicare Part B premium"},{v:"masshealth",l:"MassHealth"},{v:"none",l:"None of these"}]},
+  {id:"working", type:"single", q:"Still earning wages from a job?", hint:"Affects Social Security timing.",
+    opts:[{v:"yes",l:"Yes, still working"},{v:"no",l:"No / retired"}], showIf:a=>num(a.age)<70}
+];
+
+/* helpers for names */
+function who(a){const n=(a&&a.name||"").trim(); return n?n:"this person";}
+function whoC(a){const n=(a&&a.name||"").trim(); if(!n) return "What's the"; return n+"'s";}
+function num(x){const v=parseFloat(String(x).replace(/[^0-9.]/g,"")); return isNaN(v)?0:v;}
+function money(x){return "$"+Math.round(x).toLocaleString();}
+
+/* ---------- State ---------- */
+let A = {};           // answers
+let order = [];       // visible question ids in order visited
+let i = 0;            // index into a freshly computed visible list
+
+function visible(){ return Q.filter(q=>!q.showIf || q.showIf(A)); }
+
+/* ---------- Render question ---------- */
+function render(){
+  const vis = visible();
+  if(i>=vis.length){ return results(); }
+  const q = vis[i];
+  document.getElementById("bar").style.width = Math.round((i/(vis.length))*100)+"%";
+  const qt = typeof q.q==="function"?q.q(A):q.q;
+  const app = document.getElementById("app");
+  let inner = `<div class="card"><div class="q">${qt}</div>`;
+  if(q.hint) inner += `<p class="hint">${q.hint}</p>`;
+
+  if(q.type==="single"||q.type==="multi"){
+    inner += `<div class="opts ${q.type==='multi'?'ms':''}">`;
+    q.opts.forEach(o=>{
+      const cur = q.type==="multi" ? (A[q.id]||[]).includes(o.v) : A[q.id]===o.v;
+      inner += `<button class="opt ${cur?'sel':''}" data-v="${o.v}"><span class="chk"></span><span>${o.l}</span></button>`;
+    });
+    inner += `</div>`;
+  } else {
+    const isCur = q.type==="currency";
+    const val = A[q.id]!=null?A[q.id]:"";
+    inner += `<div class="ipwrap ${isCur?'cur':''}">${isCur?'<span class="pre">$</span>':''}
+      <input id="ip" type="${q.type==='text'?'text':'number'}" inputmode="${q.type==='text'?'text':'decimal'}"
+      value="${val}" placeholder="${q.placeholder||''}"></div>`;
+    if(q.suffix) inner += `<p class="hint" style="margin:8px 0 0">in ${q.suffix}</p>`;
+  }
+
+  inner += `<div class="nav">
+      <button class="btn ghost" id="back" ${i===0?'disabled':''}>Back</button>
+      <button class="btn prim" id="next">${q.optional?'Next':'Next'}</button>
+    </div></div>`;
+  app.innerHTML = inner;
+
+  // wire choices
+  if(q.type==="single"){
+    app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{A[q.id]=b.dataset.v;i++;render();});
+  } else if(q.type==="multi"){
+    app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+      const set=new Set(A[q.id]||[]); set.has(b.dataset.v)?set.delete(b.dataset.v):set.add(b.dataset.v);
+      A[q.id]=[...set]; render();
+    });
+  } else {
+    const ip=document.getElementById("ip"); ip.focus();
+    ip.onkeydown=e=>{if(e.key==="Enter")document.getElementById("next").click();};
+  }
+  const back=document.getElementById("back"); if(back) back.onclick=()=>{i=Math.max(0,i-1);render();};
+  document.getElementById("next").onclick=()=>{
+    if(q.type==="text"||q.type==="number"||q.type==="currency"){
+      const v=document.getElementById("ip").value.trim();
+      if(!v && !q.optional){ document.getElementById("ip").focus(); document.getElementById("ip").style.borderColor="#d23"; return;}
+      A[q.id]=v;
+    }
+    i++; render();
+  };
+}
+
+/* ---------- Eligibility engine ---------- */
+// thresholds (FY2025-26, approximate / public)
+const CB_INC = {single:75000, hof:94000, joint:112000, none:75000}; // circuit breaker caps by FILING status (TIR 25-7)
+const CB_MAX = 2820;                            // circuit breaker max credit
+const CB_ASSESS = 1298000;                      // assessed value ceiling
+const LIHEAP = {1:49196, 2:64333};              // ~60% state median income (rough)
+const SNAP200 = {1:30120, 2:40880};             // 200% FPL gross (MA BBCE), annual
+const MSP_INC = {1:24860, 2:33620};             // ~165% FPL (QI), annual; MA has NO asset test
+const FPL = {1:15060, 2:20440};
+
+function hhSize(){ return A.marital==="married"?2:1; }
+// citizenship gate for federal means-tested programs (SNAP/MSP/SSI)
+function citizenOK(){ return A.citizen!=="other"; } // citizen or qualified immigrant
+function citizenNote(){ return A.citizen==="qualified"?" (qualified-immigrant rules can add a waiting period — verify.)":""; }
+
+function programs(){
+  const age=num(A.age), incSS=num(A.incomeSS), incOther=num(A.incomeOther), inc=incSS+incOther;
+  const assets=num(A.assets), med=num(A.medExpenses), hh=hhSize();
+  const out=[];
+  const owner = A.housing==="own", renter = A.housing==="rent";
+  const disabled = A.disability==="yes";
+
+  // 1. Senior Circuit Breaker
+  (()=>{
+    if(age<65){ out.push(cb("no","Requires age 65+ by December 31.")); return; }
+    if(A.dependent==="yes"){ out.push(cb("no","Can't be claimed as a dependent on someone else's return — that disqualifies the Circuit Breaker.")); return; }
+    if(A.dependent==="unsure"){ out.push(cb("maybe","Eligible only if NOT claimed as a dependent by anyone — confirm this first.")); return; }
+    if(A.filing==="mfs"){ out.push(cb("no","Married filing separately can't claim it — a married couple must file jointly.")); return; }
+    const cap = CB_INC[A.filing] || CB_INC.single;
+    if(inc>cap){ out.push(cb("no",`Total income ~${money(inc)} is over the $${cap.toLocaleString()} limit for this filing status.`)); return; }
+    let status="maybe", why="";
+    if(owner){
+      const tax=num(A.propTax);
+      const burden = tax > 0.10*inc;
+      if(A.assessed && num(A.assessed)>CB_ASSESS){ out.push(cb("no",`Home assessed over the $${CB_ASSESS.toLocaleString()} value ceiling.`)); return; }
+      const assessedKnown = A.assessed && num(A.assessed)>0;
+      if(burden && assessedKnown){ status="likely"; why=`Property tax (${money(tax)}) tops 10% of income and the home is under the value ceiling — strong match. (50% of water/sewer also counts toward the test.)`; }
+      else if(burden && !assessedKnown){ status="maybe"; why=`Property tax tops 10% of income — likely, but you MUST confirm the home is assessed under $${CB_ASSESS.toLocaleString()} (hard cutoff).`; }
+      else { status="maybe"; why=`Income qualifies; confirm property tax + 50% of water/sewer exceeds 10% of income (${money(0.10*inc)}).`; }
+    } else if(renter){
+      if(A.subsidized==="yes"){ out.push(cb("no","Renters in public/subsidized/tax-exempt housing can't claim it — no property tax is paid on the unit.")); return; }
+      const rentYr=num(A.rent)*12; const burden = (0.25*rentYr) > 0.10*inc;
+      status = burden?(A.subsidized==="unsure"?"maybe":"likely"):"maybe";
+      why = burden?`25% of rent (${money(0.25*rentYr)}) tops 10% of income — qualifies as a renter${A.subsidized==="unsure"?" (confirm the unit isn't subsidized/tax-exempt).":"."}`:`Income qualifies; 25% of rent must top 10% of income (${money(0.10*inc)}).`;
+    } else { out.push(cb("maybe","Income qualifies, but the Circuit Breaker needs you to own or rent your principal MA home.")); return; }
+    out.push(cb(status, why));
+    function cb(s,w){return {id:"cb",name:"Senior Circuit Breaker Credit",status:s,val:s==="no"?0:CB_MAX,valTxt:s==="no"?"—":`up to ${money(CB_MAX)}/yr`,why:w,
+      form:"Schedule CB (filed with the MA income tax return).",
+      forml:"https://www.mass.gov/info-details/massachusetts-senior-circuit-breaker-tax-credit",
+      docs:["Property tax bills + water/sewer bills (homeowners), or rent receipts/landlord statement","Last year's tax return / all income statements","Proof of age 65+ and MA principal residence"],
+      where:`File Schedule CB with the MA Form 1. NOTE: "total income" on Schedule CB has its own definition (it adds back tax-exempt interest and counts Social Security) — verify the exact figure on the form. ${A.filing==="none"?"Even if "+who(A)+" doesn't normally file, they can file a return just to claim this refundable credit. ":""}Missed prior years? You can usually AMEND the last 3 years and claim it retroactively.`};}
+  })();
+
+  // 2. Property tax exemption Clause 41C/41C½ (owner)
+  if(owner){
+    let s="no",w="";
+    const married=A.marital==="married";
+    const titleNote = (A.titling==="trust"||A.titling==="life_estate"||A.titling==="multi")?" Note: the home is held in a trust/life-estate/shared deed — that can affect exemption eligibility; confirm with the assessor.":"";
+    // Real limits (FY2025-26): unmodified statutory FLOOR = $13k single / $15k married income, $28k/$30k assets (whole estate excl. domicile).
+    // Towns can raise the 41C limits by local option, and towns that adopt Clause 41C½ use an income limit that TRACKS the Senior Circuit Breaker cap.
+    // So the real range is ~$13k (floor) up to the Circuit Breaker cap (41C½) — it depends entirely on the town's adopted clause.
+    const floorInc = married?15000:13000, floorAsset = married?30000:28000;
+    const halfInc = CB_INC[A.filing] || (married?CB_INC.joint:CB_INC.single); // 41C½ income ceiling
+    if(age>=65 && inc<=floorInc && assets<=floorAsset){
+      s="maybe"; w=`At/under the unmodified state floor ($${floorInc.toLocaleString()} income / $${floorAsset.toLocaleString()} assets, home not counted) — qualifies for Clause 41C in essentially any MA town. Just verify the exact dollar amount.`+titleNote;
+    } else if(age>=65 && inc<=halfInc){
+      s="maybe"; w=`Depends entirely on which clause ${A.town||"the town"} adopted: limits run from ~$${floorInc.toLocaleString()} (classic 41C floor) up to ~$${halfInc.toLocaleString()} for towns that adopted 41C½ (its income limit tracks the Circuit Breaker). You MUST check ${A.town||"your town"}'s adopted clause + asset limit before counting on this.`+titleNote;
+    } else if(age>=65){
+      s="no"; w=`Income (~${money(inc)}) likely exceeds even the most generous 41C½ limit (~$${halfInc.toLocaleString()}). The Clause 41A deferral below is the usual fallback for higher-income owners.`+titleNote;
+    } else { w="Senior clauses require age 65 (Clause 17D allows 70)."; }
+    out.push({id:"ex41c",name:"Property Tax Exemption (Clause 41C / 41C½)",status:s,val:s==="no"?0:1200,valTxt:s==="no"?"—":"~$500–$2,000/yr",why:w,
+      form:"State Tax Form 96 (filed with your town assessor).",
+      forml:"https://www.mass.gov/info-details/property-tax-exemptions-for-seniors",
+      docs:["Prior-year income (tax return / SS statement)","Bank & investment balances","Deed / proof of ownership & residency","Birth date proof"],
+      where:`Contact the ${A.town||"town"} Assessor's office — they confirm the town's adopted clause, limits, and amount. Statewide adopted values: https://dls-gw.dor.state.ma.us/reports/rdpage.aspx?rdreport=localoptions.propertytax . Deadline is usually April 1.`});
+  }
+
+  // 3. Clause 17D (owner, 70+ or widowed — asset test, no income test)
+  if(owner && (age>=70 || A.marital==="widowed")){
+    out.push({id:"ex17d",name:"Property Tax Exemption (Clause 17D)",status:"maybe",val:300,valTxt:"~$175–$350/yr",
+      why:"70+ or surviving spouse, owner — a no-income-test alternative if income is too high for Clause 41C.",
+      form:"State Tax Form 96-1 (town assessor).",forml:"https://www.mass.gov/info-details/property-tax-exemptions-for-seniors",
+      docs:["Proof of ownership/residency","Whole-estate (asset) statement"],
+      where:`${A.town||"Town"} Assessor. Choose whichever clause (17D vs 41C) gives the bigger break — you can't take both.`});
+  }
+
+  // 4. Veterans exemption Clause 22 (owner)
+  if((A.veteran==="vet"||A.veteran==="spouse")){
+    let s = owner ? "maybe":"no", w;
+    if(!owner){ w="Veterans property-tax exemption applies to homeowners; renter — skip."; }
+    else if(A.vaDis==="full"){ s="likely"; w="Owner + 100%/unemployable rating — can be a large exemption (Clause 22E or full)."; }
+    else if(A.vaDis==="partial"){ s="likely"; w="Owner + service-connected disability — qualifies for the veterans' exemption."; }
+    else { s="maybe"; w="Veteran/surviving spouse, owner — many qualify even at the base level; verify with the assessor."; }
+    out.push({id:"vet22",name:"Veterans' Property Tax Exemption (Cl. 22)",status:s,val:s==="no"?0:800,valTxt:s==="no"?"—":"$400 – full abatement",why:w,
+      form:"State Tax Form 96-3 (town assessor).",forml:"https://www.mass.gov/info-details/learn-about-property-tax-deferral-and-exemptions-for-veterans",
+      docs:["DD-214 (discharge papers)","VA disability award letter","Proof of MA residency & ownership"],
+      where:`${A.town||"Town"} Assessor. Also ask the local Veterans' Service Officer about state veterans' benefits (Chapter 115).`});
+  }
+
+  // 5. Blind exemption 37A
+  if(A.blind==="yes" && owner){
+    out.push({id:"blind37a",name:"Blind Person's Exemption (Cl. 37A)",status:"likely",val:500,valTxt:"~$500/yr",
+      why:"Legally blind homeowner — straightforward exemption.",
+      form:"State Tax Form 96-4 + Mass. Commission for the Blind certificate.",forml:"https://www.mass.gov/info-details/property-tax-exemptions-for-seniors",
+      docs:["Certificate of blindness from the Mass. Commission for the Blind","Proof of ownership"],
+      where:`${A.town||"Town"} Assessor (annual).`});
+  }
+
+  // 6. Fuel Assistance / LIHEAP
+  (()=>{
+    if(A.housing==="family"){ out.push(fa("maybe","May still qualify if responsible for any heat/utility costs.")); return;}
+    const lim = LIHEAP[hh]||LIHEAP[2];
+    const s = inc<=lim?"likely":(inc<=lim*1.15?"maybe":"no");
+    out.push(fa(s, s==="no"?`Income above the ~${money(lim)} guideline for a household of ${hh}.`:`Income near/under the ~${money(lim)} guideline — heat & utility help. Renters qualify even if heat is included in rent.`));
+    function fa(s,w){return {id:"liheap",name:"Fuel Assistance (LIHEAP)",status:s,val:s==="no"?0:800,valTxt:s==="no"?"—":"~$500–$1,200/winter",why:w,
+      form:"Application through your local Community Action agency.",forml:"https://www.mass.gov/how-to/apply-for-the-low-income-home-energy-assistance-program-liheap",
+      docs:["Last 4 weeks of income (all sources)","Most recent heating + electric bill","Lease or mortgage statement"],
+      where:"Find your local fuel-assistance (CAP) agency by ZIP and apply Nov–Apr. Also unlocks utility discount rates."};}
+  })();
+
+  // 7. SNAP (food)
+  (()=>{
+    const lim=SNAP200[hh]||SNAP200[2];
+    let s = inc<=lim?"likely":(inc<=lim*1.1?"maybe":"no");
+    let w = s==="no"?`Income above ~${money(lim)} for a household of ${hh}.`:`Age 60+ gets extra deductions for medical costs and high rent — many qualify even near the income line.${med>0?` Their ~${money(med)}/yr medical costs help via the 60+ deduction.`:""}`;
+    if(!citizenOK()){ s="no"; w="SNAP needs U.S. citizen or qualified-immigrant status — verify before applying."; }
+    out.push({id:"snap",name:"SNAP (Food Assistance)",status:s,val:s==="no"?0:1200,valTxt:s==="no"?"—":"~$23–$291/mo",why:w,
+      form:"Online via DTAConnect or paper application.",forml:"https://www.mass.gov/snap-benefits-formerly-food-stamps",
+      docs:["Proof of income","Housing + utility costs","Out-of-pocket medical expenses (60+ deduction)"],
+      where:"Apply at DTAConnect.com or call DTA. Seniors can deduct medical expenses over $35/mo — push hard on this."});
+  })();
+
+  // 8. Medicare Savings Program (MA Buy-In) — no asset test in MA
+  if(A.medicare==="yes"){
+    const lim=MSP_INC[hh]||MSP_INC[2];
+    let s = inc<=lim?"likely":(inc<=lim*1.15?"maybe":"no");
+    let mw = s==="no"?`Income above ~${money(lim)}; still worth a SHINE check.`:`Massachusetts has NO asset test for this — it pays the Part B premium (~$185/mo) and often more. High-value, often missed.${citizenNote()}`;
+    if(!citizenOK()){ s="no"; mw="Needs U.S. citizen or qualified-immigrant status — verify."; }
+    out.push({id:"msp",name:"Medicare Savings Program (pays Part B)",status:s,val:s==="no"?0:2220,valTxt:s==="no"?"—":"~$2,100+/yr",
+      why:mw,
+      form:"MassHealth Buy-In application (MSP).",forml:"https://www.mass.gov/info-details/masshealth-coverage-types-for-individuals-and-families-including-people-with-disabilities#medicare-savings-programs-",
+      docs:["Medicare card","Proof of income","Social Security award letter"],
+      where:"Apply through MassHealth or get free help from a SHINE counselor (1-800-AGE-INFO). Approval also triggers federal Extra Help for drug costs."});
+    // Extra Help flag
+    if(s!=="no"){
+      out.push({id:"lis",name:"Extra Help — Part D Drug Costs",status:"likely",val:600,valTxt:"~$600+/yr",
+        why:"Qualifying for the Medicare Savings Program automatically grants Extra Help (lower drug copays).",
+        form:"Automatic with MSP, or apply via SSA.",forml:"https://www.ssa.gov/medicare/part-d-extra-help",
+        docs:["Same as MSP"],where:"Confirm enrollment when MSP is approved; otherwise apply at ssa.gov."});
+    }
+  }
+
+  // 9. VA Aid & Attendance
+  if((A.veteran==="vet"||A.veteran==="spouse") && A.adl==="yes"){
+    out.push({id:"aanda",name:"VA Aid & Attendance Pension",status:"likely",val:A.veteran==="vet"?27000:16000,
+      valTxt:A.veteran==="vet"?"up to ~$2,300/mo":"up to ~$1,480/mo",
+      why:"Wartime veteran (or surviving spouse) who needs help with daily activities — a large, underused benefit.",
+      form:"VA Form 21-2680 + pension application.",forml:"https://www.va.gov/pension/aid-attendance-housebound/",
+      docs:["DD-214","Doctor's statement on care needs","Income & net-worth statement (limit ~$155k)","Care/medical expense records"],
+      where:"File with the VA; a free accredited VSO (Veterans Service Officer) or the town Veterans' Agent can do this with you — never pay someone to file it."});
+  }
+
+  // 10. Social Security review (informational)
+  {
+    const tips=[];
+    if(num(A.age)<70 && A.working==="no") tips.push("delaying claiming raises the monthly check ~8%/yr until 70");
+    if(A.marital==="married") tips.push("a spousal benefit can be worth up to 50% of the higher earner's");
+    if(A.marital==="widowed") tips.push("survivor benefits may pay more than the current check — worth checking");
+    if(A.working==="yes" && num(A.age)<67) tips.push("the earnings test may be reducing the check while still working");
+    out.push({id:"ss",name:"Social Security Review",status:"maybe",val:0,valTxt:"strategy",
+      why: tips.length?("Worth a one-time look: "+tips.join("; ")+"."):"A one-time claiming/strategy review is usually worthwhile.",
+      form:"Free review with a fee-only advisor or SSA.",forml:"https://www.ssa.gov/myaccount/",
+      docs:["my Social Security account statement","Spouse's earnings record (if married/widowed)"],
+      where:"Open a my Social Security account to see the actual numbers. NOTE: this is information, not financial advice — confirm with a licensed advisor before changing anything."});
+  }
+
+  // 11. MassHealth — REFER, never advise
+  if(age>=65 && (A.adl==="yes" || assets<100000)){
+    out.push({id:"masshealth",name:"MassHealth / Long-Term Care",status:"refer",val:0,valTxt:"see an attorney",
+      why:"Potentially major help with care costs — BUT eligibility & asset planning is legal work (5-year lookback, estate recovery). Don't DIY.",
+      form:"Handled by an elder-law attorney.",forml:"https://www.mass.gov/masshealth",
+      docs:["Bring a full asset/income picture to the consult"],
+      where:"Refer to a licensed MA elder-law attorney — many offer a free first consult. This is the ONE area we do not advise on directly, by design."});
+  }
+
+  // 12. SSI (very low income + assets; aged 65+ or disabled)
+  if((age>=65 || disabled) && assets<6000 && inc<15000){
+    let s = (citizenOK() && assets<3000) ? "maybe" : (citizenOK()?"maybe":"no");
+    out.push({id:"ssi",name:"Supplemental Security Income (SSI)",status: citizenOK()?"maybe":"no",
+      val:11000, valTxt: citizenOK()?"up to ~$1,000+/mo":"—",
+      why: citizenOK()?`Very low income & assets (SSI limit is ~$2,000 single / $3,000 couple) plus 65+ or disabled — monthly cash from SSA + the MA state supplement. Verify exact countable assets.`:"SSI needs U.S. citizen or qualified-immigrant status.",
+      form:"Apply with the Social Security Administration.",forml:"https://www.ssa.gov/ssi/",
+      docs:["Bank statements (asset limit is strict)","Proof of income","ID & citizenship/immigration docs"],
+      where:"Apply at ssa.gov or 1-800-772-1213. SSI in MA usually opens MassHealth automatically."});
+  }
+
+  // 13. Chapter 115 MA veterans' benefits (need-based; separate from the Cl.22 exemption)
+  if((A.veteran==="vet"||A.veteran==="spouse") && inc<45000){
+    out.push({id:"ch115",name:"MA Veterans' Benefits (Chapter 115)",status:"maybe",val:6000,valTxt:"need-based, can be substantial",
+      why:"Need-based MA cash + medical benefit for low-income veterans and surviving spouses — completely separate from the property-tax exemption, and often missed.",
+      form:"Through your city/town Veterans' Service Officer (VSO).",forml:"https://www.mass.gov/chapter-115-benefits",
+      docs:["DD-214","Income & asset statement","Proof of MA residency"],
+      where:"Contact your municipal Veterans' Service Officer — every MA city/town has one; the service is free."});
+  }
+
+  // 14. Property tax deferral Clause 41A (owner 65+) — the income-too-high fallback
+  if(owner && age>=65){
+    out.push({id:"defer41a",name:"Property Tax Deferral (Clause 41A)",status:"maybe",val:0,valTxt:"defers up to 100% of the bill",
+      why:"Lets a 65+ owner defer property tax at low interest, repaid when the home is sold or transferred. The fallback when income is too high for the 41C exemption — keeps a house-rich/cash-tight senior in their home.",
+      form:"State Tax Form 97 (town assessor) + a tax-deferral agreement.",forml:"https://www.mass.gov/info-details/learn-about-property-tax-deferral-and-exemptions-for-residential-properties",
+      docs:["Proof of ownership & residency","Income statement","Note: it's a lien repaid later, not a giveaway"],
+      where:`${A.town||"Town"} Assessor. Income limit is a local option (often ~$60k+). Discuss with family since it reduces home equity over time.`});
+  }
+
+  // 15. Senior property-tax Work-Off (owner 60+)
+  if(owner && age>=60){
+    out.push({id:"workoff",name:"Senior Property Tax Work-Off",status:"maybe",val:1500,valTxt:"up to ~$2,000/yr off the bill",
+      why:"Many MA towns let seniors volunteer for the town in exchange for up to ~$2,000 off the property tax bill. Town-specific program.",
+      form:"Sign up through the town (Council on Aging or Assessor).",forml:"https://www.mass.gov/info-details/property-tax-exemptions-for-seniors",
+      docs:["Proof of age & residency"],
+      where:`Ask the ${A.town||"town"} Council on Aging or Assessor if they run a Senior Work-Off program and whether slots are open.`});
+  }
+
+  // 16. Prescription Advantage (MA pharmacy assistance; 65+ or disabled)
+  if(age>=65 || disabled){
+    out.push({id:"rxadv",name:"Prescription Advantage (MA)",status:"maybe",val:600,valTxt:"lowers drug costs",
+      why:"MA state pharmacy program that wraps around Medicare Part D — fills coverage gaps and caps out-of-pocket drug spending. Income-based benefit levels.",
+      form:"Apply to Prescription Advantage (works with Part D).",forml:"https://www.mass.gov/prescription-advantage",
+      docs:["Medicare card","Income info","Current drug list"],
+      where:"Apply via mass.gov or a SHINE counselor; stacks on top of Part D / Extra Help."});
+  }
+
+  // 17. Utility low-income discount rate + arrearage forgiveness (income-eligible)
+  if(A.housing!=="family"){
+    const utilLim = LIHEAP[hh]||LIHEAP[2];
+    if(inc<=utilLim*1.3){
+      out.push({id:"utildisc",name:"Utility Discount Rate",status: inc<=utilLim?"likely":"maybe",val:450,valTxt:"~$300–$600/yr",
+        why:"Income-eligible households get a discounted electric & gas rate (often 25–42% off), plus arrearage-forgiveness programs. Separate from — and stackable with — Fuel Assistance.",
+        form:"Enroll with the electric/gas utility (often automatic with LIHEAP/SNAP/MassHealth).",forml:"https://www.mass.gov/info-details/low-income-discount-rates-for-utilities",
+        docs:["Proof of income or a benefit-program enrollment letter","A recent utility bill"],
+        where:"Call the utility's low-income/discount line, or it auto-applies once Fuel Assistance/SNAP/MassHealth is approved."});
+    }
+  }
+
+  // 18. Weatherization (WAP) — income-eligible
+  if(A.housing!=="family"){
+    const utilLim = LIHEAP[hh]||LIHEAP[2];
+    if(inc<=utilLim){
+      out.push({id:"wap",name:"Weatherization Assistance (WAP)",status:"maybe",val:0,valTxt:"free home energy upgrades",
+        why:"Free insulation, air-sealing, and heating-system help for income-eligible homes (owners AND renters) — cuts heating bills long-term.",
+        form:"Through the local Community Action / fuel-assistance agency.",forml:"https://www.mass.gov/how-to/apply-for-weatherization-assistance-program-wap",
+        docs:["Proof of income","A recent energy bill"],
+        where:"Apply at the same local CAP agency as Fuel Assistance — they often screen for both together."});
+    }
+  }
+
+  // ---- "Already receiving" override: don't tell people to apply for what they have ----
+  const haveMap={cb:"cb",ex41c:"exemption",ex17d:"exemption",vet22:"exemption",blind37a:"exemption",liheap:"liheap",snap:"snap",msp:"msp",lis:"msp",masshealth:"masshealth"};
+  const has=(A.already||[]);
+  out.forEach(p=>{
+    const k=haveMap[p.id];
+    if(k && has.includes(k) && p.status!=="no"){
+      p.status="have"; p.val=0;
+      p.why="✓ Already receiving this — no action needed. Just re-confirm it stays active (most must be re-filed/redetermined every year).";
+    }
+  });
+
+  return out;
+}
+
+/* ---------- Results screen ---------- */
+function results(){
+  document.getElementById("bar").style.width="100%";
+  document.getElementById("privacy").style.display="none";
+  const ps=programs();
+  const rank={likely:0,maybe:1,have:2,refer:3,no:4};
+  ps.sort((a,b)=> (rank[a.status]-rank[b.status]) || (b.val-a.val));
+  const likely=ps.filter(p=>p.status==="likely");
+  const total=likely.reduce((s,p)=>s+(p.val||0),0);
+  const haveN=ps.filter(p=>p.status==="have").length;
+  const nm=who(A);
+
+  let h=`<div class="headline">
+      <div class="pill" style="color:#fff;background:rgba(255,255,255,.18)">${(A.town||"Massachusetts")}</div>
+      <div class="big">${total>0?money(total)+"/yr":"Let's verify"}</div>
+      <div class="lbl">estimated value of programs ${nm==="this person"?"they":nm} likely qualif${nm==="this person"?"y":"ies"} for</div>
+      <div class="sub">${likely.length} strong match${likely.length===1?"":"es"} &middot; ${ps.filter(p=>p.status==="maybe").length} worth verifying${haveN?` &middot; ${haveN} already active`:""} &middot; tap any card for the exact form, documents, and where to file.</div>
+    </div>`;
+
+  const groups=[["likely","✅ Apply for these"],["maybe","🔎 Worth verifying"],["have","✓ Already receiving — no action needed"],["refer","⚖️ Get professional help"],["no","Not a match right now"]];
+  groups.forEach(([st,label])=>{
+    const g=ps.filter(p=>p.status===st);
+    if(!g.length) return;
+    h+=`<div class="sech">${label}</div>`;
+    g.forEach(p=>{
+      const bc={likely:"b-likely",maybe:"b-maybe",have:"b-have",refer:"b-refer",no:"b-no"}[p.status];
+      const bt={likely:"Likely eligible",maybe:"Verify",have:"Already have",refer:"Refer out",no:"Not now"}[p.status];
+      h+=`<div class="prog">
+        <div class="top"><h3>${p.name}</h3><span class="val">${p.valTxt}</span></div>
+        <span class="badge ${bc}">${bt}</span>
+        <p class="why">${p.why}</p>`;
+      if(p.status!=="no"){
+        h+=`<details><summary>How to claim it →</summary><div class="body">
+          <b>Form:</b> ${p.form}<br>
+          <b>Bring / gather:</b><ul>${p.docs.map(d=>`<li>${d}</li>`).join("")}</ul>
+          <b>Where:</b> ${p.where}<br>
+          <a href="${p.forml}" target="_blank" rel="noopener">Official program page →</a>
+        </div></details>`;
+      }
+      h+=`</div>`;
+    });
+  });
+
+  h+=`<div class="acts">
+      <button class="btn prim" onclick="window.print()">Save / Print plan</button>
+      <button class="btn sec" id="dl">Export data</button>
+    </div>
+    <div class="acts" style="margin-top:11px"><button class="btn sec" style="flex:1" onclick="A={};i=0;render();window.scrollTo(0,0)">Start over</button></div>
+    <div class="disc"><b>Important:</b> This tool gives general information based on public Massachusetts program rules (FY2025–26). It is <b>not</b> legal, tax, or financial advice. Dollar amounts and eligibility shown are estimates — income limits, exemption amounts, and town rules change and must be confirmed with each program or a licensed professional before you rely on them. MassHealth/long-term-care planning should go to a licensed elder-law attorney.</div>`;
+  document.getElementById("app").innerHTML=h;
+  const dl=document.getElementById("dl");
+  if(dl) dl.onclick=()=>{
+    const blob=new Blob([JSON.stringify({answers:A,generated:"client-side",programs:ps},null,2)],{type:"application/json"});
+    const u=URL.createObjectURL(blob);const a=document.createElement("a");
+    a.href=u;a.download=`benefits-audit-${(A.name||"profile").replace(/\W+/g,"_")}.json`;a.click();URL.revokeObjectURL(u);
+  };
+  window.scrollTo(0,0);
+}
+
+render();
+</script>
+</body>
+</html>
