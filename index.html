@@ -317,6 +317,7 @@ const LIHEAP = {1:49196, 2:64333};              // ~60% state median income (rou
 const SNAP200 = {1:30120, 2:40880};             // 200% FPL gross (MA BBCE), annual
 const MSP_INC = {1:24860, 2:33620};             // ~165% FPL (QI), annual; MA has NO asset test
 const FPL = {1:15060, 2:20440};
+const FPL135 = {1:20331, 2:27594};             // 135% FPL — Lifeline phone/broadband income gate
 
 function hhSize(){ return A.marital==="married"?2:1; }
 // citizenship gate for federal means-tested programs (SNAP/MSP/SSI)
@@ -566,6 +567,37 @@ function programs(){
     }
   }
 
+  // 19. Lifeline + ACP-style phone/broadband discount (income- or program-based)
+  (()=>{
+    const lim135 = FPL135[hh]||FPL135[2];
+    const snapLim = SNAP200[hh]||SNAP200[2];
+    let s = inc<=lim135 ? "likely" : (inc<=snapLim ? "maybe" : "no");
+    if(s==="no") return; // don't clutter for clearly-ineligible
+    out.push({id:"lifeline",name:"Lifeline Phone/Internet Discount",status:s,val:120,valTxt:"~$10–$20/mo off",
+      why:(s==="likely"?"Income looks within Lifeline's ~135% FPL limit":"You likely qualify *through* a benefit program (SNAP/MassHealth/SSI auto-qualify)")+" — a monthly federal (and MA) discount on a phone or home-internet bill. Commonly missed.",
+      form:"Apply via the Lifeline National Verifier, or through a participating phone/internet carrier.",forml:"https://www.lifelinesupport.org/",
+      docs:["Proof of income OR proof of SNAP/MassHealth/SSI enrollment","ID"],
+      where:"Easiest path: once SNAP/MassHealth is approved, the carrier can enroll you automatically. One discount per household."});
+  })();
+
+  // 20. Community MassHealth / Frail Elder (the FREE, no-lawyer, no-lookback path — distinct from LTC planning)
+  if(A.adl==="yes" && (age>=65 || disabled)){
+    out.push({id:"mhcommunity",name:"In-Home Care via MassHealth (Frail Elder Waiver)",status:"maybe",val:0,valTxt:"in-home care + dental",
+      why:"Needs help with daily activities — there's a FREE path most people miss: community MassHealth + the Frail Elder Waiver / Personal Care Attendant / adult day health pay for care AT HOME, plus adult dental. Income/asset limits apply, but the 5-year lookback does NOT (that only applies to nursing-home MassHealth) — so no lawyer needed to apply.",
+      form:"Free eligibility screen through your local ASAP (Aging Services Access Point).",forml:"https://www.mass.gov/info-details/masshealth-coverage-types-for-individuals-and-families-including-people-with-disabilities",
+      docs:["Income & asset info","Medicare/insurance cards","A note on the help needed at home"],
+      where:"Call your local ASAP or 800-AGE-INFO (SHINE) for a free assessment — no attorney required. (Nursing-home/asset-protection MassHealth is the separate 'see a pro' card below.)"});
+  }
+
+  // 21. Reduced-fare senior transit (NOT income-based — universal for 65+/disabled)
+  if(age>=65 || disabled){
+    out.push({id:"transit",name:"Reduced-Fare Senior Transit",status:"likely",val:0,valTxt:"half-fare or free rides",
+      why:"Not income-based — anyone 65+ (or with a disability) gets reduced or free local transit: MBTA Senior CharlieCard, regional (RTA) half-fare, and The RIDE paratransit.",
+      form:"Apply to the local transit authority for a senior/disabled fare card.",forml:"https://www.mass.gov/how-to/apply-for-a-senior-charliecard",
+      docs:["Proof of age (ID) or disability","A photo for the card"],
+      where:"MBTA Senior CharlieCard office, or your regional transit authority (RTA). The RIDE needs a separate application."});
+  }
+
   // ---- Unknown-answer handling: a created card that depends on a skipped ("not sure") field becomes "verify — needs info" ----
   const DEP={
     cb:["filing","dependent","incomeSS","incomeOther","propTax","assessed","rent","subsidized"],
@@ -578,7 +610,8 @@ function programs(){
     ssi:["incomeSS","incomeOther","assets","citizen"],
     ch115:["incomeSS","incomeOther"],
     utildisc:["incomeSS","incomeOther"],
-    wap:["incomeSS","incomeOther"]
+    wap:["incomeSS","incomeOther"],
+    lifeline:["incomeSS","incomeOther"]
   };
   out.forEach(p=>{
     if(p.status==="have"||p.status==="refer"||p.status==="no") return;
