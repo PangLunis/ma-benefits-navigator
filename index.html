@@ -50,6 +50,23 @@
   .btn.ghost{background:#fff;color:var(--muted);border:2px solid var(--line);flex:0 0 96px}
   .btn:disabled{opacity:.4;cursor:default}
   .note{font-size:13px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.45}
+  button.opt.unsure{border-style:dashed;border-color:#cdd5df;color:var(--muted);font-weight:600;margin-top:4px}
+  button.opt.unsure .chk{display:none}
+  button.opt.unsure.sel{background:#f1f4f8;border-color:#9fb0c4;color:var(--ink)}
+  .skip{display:block;width:100%;text-align:center;background:none;border:none;color:var(--muted);
+    font-size:15px;font-weight:700;padding:14px 0 2px;cursor:pointer;text-decoration:underline}
+  details.help{margin:2px 0 16px;border:none;padding:0}
+  details.help summary{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:var(--brand);cursor:pointer;padding:4px 0}
+  details.help summary::-webkit-details-marker{display:none}
+  details.help .hbox{font-size:16px;color:var(--ink);background:#eef4ff;border-radius:11px;padding:13px 14px;margin-top:8px;line-height:1.5}
+  .reassure{font-size:14px;color:var(--muted);text-align:center;background:#f1f4f8;border-radius:11px;padding:11px 12px;margin:0 2px 14px;line-height:1.45}
+  /* gaps checklist on results */
+  .gaps{background:#fff8e6;border:1px solid #f0dca0;border-radius:15px;padding:17px 17px;margin-bottom:18px}
+  .gaps h3{margin:0 0 4px;font-size:18px;font-weight:800;color:#8a6400}
+  .gaps p.lead{margin:0 0 12px;font-size:15px;color:#6b5300}
+  .gaps .gitem{border-top:1px dashed #ecd998;padding:11px 0 2px}
+  .gaps .gq{font-weight:800;font-size:16px;color:var(--ink)}
+  .gaps .gh{font-size:15px;color:var(--muted);margin-top:3px;line-height:1.45}
   /* results */
   .headline{background:linear-gradient(135deg,#1f6feb,#3b8bff);color:#fff;border-radius:18px;padding:24px 22px;margin-bottom:18px}
   .headline .big{font-size:42px;font-weight:900;letter-spacing:-.5px;line-height:1}
@@ -101,37 +118,50 @@
 <script>
 /* ---------- Adaptive question set (branching via showIf) ---------- */
 const Q = [
-  {id:"name", type:"text", q:"Whose benefits are we checking?", hint:"Just a first name, so the results read clearly.", placeholder:"e.g. Dad / Robert", optional:true},
-  {id:"age", type:"number", q:n=>`How old is ${who(n)}?`, hint:"Age as of December 31 this year. The 65 and 70 cutoffs are exact-date tests.", suffix:"years"},
-  {id:"marital", type:"single", q:n=>`${whoC(n)} marital status?`,
+  {id:"name", type:"text", q:"Whose benefits are we checking?", hint:"Just a first name, so the results read clearly.", placeholder:"e.g. Dad / Robert", optional:true, noSkip:true},
+  {id:"age", type:"number", q:n=>`How old is ${who(n)}?`, hint:"Age as of December 31 this year.", suffix:"years", noSkip:true},
+  {id:"marital", type:"single", q:n=>`${whoC(n)} marital status?`, noSkip:true,
     opts:[{v:"single",l:"Single"},{v:"married",l:"Married"},{v:"widowed",l:"Widowed"}]},
   {id:"filing", type:"single", q:n=>`How does ${who(n)} file taxes?`, hint:"This sets the income limit for the Circuit Breaker credit.",
+    help:"Look at the top of last year's tax return (MA Form 1 or the federal 1040) — it shows Single, Head of household, or Married. If they don't file at all, pick \"Doesn't file a return.\" Not sure? Tap \"I'm not sure\" and we'll flag it.",
     opts:[{v:"single",l:"Single"},{v:"hof",l:"Head of household"},{v:"joint",l:"Married — filing jointly"},{v:"mfs",l:"Married — filing separately"},{v:"none",l:"Doesn't file a return"}]},
-  {id:"dependent", type:"single", q:n=>`Is ${who(n)} claimed as a dependent by someone else?`, hint:"e.g., an adult child claims them on their taxes. This disqualifies some credits.",
-    opts:[{v:"no",l:"No"},{v:"yes",l:"Yes, claimed as a dependent"},{v:"unsure",l:"Not sure"}]},
+  {id:"dependent", type:"single", q:n=>`Is ${who(n)} claimed as a dependent by someone else?`, hint:"Usually \"No\" for an independent senior.",
+    help:"Say \"Yes\" only if an adult child or someone else lists this person as a dependent on THEIR taxes. For most seniors living on their own income, it's \"No.\"",
+    opts:[{v:"no",l:"No"},{v:"yes",l:"Yes, claimed as a dependent"}]},
   {id:"citizen", type:"single", q:n=>`${whoC(n)} citizenship status?`, hint:"Needed for SNAP, SSI, and Medicare Savings.",
-    opts:[{v:"citizen",l:"U.S. citizen"},{v:"qualified",l:"Green card / qualified immigrant"},{v:"other",l:"Other / not sure"}]},
-  {id:"housing", type:"single", q:n=>`Does ${who(n)} own or rent?`,
+    help:"\"U.S. citizen\" covers anyone born in the U.S. or naturalized. \"Green card\" means a lawful permanent resident.",
+    opts:[{v:"citizen",l:"U.S. citizen"},{v:"qualified",l:"Green card / lawful permanent resident"}]},
+  {id:"housing", type:"single", q:n=>`Does ${who(n)} own or rent?`, noSkip:true,
     opts:[{v:"own",l:"Owns the home"},{v:"rent",l:"Rents"},{v:"family",l:"Lives with family (no rent)"}]},
-  {id:"town", type:"text", q:"Which city or town in Massachusetts?", hint:"Property-tax breaks are set town-by-town, so we need this.", placeholder:"e.g. Framingham"},
+  {id:"town", type:"text", q:"Which city or town in Massachusetts?", hint:"Property-tax breaks are set town-by-town, so we need this.", placeholder:"e.g. Framingham", noSkip:true},
   {id:"ownYears", type:"number", q:"About how many years owned?", hint:"Some senior exemptions require owning ~5 years.", suffix:"years",
     showIf:a=>a.housing==="own"},
   {id:"titling", type:"single", q:"How is the home titled?", hint:"Trusts and life estates can change exemption eligibility.",
-    opts:[{v:"own_name",l:"In their own name"},{v:"trust",l:"In a trust"},{v:"life_estate",l:"Life estate"},{v:"multi",l:"Shared with others on the deed"},{v:"unsure",l:"Not sure"}],
+    help:"Check the deed or the top of the tax bill. \"In a trust\" = a family/living trust owns the home. \"Life estate\" is a legal arrangement (often for Medicaid planning). Don't know? Tap \"I'm not sure.\"",
+    opts:[{v:"own_name",l:"In their own name"},{v:"trust",l:"In a trust"},{v:"life_estate",l:"Life estate"},{v:"multi",l:"Shared with others on the deed"}],
     showIf:a=>a.housing==="own"},
-  {id:"incomeSS", type:"currency", q:n=>`${whoC(n)} yearly Social Security income?`, hint:"Just Social Security. Best estimate is fine — enter 0 if none."},
-  {id:"incomeOther", type:"currency", q:"Other yearly income?", hint:"Everything except Social Security: pensions, wages, withdrawals, interest, rental income."},
-  {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Bank + investment accounts. Do NOT count the home or one car."},
-  {id:"medExpenses", type:"currency", q:"Yearly out-of-pocket medical costs?", hint:"Premiums, copays, meds not covered. Drives SNAP & Circuit Breaker math. Enter 0 if unsure.", optional:true},
-  {id:"propTax", type:"currency", q:"Yearly property tax bill?", hint:"From the tax bill — your best estimate is fine.", showIf:a=>a.housing==="own"},
-  {id:"assessed", type:"currency", q:"Assessed value of the home?", hint:"Also on the tax bill. There's a value ceiling for the Circuit Breaker, so this matters. Skip only if truly unknown.", showIf:a=>a.housing==="own", optional:true},
-  {id:"rent", type:"currency", q:"Monthly rent?", hint:"Your share of the rent each month.", showIf:a=>a.housing==="rent"},
-  {id:"subsidized", type:"single", q:"Is the rental public, subsidized, or tax-exempt housing?", hint:"Public housing, Section 8 project-based, or owned by a church/nonprofit. Affects the Circuit Breaker.",
-    opts:[{v:"no",l:"No — private market rental"},{v:"yes",l:"Yes, subsidized/public"},{v:"unsure",l:"Not sure"}], showIf:a=>a.housing==="rent"},
+  {id:"incomeSS", type:"currency", q:n=>`${whoC(n)} yearly Social Security income?`, hint:"Just Social Security. Enter 0 if none.",
+    help:"The yearly Social Security total — on the annual letter from Social Security, or just the monthly check × 12. A rough number is fine."},
+  {id:"incomeOther", type:"currency", q:"Other yearly income?", hint:"Everything except Social Security.",
+    help:"Add up pensions, any wages, IRA/401(k) withdrawals, interest & dividends, and rental income — everything EXCEPT Social Security. A close estimate is fine."},
+  {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Do NOT count the home or one car.",
+    help:"Add up checking, savings, CDs, and investment/IRA accounts. Do NOT count the home they live in or one car. A ballpark is fine."},
+  {id:"medExpenses", type:"currency", q:"Yearly out-of-pocket medical costs?", hint:"A rough estimate is fine. Enter 0 if unsure.", optional:true,
+    help:"Out-of-pocket health costs over a year: premiums, copays, prescriptions, dental, glasses. Seniors get extra SNAP credit for these, so even a rough number helps."},
+  {id:"propTax", type:"currency", q:"Yearly property tax bill?", hint:"Your best estimate is fine.", showIf:a=>a.housing==="own",
+    help:"On the city/town property tax bill. It often comes quarterly — add the four quarters. You can also look it up free on the town's online assessor database by address."},
+  {id:"assessed", type:"currency", q:"Assessed value of the home?", hint:"There's a value ceiling for the Circuit Breaker, so this matters.", showIf:a=>a.housing==="own",
+    help:"Also on the property tax bill, labeled \"assessed value\" or \"total value\" — what the TOWN values the home at (often lower than market). Same assessor website has it. Truly can't find it? Tap \"I'm not sure.\""},
+  {id:"rent", type:"currency", q:"Monthly rent?", hint:"Your share of the rent each month.", showIf:a=>a.housing==="rent",
+    help:"The monthly rent payment. If utilities are bundled in, just estimate the rent portion."},
+  {id:"subsidized", type:"single", q:"Is the rental public, subsidized, or tax-exempt housing?", hint:"Affects the Circuit Breaker.",
+    help:"\"Yes\" = public housing, a Section 8 voucher building, or housing run by a church/nonprofit at reduced rent. A normal private landlord at market rent = \"No.\"",
+    opts:[{v:"no",l:"No — private market rental"},{v:"yes",l:"Yes, subsidized/public"}], showIf:a=>a.housing==="rent"},
   {id:"veteran", type:"single", q:n=>`Military service?`, hint:"Veterans qualify for extra programs.",
     opts:[{v:"vet",l:"Is a veteran"},{v:"spouse",l:"Surviving spouse of a veteran"},{v:"no",l:"No military service"}]},
   {id:"vaDis", type:"single", q:"Service-connected disability rating?", hint:"From the VA, if any.",
-    opts:[{v:"none",l:"None / not sure"},{v:"partial",l:"10% – 90%"},{v:"full",l:"100% or unable to work"}],
+    help:"On the VA award/decision letter — a percentage like 30%, 70%, or 100%. Don't have it handy? Tap \"I'm not sure.\"",
+    opts:[{v:"none",l:"None"},{v:"partial",l:"10% – 90%"},{v:"full",l:"100% or unable to work"}],
     showIf:a=>a.veteran==="vet"||a.veteran==="spouse"},
   {id:"disability", type:"single", q:n=>`Does ${who(n)} have a disability or get SSDI/SSI?`, hint:"Separate from veterans' disability — opens programs regardless of age.",
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]},
@@ -141,7 +171,7 @@ const Q = [
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No / not yet"}]},
   {id:"adl", type:"single", q:"Need help with daily activities?", hint:"Bathing, dressing, cooking, managing meds, getting around.",
     opts:[{v:"yes",l:"Yes, needs some help"},{v:"no",l:"No, fully independent"}]},
-  {id:"already", type:"multi", q:n=>`Which of these does ${who(n)} ALREADY get?`, hint:"So we don't tell you to re-apply for something you already have. Pick all that apply.",
+  {id:"already", type:"multi", q:n=>`Which of these does ${who(n)} ALREADY get?`, hint:"So we don't tell you to re-apply for something you already have. Pick all that apply (or \"None\").", noSkip:true,
     opts:[{v:"cb",l:"Senior Circuit Breaker credit"},{v:"exemption",l:"A property-tax exemption"},{v:"liheap",l:"Fuel Assistance"},{v:"snap",l:"SNAP / food assistance"},{v:"msp",l:"Help paying the Medicare Part B premium"},{v:"masshealth",l:"MassHealth"},{v:"none",l:"None of these"}]},
   {id:"working", type:"single", q:"Still earning wages from a job?", hint:"Affects Social Security timing.",
     opts:[{v:"yes",l:"Yes, still working"},{v:"no",l:"No / retired"}], showIf:a=>num(a.age)<70}
@@ -152,6 +182,8 @@ function who(a){const n=(a&&a.name||"").trim(); return n?n:"this person";}
 function whoC(a){const n=(a&&a.name||"").trim(); if(!n) return "What's the"; return n+"'s";}
 function num(x){const v=parseFloat(String(x).replace(/[^0-9.]/g,"")); return isNaN(v)?0:v;}
 function money(x){return "$"+Math.round(x).toLocaleString();}
+function isUnknown(id){ return A[id]==="unknown"; }
+function qLabel(id){ const m={filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",citizen:"citizenship status"}; return m[id]||id; }
 
 /* ---------- State ---------- */
 let A = {};           // answers
@@ -168,19 +200,25 @@ function render(){
   document.getElementById("bar").style.width = Math.round((i/(vis.length))*100)+"%";
   const qt = typeof q.q==="function"?q.q(A):q.q;
   const app = document.getElementById("app");
-  let inner = `<div class="card"><div class="q">${qt}</div>`;
+  let inner = i===0 ? `<div class="reassure">Answer what you can. Not sure about something? Tap <b>"I'm not sure"</b> — we'll list it at the end so you can look it up.</div>` : "";
+  inner += `<div class="card"><div class="q">${qt}</div>`;
   if(q.hint) inner += `<p class="hint">${q.hint}</p>`;
+  if(q.help) inner += `<details class="help"><summary>ⓘ What's this? Where do I find it?</summary><div class="hbox">${q.help}</div></details>`;
 
+  const isInput = (q.type==="number"||q.type==="currency"||q.type==="text");
   if(q.type==="single"||q.type==="multi"){
     inner += `<div class="opts ${q.type==='multi'?'ms':''}">`;
     q.opts.forEach(o=>{
       const cur = q.type==="multi" ? (A[q.id]||[]).includes(o.v) : A[q.id]===o.v;
       inner += `<button class="opt ${cur?'sel':''}" data-v="${o.v}"><span class="chk"></span><span>${o.l}</span></button>`;
     });
+    if(q.type==="single" && !q.noSkip){
+      inner += `<button class="opt unsure ${A[q.id]==="unknown"?'sel':''}" data-v="unknown"><span class="chk"></span><span>🤔 I'm not sure — flag it for later</span></button>`;
+    }
     inner += `</div>`;
   } else {
     const isCur = q.type==="currency";
-    const val = A[q.id]!=null?A[q.id]:"";
+    const val = (A[q.id]!=null && A[q.id]!=="unknown")?A[q.id]:"";
     inner += `<div class="ipwrap ${isCur?'cur':''}">${isCur?'<span class="pre">$</span>':''}
       <input id="ip" type="${q.type==='text'?'text':'number'}" inputmode="${q.type==='text'?'text':'decimal'}"
       value="${val}" placeholder="${q.placeholder||''}"></div>`;
@@ -189,8 +227,10 @@ function render(){
 
   inner += `<div class="nav">
       <button class="btn ghost" id="back" ${i===0?'disabled':''}>Back</button>
-      <button class="btn prim" id="next">${q.optional?'Next':'Next'}</button>
-    </div></div>`;
+      <button class="btn prim" id="next">Next</button>
+    </div>`;
+  if(isInput && !q.noSkip){ inner += `<button class="skip" id="skip">🤔 I'm not sure — skip &amp; flag it for later</button>`; }
+  inner += `</div>`;
   app.innerHTML = inner;
 
   // wire choices
@@ -206,8 +246,9 @@ function render(){
     ip.onkeydown=e=>{if(e.key==="Enter")document.getElementById("next").click();};
   }
   const back=document.getElementById("back"); if(back) back.onclick=()=>{i=Math.max(0,i-1);render();};
+  const skip=document.getElementById("skip"); if(skip) skip.onclick=()=>{A[q.id]="unknown"; i++; render();};
   document.getElementById("next").onclick=()=>{
-    if(q.type==="text"||q.type==="number"||q.type==="currency"){
+    if(isInput){
       const v=document.getElementById("ip").value.trim();
       if(!v && !q.optional){ document.getElementById("ip").focus(); document.getElementById("ip").style.borderColor="#d23"; return;}
       A[q.id]=v;
@@ -472,6 +513,25 @@ function programs(){
     }
   }
 
+  // ---- Unknown-answer handling: a created card that depends on a skipped ("not sure") field becomes "verify — needs info" ----
+  const DEP={
+    cb:["filing","dependent","incomeSS","incomeOther","propTax","assessed","rent","subsidized"],
+    ex41c:["incomeSS","incomeOther","assets","titling"],
+    vet22:["vaDis"],
+    liheap:["incomeSS","incomeOther"],
+    snap:["incomeSS","incomeOther","citizen"],
+    msp:["incomeSS","incomeOther","citizen"],
+    ssi:["incomeSS","incomeOther","assets","citizen"],
+    ch115:["incomeSS","incomeOther"],
+    utildisc:["incomeSS","incomeOther"],
+    wap:["incomeSS","incomeOther"]
+  };
+  out.forEach(p=>{
+    if(p.status==="have"||p.status==="refer"||p.status==="no") return;
+    const miss=(DEP[p.id]||[]).filter(isUnknown);
+    if(miss.length){ p.status="maybe"; p.why="⚠️ Can't confirm yet — still need: "+miss.map(qLabel).join(", ")+" (see the checklist up top). "+p.why; }
+  });
+
   // ---- "Already receiving" override: don't tell people to apply for what they have ----
   const haveMap={cb:"cb",ex41c:"exemption",ex17d:"exemption",vet22:"exemption",blind37a:"exemption",liheap:"liheap",snap:"snap",msp:"msp",lis:"msp",masshealth:"masshealth"};
   const has=(A.already||[]);
@@ -504,6 +564,16 @@ function results(){
       <div class="lbl">estimated value of programs ${nm==="this person"?"they":nm} likely qualif${nm==="this person"?"y":"ies"} for</div>
       <div class="sub">${likely.length} strong match${likely.length===1?"":"es"} &middot; ${ps.filter(p=>p.status==="maybe").length} worth verifying${haveN?` &middot; ${haveN} already active`:""} &middot; tap any card for the exact form, documents, and where to file.</div>
     </div>`;
+
+  // "I'm not sure" checklist — resurface every skipped answer with how-to-find-it help
+  const unknownQs = Q.filter(q=>A[q.id]==="unknown");
+  if(unknownQs.length){
+    const many=unknownQs.length>1;
+    h+=`<div class="gaps"><h3>⚠️ ${unknownQs.length} answer${many?"s":""} to track down</h3>
+      <p class="lead">You marked ${many?"these":"this"} "not sure." Find ${many?"them":"it"} and re-run — ${many?"they":"it"} can change what ${nm==="this person"?"they"  : nm} qualif${nm==="this person"?"y":"ies"} for.</p>`;
+    unknownQs.forEach(q=>{ const qt=typeof q.q==="function"?q.q(A):q.q; h+=`<div class="gitem"><div class="gq">${qt}</div>${q.help?`<div class="gh">${q.help}</div>`:""}</div>`; });
+    h+=`</div>`;
+  }
 
   const groups=[["likely","✅ Apply for these"],["maybe","🔎 Worth verifying"],["have","✓ Already receiving — no action needed"],["refer","⚖️ Get professional help"],["no","Not a match right now"]];
   groups.forEach(([st,label])=>{
