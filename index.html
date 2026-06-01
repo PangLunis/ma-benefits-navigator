@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MA Senior Benefits Audit</title>
 <style>
   :root{
-    --bg:#f4f6f9; --card:#ffffff; --ink:#1c2530; --muted:#5b6876;
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1c2530; --muted:#4a5563;
     --brand:#1f6feb; --brand-d:#1857c0; --line:#dde3ea;
     --green:#137a3b; --green-bg:#e7f6ec; --amber:#9a6700; --amber-bg:#fbf3da;
     --blue:#1551a8; --blue-bg:#e6effb; --grey:#6b7480; --grey-bg:#eef1f5;
@@ -100,7 +100,26 @@
   .acts .btn.sec{background:#fff;color:var(--brand);border:2px solid var(--brand)}
   .pill{display:inline-flex;align-items:center;gap:6px;background:#eef4ff;color:var(--brand);
     font-size:12px;font-weight:800;padding:5px 10px;border-radius:99px;margin-bottom:12px}
-  @media print{.acts,.bar,header small,.note{display:none}body{background:#fff}}
+  /* keyboard focus visibility (a11y) */
+  button:focus-visible, summary:focus-visible, input:focus-visible, a:focus-visible{outline:3px solid #1f6feb;outline-offset:2px;border-radius:8px}
+  /* text-size control in header */
+  .tsize{margin-left:auto;display:flex;gap:6px;align-items:center}
+  .tsize button{appearance:none;border:1.5px solid var(--line);background:#fff;border-radius:9px;font-weight:800;color:var(--brand);cursor:pointer;padding:6px 10px;line-height:1}
+  .tsize button.am{font-size:13px} .tsize button.ap{font-size:18px}
+  /* larger text modes (px-based, so we override the key reading sizes) */
+  body.lg{font-size:21px} body.xl{font-size:24px}
+  body.lg .q,body.xl .q{font-size:27px} body.xl .q{font-size:30px}
+  body.lg .hint,body.lg button.opt,body.lg input,body.lg .why,body.lg details .body,body.lg .gh,body.lg .gaps p.lead,body.lg .od,body.lg details.help summary,body.lg .legend{font-size:18px}
+  body.xl .hint,body.xl button.opt,body.xl input,body.xl .why,body.xl details .body,body.xl .gh,body.xl .gaps p.lead,body.xl .od,body.xl details.help summary,body.xl .legend{font-size:20px}
+  /* estimate caveat + badge legend under headline */
+  .estnote{font-size:13.5px;color:var(--muted);margin:14px 2px 4px;text-align:center;line-height:1.45}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:13.5px;color:var(--ink);margin:0 2px 16px;font-weight:600}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  /* make the card disclosure look tappable */
+  .prog details summary{display:inline-flex;align-items:center;gap:7px;background:#eef4ff;border:1.5px solid #cfe0fb;border-radius:9px;padding:9px 13px;font-size:15px}
+  details[open] .nomore{display:none}
+  @media print{.acts,.bar,header small,.note,.tsize{display:none}body{background:#fff}}
 </style>
 </head>
 <body>
@@ -109,7 +128,11 @@
     <div class="dot">$</div>
     <div>
       <h1>Senior Benefits Audit</h1>
-      <small>Massachusetts &middot; find what you're owed</small>
+      <small>Massachusetts &middot; free money you may be missing</small>
+    </div>
+    <div class="tsize" role="group" aria-label="Text size">
+      <button class="am" id="tdown" aria-label="Smaller text">A&minus;</button>
+      <button class="ap" id="tup" aria-label="Larger text">A+</button>
     </div>
   </header>
   <div class="bar"><i id="bar"></i></div>
@@ -165,6 +188,10 @@ const Q = [
     help:"On the VA award/decision letter — a percentage like 30%, 70%, or 100%. Don't have it handy? Tap \"I'm not sure.\"",
     opts:[{v:"none",l:"None"},{v:"partial",l:"10% – 90%"},{v:"full",l:"100% or unable to work"}],
     showIf:a=>a.veteran==="vet"||a.veteran==="spouse"},
+  {id:"wartime", type:"single", q:"Did the service include a wartime period?", hint:"Required for the VA Aid & Attendance pension.",
+    help:"At least 90 days of active duty with one day during a wartime window — e.g., WWII, Korea, Vietnam (8/5/1964–5/7/1975, or 2/28/1961 if served in Vietnam), or the Gulf War (8/2/1990–present). Peacetime-only service doesn't qualify for this particular pension. Not sure of the dates? Tap \"I'm not sure.\"",
+    opts:[{v:"yes",l:"Yes — served during a wartime period"},{v:"no",l:"No — peacetime only"}],
+    showIf:a=>a.veteran==="vet"||a.veteran==="spouse"},
   {id:"disability", type:"single", q:n=>`Does ${who(n)} have a disability or get SSDI/SSI?`, hint:"Separate from veterans' disability — opens programs regardless of age.",
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]},
   {id:"blind", type:"single", q:n=>`Is ${who(n)} legally blind?`,
@@ -195,7 +222,15 @@ function whoC(a){const n=(a&&a.name||"").trim(); if(!n) return "What's the"; ret
 function num(x){const v=parseFloat(String(x).replace(/[^0-9.]/g,"")); return isNaN(v)?0:v;}
 function money(x){return "$"+Math.round(x).toLocaleString();}
 function isUnknown(id){ return A[id]==="unknown"; }
-function qLabel(id){ const m={filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",citizen:"citizenship status"}; return m[id]||id; }
+/* text-size toggle (a11y) — pinch-zoom is also enabled via the viewport meta */
+let tIdx=0; const tClasses=["","lg","xl"];
+function applyTextSize(){ document.body.className=tClasses[tIdx]; }
+window.addEventListener("DOMContentLoaded",()=>{
+  const up=document.getElementById("tup"), dn=document.getElementById("tdown");
+  if(up) up.onclick=()=>{ tIdx=Math.min(2,tIdx+1); applyTextSize(); };
+  if(dn) dn.onclick=()=>{ tIdx=Math.max(0,tIdx-1); applyTextSize(); };
+});
+function qLabel(id){ const m={filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
 
 /* ---------- State ---------- */
 let A = {};           // answers
@@ -219,13 +254,14 @@ function render(){
 
   const isInput = (q.type==="number"||q.type==="currency"||q.type==="text");
   if(q.type==="single"||q.type==="multi"){
-    inner += `<div class="opts ${q.type==='multi'?'ms':''}">`;
+    inner += `<div class="opts ${q.type==='multi'?'ms':''}" role="${q.type==='multi'?'group':'radiogroup'}">`;
+    const role = q.type==="multi"?"checkbox":"radio";
     q.opts.forEach(o=>{
       const cur = q.type==="multi" ? (A[q.id]||[]).includes(o.v) : A[q.id]===o.v;
-      inner += `<button class="opt ${cur?'sel':''}" data-v="${o.v}"><span class="chk"></span><span class="ol">${o.l}${o.d?`<span class="od">${o.d}</span>`:""}</span></button>`;
+      inner += `<button class="opt ${cur?'sel':''}" data-v="${o.v}" role="${role}" aria-checked="${cur}"><span class="chk"></span><span class="ol">${o.l}${o.d?`<span class="od">${o.d}</span>`:""}</span></button>`;
     });
     if(q.type==="single" && !q.noSkip){
-      inner += `<button class="opt unsure ${A[q.id]==="unknown"?'sel':''}" data-v="unknown"><span class="chk"></span><span>🤔 I'm not sure — flag it for later</span></button>`;
+      inner += `<button class="opt unsure ${A[q.id]==="unknown"?'sel':''}" data-v="unknown" role="radio" aria-checked="${A[q.id]==="unknown"}"><span class="chk"></span><span>🤔 I'm not sure — flag it for later</span></button>`;
     }
     inner += `</div>`;
   } else {
@@ -398,7 +434,7 @@ function programs(){
     let s = inc<=lim?"likely":(inc<=lim*1.1?"maybe":"no");
     let w = s==="no"?`Income above ~${money(lim)} for a household of ${hh}.`:`Age 60+ gets extra deductions for medical costs and high rent — many qualify even near the income line.${med>0?` Their ~${money(med)}/yr medical costs help via the 60+ deduction.`:""}`;
     if(!citizenOK()){ s="no"; w="SNAP needs U.S. citizen or qualified-immigrant status — verify before applying."; }
-    out.push({id:"snap",name:"SNAP (Food Assistance)",status:s,val:s==="no"?0:1200,valTxt:s==="no"?"—":"~$23–$291/mo",why:w,
+    out.push({id:"snap",name:"SNAP (Food Assistance)",status:s,val:s==="no"?0:1200,valTxt:s==="no"?"—":"~$100/mo (varies)",why:w+" Benefit varies with income — often around $50–$150/mo for seniors (statutory max $292).",
       form:"Online via DTAConnect or paper application.",forml:"https://www.mass.gov/snap-benefits-formerly-food-stamps",
       docs:["Proof of income","Housing + utility costs","Out-of-pocket medical expenses (60+ deduction)"],
       where:"Apply at DTAConnect.com or call DTA. Seniors can deduct medical expenses over $35/mo — push hard on this."});
@@ -424,13 +460,14 @@ function programs(){
     }
   }
 
-  // 9. VA Aid & Attendance
-  if((A.veteran==="vet"||A.veteran==="spouse") && A.adl==="yes"){
-    out.push({id:"aanda",name:"VA Aid & Attendance Pension",status:"likely",val:A.veteran==="vet"?27000:16000,
+  // 9. VA Aid & Attendance (requires WARTIME service)
+  if((A.veteran==="vet"||A.veteran==="spouse") && A.adl==="yes" && A.wartime!=="no"){
+    const wt = A.wartime==="yes";
+    out.push({id:"aanda",name:"VA Aid & Attendance Pension",status: wt?"likely":"maybe",val:A.veteran==="vet"?27000:16000,
       valTxt:A.veteran==="vet"?"up to ~$2,300/mo":"up to ~$1,480/mo",
-      why:"Wartime veteran (or surviving spouse) who needs help with daily activities — a large, underused benefit.",
+      why: wt?"Wartime veteran (or surviving spouse) who needs help with daily activities — a large, underused benefit.":"Big benefit IF the service included a wartime period (90 days active, 1 day wartime) — confirm the dates. Also needs net worth under ~$155k.",
       form:"VA Form 21-2680 + pension application.",forml:"https://www.va.gov/pension/aid-attendance-housebound/",
-      docs:["DD-214","Doctor's statement on care needs","Income & net-worth statement (limit ~$155k)","Care/medical expense records"],
+      docs:["DD-214 (shows service dates — confirms the wartime requirement)","Doctor's statement on care needs","Income & net-worth statement (limit ~$155k)","Care/medical expense records"],
       where:"File with the VA; a free accredited VSO (Veterans Service Officer) or the town Veterans' Agent can do this with you — never pay someone to file it."});
   }
 
@@ -457,14 +494,15 @@ function programs(){
       where:"Refer to a licensed MA elder-law attorney — many offer a free first consult. This is the ONE area we do not advise on directly, by design."});
   }
 
-  // 12. SSI (very low income + assets; aged 65+ or disabled)
-  if((age>=65 || disabled) && assets<6000 && inc<15000){
-    let s = (citizenOK() && assets<3000) ? "maybe" : (citizenOK()?"maybe":"no");
-    out.push({id:"ssi",name:"Supplemental Security Income (SSI)",status: citizenOK()?"maybe":"no",
-      val:11000, valTxt: citizenOK()?"up to ~$1,000+/mo":"—",
-      why: citizenOK()?`Very low income & assets (SSI limit is ~$2,000 single / $3,000 couple) plus 65+ or disabled — monthly cash from SSA + the MA state supplement. Verify exact countable assets.`:"SSI needs U.S. citizen or qualified-immigrant status.",
+  // 12. SSI (very low income + STRICT asset limit; aged 65+ or disabled)
+  const ssiAssetCap = A.marital==="married"?3000:2000;
+  if((age>=65 || disabled) && assets<=ssiAssetCap+1000 && inc<13000){
+    const s = citizenOK()?"maybe":"no";
+    out.push({id:"ssi",name:"Supplemental Security Income (SSI)",status:s,
+      val: s==="no"?0:6000, valTxt: s==="no"?"—":"up to ~$960/mo",
+      why: citizenOK()?`Income and assets look low enough to be worth a hard look. SSI has a STRICT countable-asset limit (~$${ssiAssetCap.toLocaleString()}) and pays up to ~$960/mo federal + a small MA supplement. Confirm exact countable assets & income — these limits are unforgiving, so this is a "verify," not a sure thing.`:"SSI needs U.S. citizen or qualified-immigrant status.",
       form:"Apply with the Social Security Administration.",forml:"https://www.ssa.gov/ssi/",
-      docs:["Bank statements (asset limit is strict)","Proof of income","ID & citizenship/immigration docs"],
+      docs:["Bank statements (asset limit is strict — ~$2,000 single / $3,000 couple)","Proof of income","ID & citizenship/immigration docs"],
       where:"Apply at ssa.gov or 1-800-772-1213. SSI in MA usually opens MassHealth automatically."});
   }
 
@@ -533,6 +571,7 @@ function programs(){
     cb:["filing","dependent","incomeSS","incomeOther","propTax","assessed","rent","subsidized"],
     ex41c:["incomeSS","incomeOther","assets","titling"],
     vet22:["vaDis"],
+    aanda:["wartime"],
     liheap:["incomeSS","incomeOther"],
     snap:["incomeSS","incomeOther","citizen"],
     msp:["incomeSS","incomeOther","citizen"],
@@ -573,11 +612,19 @@ function results(){
   const haveN=ps.filter(p=>p.status==="have").length;
   const nm=who(A);
 
+  const maybeN=ps.filter(p=>p.status==="maybe").length;
   let h=`<div class="headline">
       <div class="pill" style="color:#fff;background:rgba(255,255,255,.18)">${(A.town||"Massachusetts")}</div>
-      <div class="big">${total>0?money(total)+"/yr":"Let's verify"}</div>
-      <div class="lbl">estimated value of programs ${nm==="this person"?"they":nm} likely qualif${nm==="this person"?"y":"ies"} for</div>
-      <div class="sub">${likely.length} strong match${likely.length===1?"":"es"} &middot; ${ps.filter(p=>p.status==="maybe").length} worth verifying${haveN?` &middot; ${haveN} already active`:""} &middot; tap any card for the exact form, documents, and where to file.</div>
+      <div class="big">${total>0?"≈ "+money(total)+"/yr":"Let's dig in"}</div>
+      <div class="lbl">in benefits ${nm==="this person"?"they":nm} may be leaving on the table — estimated, if approved for the strong matches</div>
+      <div class="sub">${likely.length} to apply for now &middot; ${maybeN} worth verifying${haveN?` &middot; ${haveN} already active`:""}. Tap any card for the exact form, documents, and where to file.</div>
+    </div>
+    <div class="estnote">These are <b>estimates, not guarantees</b> — each program must be applied for and confirmed, and amounts vary by income and town. This tool finds what to chase; it doesn't approve anything.</div>
+    <div class="legend">
+      <span><i style="background:var(--green)"></i>Apply now</span>
+      <span><i style="background:var(--amber)"></i>Verify / need info</span>
+      ${haveN?`<span><i style="background:#0a5"></i>Already have</span>`:""}
+      <span><i style="background:var(--blue)"></i>See a pro</span>
     </div>`;
 
   // "I'm not sure" checklist — resurface every skipped answer with how-to-find-it help
@@ -591,17 +638,24 @@ function results(){
   }
   if((A.already||[]).includes("unsure")){
     h+=`<div class="gaps" style="background:#e6effb;border-color:#bcd0f5"><h3 style="color:#1551a8">ℹ️ First, check what's already in place</h3>
-      <p class="lead" style="color:#33507e">You weren't sure which of these ${nm==="this person"?"they"  : nm} already gets. Before applying for anything below, do a quick check (the "where to look" tips were on that question) so you don't re-apply for something that's already active.</p></div>`;
+      <p class="lead" style="color:#33507e">You weren't sure which of these ${nm==="this person"?"they"  : nm} already gets. Here's how to check each, so you don't re-apply for something already active:</p>
+      <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Circuit Breaker credit</div><div class="gh">Last year's MA state tax return — a "Schedule CB" credit line.</div></div>
+      <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Property-tax exemption</div><div class="gh">The town property tax bill — an "exemption"/"senior" line lowering the amount owed.</div></div>
+      <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Fuel Assistance / SNAP</div><div class="gh">Did they apply for winter heating help at a local agency? Do they have an EBT card?</div></div>
+      <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Medicare Part B help / MassHealth</div><div class="gh">Is the ~$185/mo Part B premium NOT coming out of their Social Security check? Do they carry a MassHealth card?</div></div>
+    </div>`;
   }
 
   const groups=[["likely","✅ Apply for these"],["maybe","🔎 Worth verifying"],["have","✓ Already receiving — no action needed"],["refer","⚖️ Get professional help"],["no","Not a match right now"]];
   groups.forEach(([st,label])=>{
     const g=ps.filter(p=>p.status===st);
     if(!g.length) return;
-    h+=`<div class="sech">${label}</div>`;
+    const collapse = st==="no";   // tuck the non-matches behind a toggle to cut clutter
+    if(collapse){ h+=`<details class="nomatch"><summary class="sech" style="cursor:pointer;list-style:none">▸ ${label} (${g.length}) — tap to view</summary>`; }
+    else { h+=`<div class="sech">${label}</div>`; }
     g.forEach(p=>{
       const bc={likely:"b-likely",maybe:"b-maybe",have:"b-have",refer:"b-refer",no:"b-no"}[p.status];
-      const bt={likely:"Likely eligible",maybe:"Verify",have:"Already have",refer:"Refer out",no:"Not now"}[p.status];
+      const bt={likely:"Likely eligible",maybe:"Need to verify",have:"Already have",refer:"See a pro",no:"Not a match"}[p.status];
       h+=`<div class="prog">
         <div class="top"><h3>${p.name}</h3><span class="val">${p.valTxt}</span></div>
         <span class="badge ${bc}">${bt}</span>
@@ -616,6 +670,7 @@ function results(){
       }
       h+=`</div>`;
     });
+    if(collapse){ h+=`</details>`; }
   });
 
   h+=`<div class="acts">
