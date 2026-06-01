@@ -50,6 +50,8 @@
   .btn.ghost{background:#fff;color:var(--muted);border:2px solid var(--line);flex:0 0 96px}
   .btn:disabled{opacity:.4;cursor:default}
   .note{font-size:13px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.45}
+  button.opt .ol{display:block}
+  button.opt .od{display:block;font-weight:600;font-size:14px;color:var(--muted);margin-top:3px;line-height:1.4}
   button.opt.unsure{border-style:dashed;border-color:#cdd5df;color:var(--muted);font-weight:600;margin-top:4px}
   button.opt.unsure .chk{display:none}
   button.opt.unsure.sel{background:#f1f4f8;border-color:#9fb0c4;color:var(--ink)}
@@ -171,8 +173,18 @@ const Q = [
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No / not yet"}]},
   {id:"adl", type:"single", q:"Need help with daily activities?", hint:"Bathing, dressing, cooking, managing meds, getting around.",
     opts:[{v:"yes",l:"Yes, needs some help"},{v:"no",l:"No, fully independent"}]},
-  {id:"already", type:"multi", q:n=>`Which of these does ${who(n)} ALREADY get?`, hint:"So we don't tell you to re-apply for something you already have. Pick all that apply (or \"None\").", noSkip:true,
-    opts:[{v:"cb",l:"Senior Circuit Breaker credit"},{v:"exemption",l:"A property-tax exemption"},{v:"liheap",l:"Fuel Assistance"},{v:"snap",l:"SNAP / food assistance"},{v:"msp",l:"Help paying the Medicare Part B premium"},{v:"masshealth",l:"MassHealth"},{v:"none",l:"None of these"}]},
+  {id:"already", type:"multi", q:n=>`Is ${who(n)} ALREADY getting any of these?`, hint:"It's totally normal not to know. If you can't tell, pick \"I'm not sure\" at the bottom — we'll help you check.", noSkip:true, exclusive:["none","unsure"],
+    help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) SNAP — do they have an EBT card? 5) Medicare Part B help — is the ~$185/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card? If you can't check any of these right now, just pick \"I'm not sure.\"",
+    opts:[
+      {v:"cb",l:"Senior Circuit Breaker tax credit",d:"A refund on the MA state tax return (look for \"Schedule CB\") — often $1,000–$2,800/yr."},
+      {v:"exemption",l:"A property-tax exemption",d:"A discount line on the town property tax bill that lowers what's owed."},
+      {v:"liheap",l:"Fuel Assistance (heating-bill help)",d:"Winter heating help, also called LIHEAP."},
+      {v:"snap",l:"SNAP / food assistance",d:"Food benefits on an EBT card (used to be \"food stamps\")."},
+      {v:"msp",l:"Help paying the Medicare Part B premium",d:"Something other than their Social Security check covers the ~$185/mo Part B premium."},
+      {v:"masshealth",l:"MassHealth",d:"MassHealth — Massachusetts Medicaid (they'd have a MassHealth card)."},
+      {v:"none",l:"None of these"},
+      {v:"unsure",l:"🤔 I'm not sure — help me check"}
+    ]},
   {id:"working", type:"single", q:"Still earning wages from a job?", hint:"Affects Social Security timing.",
     opts:[{v:"yes",l:"Yes, still working"},{v:"no",l:"No / retired"}], showIf:a=>num(a.age)<70}
 ];
@@ -210,7 +222,7 @@ function render(){
     inner += `<div class="opts ${q.type==='multi'?'ms':''}">`;
     q.opts.forEach(o=>{
       const cur = q.type==="multi" ? (A[q.id]||[]).includes(o.v) : A[q.id]===o.v;
-      inner += `<button class="opt ${cur?'sel':''}" data-v="${o.v}"><span class="chk"></span><span>${o.l}</span></button>`;
+      inner += `<button class="opt ${cur?'sel':''}" data-v="${o.v}"><span class="chk"></span><span class="ol">${o.l}${o.d?`<span class="od">${o.d}</span>`:""}</span></button>`;
     });
     if(q.type==="single" && !q.noSkip){
       inner += `<button class="opt unsure ${A[q.id]==="unknown"?'sel':''}" data-v="unknown"><span class="chk"></span><span>🤔 I'm not sure — flag it for later</span></button>`;
@@ -237,8 +249,11 @@ function render(){
   if(q.type==="single"){
     app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{A[q.id]=b.dataset.v;i++;render();});
   } else if(q.type==="multi"){
+    const excl=q.exclusive||[];
     app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
-      const set=new Set(A[q.id]||[]); set.has(b.dataset.v)?set.delete(b.dataset.v):set.add(b.dataset.v);
+      const v=b.dataset.v; let set=new Set(A[q.id]||[]);
+      if(excl.includes(v)){ set = set.has(v)?new Set():new Set([v]); }     // exclusive choice
+      else { excl.forEach(e=>set.delete(e)); set.has(v)?set.delete(v):set.add(v); }
       A[q.id]=[...set]; render();
     });
   } else {
@@ -573,6 +588,10 @@ function results(){
       <p class="lead">You marked ${many?"these":"this"} "not sure." Find ${many?"them":"it"} and re-run — ${many?"they":"it"} can change what ${nm==="this person"?"they"  : nm} qualif${nm==="this person"?"y":"ies"} for.</p>`;
     unknownQs.forEach(q=>{ const qt=typeof q.q==="function"?q.q(A):q.q; h+=`<div class="gitem"><div class="gq">${qt}</div>${q.help?`<div class="gh">${q.help}</div>`:""}</div>`; });
     h+=`</div>`;
+  }
+  if((A.already||[]).includes("unsure")){
+    h+=`<div class="gaps" style="background:#e6effb;border-color:#bcd0f5"><h3 style="color:#1551a8">ℹ️ First, check what's already in place</h3>
+      <p class="lead" style="color:#33507e">You weren't sure which of these ${nm==="this person"?"they"  : nm} already gets. Before applying for anything below, do a quick check (the "where to look" tips were on that question) so you don't re-apply for something that's already active.</p></div>`;
   }
 
   const groups=[["likely","✅ Apply for these"],["maybe","🔎 Worth verifying"],["have","✓ Already receiving — no action needed"],["refer","⚖️ Get professional help"],["no","Not a match right now"]];
