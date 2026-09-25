@@ -182,11 +182,39 @@ function wireNav(vis){
   const r=document.getElementById("navres"); if(r) r.onclick=()=>{ editMode=false; i=visible().length; render(); };
 }
 
+/* ---------- Anonymous completion counts (Ryan 2026-09-25: "just for statistical
+   purposes to see if people finish it"). Sends ONLY: start / finish / leave, the
+   id + number of the furthest question reached, the total shown, and phone vs
+   desktop. Never answers, names or towns. The session id is random per page load
+   and not stored, so visits can't be linked. Skipped if the browser asks not to be
+   tracked (Do Not Track / Global Privacy Control). Worker: stats-worker/ ---------- */
+const STATS_URL = "https://benefighter-stats.pangserve.workers.dev/c";
+const STATS_OFF = (navigator.doNotTrack==="1" || window.doNotTrack==="1" || navigator.globalPrivacyControl===true || !/benefighter\.com$/.test(location.hostname));
+const SID = (()=>{ try{ const a=new Uint8Array(9); crypto.getRandomValues(a); return Array.from(a,b=>"abcdefghijklmnopqrstuvwxyz0123456789"[b%36]).join(""); }catch(e){ return "s"+Date.now().toString(36); } })();
+let statStarted=false, statFinished=false, statLeft=false, furthestN=0, furthestId=null, lastTotal=0;
+function stat(ev, extra){
+  if(STATS_OFF) return;
+  const body=JSON.stringify(Object.assign({ev, sid:SID, dev: window.innerWidth<700?"m":"d"}, extra||{}));
+  try{ if(navigator.sendBeacon && navigator.sendBeacon(STATS_URL, body)) return; }catch(e){}
+  try{ fetch(STATS_URL,{method:"POST",body,keepalive:true,mode:"no-cors"}); }catch(e){}
+}
+function statProgress(vis){
+  if(!statStarted){ statStarted=true; stat("start",{qid:vis[0]&&vis[0].id, qn:1, qt:vis.length}); }
+  if(i+1>furthestN){ furthestN=i+1; furthestId=vis[i]&&vis[i].id; }
+  lastTotal=vis.length;
+}
+function statLeave(){
+  if(statStarted && !statFinished && !statLeft){ statLeft=true; stat("leave",{qid:furthestId, qn:furthestN, qt:lastTotal}); }
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") statLeave(); });
+window.addEventListener("pagehide", statLeave);
+
 /* ---------- Render question ---------- */
 function render(){
   const vis = visible();
   if(i>=vis.length){ editMode=false; return results(); }
   const q = vis[i];
+  statProgress(vis);
   const doneN = vis.filter(x=>ansState(x)!=="empty").length;
   document.getElementById("bar").style.width = Math.round((doneN/(vis.length))*100)+"%";
   const qt = typeof q.q==="function"?q.q(A):q.q;
@@ -782,6 +810,7 @@ function programs(){
 
 /* ---------- Results screen ---------- */
 function results(){
+  if(!statFinished){ statFinished=true; stat("finish",{qn:furthestN, qt:visible().length}); }
   document.getElementById("bar").style.width="100%";
   document.getElementById("privacy").style.display="none";
   const ps=programs();

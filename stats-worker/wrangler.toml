@@ -1,0 +1,15 @@
+name = "benefighter-stats"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+# Anonymous free-check completion counts only (Ryan 2026-09-25: "just for statistical
+# purposes to see if people finish it"). No answers, names or IP addresses are stored.
+[[d1_databases]]
+binding = "DB"
+database_name = "benefighter-stats"
+database_id = "872703df-232d-42b9-8de3-533d7a1ad9bb"
+
+# No request logging (logs would include IP addresses).
+[observability]
+enabled = false
