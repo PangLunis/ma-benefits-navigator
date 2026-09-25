@@ -286,6 +286,25 @@ img { max-width: 100%; display: block; }
 .chip { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
 .chip svg { flex: none; }
 
+/* "100% free" promise in the hero — Ryan (2026-09-25): make it unmistakable
+   that you can start clicking without paying, without a card, and get
+   answers right away. Replaced the $179 chips that used to sit here (paid-
+   product details directly under the FREE button muddied the message; the
+   $179 card is still in its own band just below). */
+.free-promise {
+  margin-top: 6px; max-width: 560px;
+  background: rgba(251,246,236,.10); border: 1px solid rgba(251,246,236,.35);
+  border-radius: 14px; padding: 16px 18px 12px;
+}
+.free-promise-h { font-weight: 800; font-size: 1.05rem; margin: 0 0 8px; color: var(--honey); }
+.free-promise ul { list-style: none; margin: 0; padding: 0; }
+.free-promise li { display: flex; gap: 10px; align-items: flex-start; font-size: 1.02rem; line-height: 1.45; margin-bottom: 8px; color: var(--paper); }
+.free-promise li svg { flex: none; margin-top: 2px; }
+.free-promise strong { color: #fff; }
+.hero.hero-photo .free-promise-h,
+.hero.hero-photo .free-promise li { text-shadow: 0 1px 3px rgba(0,0,0,.75), 0 1px 10px rgba(0,0,0,.4); }
+.hero.hero-photo .free-promise { background: rgba(20,56,41,.55); backdrop-filter: blur(2px); }
+
 /* Full Benefits Check card — its own band directly below the hero now,
    instead of sitting inside the hero and covering the artwork. */
 .full-check-band { padding-top: clamp(28px, 5vw, 48px); }
