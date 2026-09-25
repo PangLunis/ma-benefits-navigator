@@ -204,20 +204,26 @@ img { max-width: 100%; display: block; }
 }
 .h1-swash { display: block; margin: -6px 0 18px; }
 
-/* Hero — photo-background variant (boxer-vs-bank illustration, full-bleed) */
+/* Hero — photo-background variant (boxer-vs-bank illustration, full-bleed)
+   Scrim is tinted with --pine-deep (the site's own brand green) instead of a
+   neutral near-black — near-black + gold text over a photoreal image reads
+   as a generic "AI dark hero" cliche, and it made the whole top of an
+   otherwise warm cream/green/gold site feel like a different, harsher
+   product. Same fade shape, lighter peak opacity, brand color throughout;
+   text-shadow (not blanket darkness) carries the legibility. */
 .hero.hero-photo {
   background-image:
-    linear-gradient(100deg, rgba(15,20,16,.90) 0%, rgba(15,20,16,.78) 32%, rgba(15,20,16,.38) 58%, rgba(15,20,16,.08) 78%),
-    url("images/hero-boxer.png");
+    linear-gradient(100deg, rgba(20,56,41,.82) 0%, rgba(20,56,41,.68) 32%, rgba(20,56,41,.32) 58%, rgba(20,56,41,.05) 78%),
+    url("images/hero-boxer.jpg");
   background-size: cover;
   background-position: right center;
 }
 .hero.hero-photo::before { content: none; }
-.hero.hero-photo .eyebrow { color: var(--honey); }
+.hero.hero-photo .eyebrow { color: var(--honey); text-shadow: 0 1px 3px rgba(0,0,0,.7), 0 2px 14px rgba(0,0,0,.45); }
 .hero.hero-photo h1,
-.hero.hero-photo .tagline span { color: var(--paper); text-shadow: 0 2px 18px rgba(0,0,0,.55); }
-.hero.hero-photo .lede { color: rgba(251,246,236,.88); text-shadow: 0 1px 10px rgba(0,0,0,.45); }
-.hero.hero-photo .hero-chips { color: rgba(251,246,236,.92); }
+.hero.hero-photo .tagline span { color: var(--paper); text-shadow: 0 1px 3px rgba(0,0,0,.75), 0 2px 20px rgba(0,0,0,.55); }
+.hero.hero-photo .lede { color: rgba(251,246,236,.92); text-shadow: 0 1px 3px rgba(0,0,0,.7), 0 1px 12px rgba(0,0,0,.45); }
+.hero.hero-photo .hero-chips { color: rgba(251,246,236,.95); text-shadow: 0 1px 3px rgba(0,0,0,.7), 0 1px 10px rgba(0,0,0,.4); }
 .hero.hero-photo .btn-ghost { color: #fff; border-color: rgba(255,255,255,.6); }
 .hero.hero-photo .btn-ghost:hover { background: rgba(255,255,255,.12); color: #fff; }
 @media (max-width: 820px) {
@@ -227,10 +233,11 @@ img { max-width: 100%; display: block; }
        Fade from dark at the top (behind the eyebrow/headline) down to much
        lighter toward the bottom (behind the CTA), so the boxer's fist/face
        actually show through, and rely on stronger per-line text-shadow
-       below for legibility instead of blanket darkness. */
+       below for legibility instead of blanket darkness. Brand green, not
+       neutral black — see the desktop comment above. */
     background-image:
-      linear-gradient(180deg, rgba(15,20,16,.86) 0%, rgba(15,20,16,.66) 32%, rgba(15,20,16,.38) 62%, rgba(15,20,16,.22) 100%),
-      url("images/hero-boxer.png");
+      linear-gradient(180deg, rgba(20,56,41,.80) 0%, rgba(20,56,41,.62) 32%, rgba(20,56,41,.36) 62%, rgba(20,56,41,.20) 100%),
+      url("images/hero-boxer.jpg");
     background-position: 75% 30%;
   }
   /* Tight, high-contrast shadow anchors every line so text stays readable
