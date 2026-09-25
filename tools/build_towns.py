@@ -17,7 +17,8 @@ Per-town keys (all optional; absent = "not shown by the source", NEVER "not offe
   cpa   true = Community Preservation Act adopted
   cpas  true = CPA low/moderate-income (incl. senior) surcharge exemption adopted
   d41   number of Clause 41A deferrals granted in the latest fiscal year DLS shows (>0 only)
-  fuel/asap/shine/rta  agency id (or list of ids) -> "agencies"
+  fuel/asap/shine/rta  agency id (or list of ids) -> "agencies" ({n name, p phone, u url, a areas})
+  ride  MBTA The RIDE paratransit coverage: "full" | "partial"
   coa   {n, p, u} council on aging
 
 Deliberately NOT included: the 41C dollar amount and income/asset limits on file with DLS. They matched
@@ -60,38 +61,46 @@ def main():
             t["d41"] = v["deferral_41a_count_latest_fy"]
         towns[name] = t
 
-    agencies = {}
+    agencies, agency_keys = {}, {}
     svc_meta = None
     if os.path.exists(SVC):
         svc = json.load(open(SVC))
         svc_meta = {"fetched": svc.get("fetched"), "sources": list((svc.get("sources") or {}).keys())}
 
-        def agency_id(a):
-            if not a or not a.get("agency") and not a.get("name"):
+        def agency_id(name, phone=None, url=None, areas=None):
+            if not name:
                 return None
-            n = a.get("agency") or a.get("name")
-            key = re.sub(r"[^a-z0-9]+", "-", n.lower()).strip("-")[:40]
-            rec = {"n": n}
-            if a.get("phone"): rec["p"] = a["phone"]
-            if a.get("url"): rec["u"] = a["url"]
-            if key in agencies and agencies[key] != rec:
-                key = key + "-" + str(abs(hash(json.dumps(rec, sort_keys=True))) % 997)
-            agencies[key] = rec
-            return key
+            rec = {"n": name}
+            if phone: rec["p"] = phone
+            if url: rec["u"] = url
+            if areas: rec["a"] = areas
+            sig = json.dumps(rec, sort_keys=True)
+            if sig not in agency_keys:          # short ids keep towns.json small
+                agency_keys[sig] = str(len(agency_keys) + 1)
+                agencies[agency_keys[sig]] = rec
+            return agency_keys[sig]
+
+        def ids(xs):
+            out = [i for i in xs if i]
+            return (out if len(out) > 1 else out[0]) if out else None
 
         for name, s in (svc.get("towns") or {}).items():
             if name not in towns:
                 print(f"WARNING: services town not in DLS list: {name!r}", file=sys.stderr)
                 continue
             t = towns[name]
-            for field in ("fuel", "asap", "shine", "rta"):
-                val = s.get(field)
-                if isinstance(val, list):
-                    ids = [i for i in (agency_id(x) for x in val) if i]
-                    if ids: t[field] = ids if len(ids) > 1 else ids[0]
-                elif isinstance(val, dict):
-                    i = agency_id(val)
-                    if i: t[field] = i
+            f = s.get("fuel") or {}
+            v = agency_id(f.get("agency"), f.get("phone"), f.get("url"))
+            if v: t["fuel"] = v
+            v = ids([agency_id(x.get("name"), x.get("phone"), x.get("url"), x.get("areas")) for x in (s.get("asap") or [])])
+            if v: t["asap"] = v
+            sh = s.get("shine") or {}
+            v = agency_id(f"SHINE ({sh['office']})" if sh.get("office") else None, sh.get("phone"))
+            if v: t["shine"] = v
+            v = ids([agency_id(x.get("name"), x.get("phone"), x.get("url")) for x in (s.get("rta") or [])])
+            if v: t["rta"] = v
+            if s.get("mbta_the_ride") in ("full", "partial"):
+                t["ride"] = s["mbta_the_ride"]
             coa = s.get("coa")
             if isinstance(coa, dict) and (coa.get("name") or coa.get("phone")):
                 t["coa"] = {k2: coa[k1] for k1, k2 in (("name", "n"), ("phone", "p"), ("url", "u")) if coa.get(k1)}
@@ -101,6 +110,9 @@ def main():
     assert towns["Boston"].get("res"), "control: Boston residential exemption missing"
     assert towns["Sudbury"].get("mt"), "control: Sudbury means-tested exemption missing"
     assert len(towns) == 351, f"expected 351 towns, got {len(towns)}"
+    if os.path.exists(SVC):
+        assert towns["Methuen"].get("fuel") and towns["Methuen"].get("asap"), "control: Methuen agencies missing"
+        assert isinstance(towns["Boston"].get("asap"), list) and len(towns["Boston"]["asap"]) == 3, "control: Boston should have 3 ASAPs"
 
     out = {"meta": {"tax_source": tax.get("source"), "tax_fetched": tax.get("fetched"),
                     "services": svc_meta, "built": "see git log"},
@@ -108,7 +120,7 @@ def main():
     s = json.dumps(out, separators=(",", ":"), ensure_ascii=False)
     open(OUT, "w").write(s)
     cov = {k: sum(1 for t in towns.values() if k in t) for k in
-           ("c", "age", "ss", "b37", "res", "mt", "cpa", "cpas", "d41", "fuel", "asap", "coa", "shine", "rta")}
+           ("c", "age", "ss", "b37", "res", "mt", "cpa", "cpas", "d41", "fuel", "asap", "coa", "shine", "rta", "ride")}
     print(f"wrote {OUT}: {len(s):,} bytes, {len(towns)} towns, {len(agencies)} agencies")
     print("coverage:", cov)
 
