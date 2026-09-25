@@ -706,3 +706,25 @@ img { max-width: 100%; display: block; }
   font-weight: 800; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase;
   padding: 6px 13px; border-radius: 999px;
 }
+
+/* ---- Guide pages (circuit-breaker-tax-credit.html etc.) ---- */
+.guide { max-width: 760px; margin: 0 auto; padding: 34px 20px 64px; font-size: 1.14rem; line-height: 1.65; }
+.guide h1 { font-size: clamp(2rem, 5vw, 2.7rem); margin-bottom: .35em; }
+.guide h2 { font-size: 1.6rem; margin-top: 1.8em; }
+.guide .updated { color: var(--ink-soft); font-size: .95rem; margin: 0 0 1.4em; }
+.guide ul, .guide ol { padding-left: 1.3em; }
+.guide li { margin: .35em 0; }
+.guide .quick { background: #fff; border: 2px solid var(--pine-tint); border-left: 8px solid var(--pine-soft); border-radius: 16px; padding: 20px 24px; box-shadow: var(--shadow-soft); }
+.guide .quick h2 { margin-top: 0; font-size: 1.3rem; }
+.guide .quick ul { margin: 0; }
+.guide .example { background: var(--paper-2); border-radius: 14px; padding: 16px 20px; margin: 14px 0; }
+.guide .example b { color: var(--pine-deep); }
+.guide .cta-box { background: var(--pine); color: var(--pine-tint); border-radius: 18px; padding: 26px 24px; margin: 2.2em 0; text-align: center; }
+.guide .cta-box h2 { color: #fff; margin-top: 0; }
+.guide .cta-box p { margin: .4em 0 1em; }
+.guide .note { background: #fff8e6; border: 1px solid #f0dca0; border-radius: 12px; padding: 14px 18px; }
+.guide .sources { font-size: .95rem; color: var(--ink-soft); }
+.guide .sources a { word-break: break-word; }
+.guide-page .header-cta { margin-left: auto; }
+.guide-page .check-footer { background: var(--pine-deep); color: #A9C3B5; padding: 26px 0; font-size: .92rem; }
+.guide-page .check-footer a { color: #fff; }
