@@ -188,6 +188,78 @@ function wireNav(vis){
    desktop. Never answers, names or towns. The session id is random per page load
    and not stored, so visits can't be linked. Skipped if the browser asks not to be
    tracked (Do Not Track / Global Privacy Control). Worker: stats-worker/ ---------- */
+/* ---------- Town data (data/towns.json, built by tools/build_towns.py) ----------
+   DLS local-options records for all 351 cities/towns (which senior/veteran property-tax
+   options each has adopted) + where-to-apply agencies. An absent key means "the source
+   doesn't show it", NEVER "the town doesn't offer it" — the card always says to confirm
+   with the assessor. Dollar amounts on file with DLS are deliberately NOT shown (they
+   matched towns' own documents in only 3 of 7 spot checks). */
+let TOWNS = null, AGENCIES = {}, TOWN_IDX = null;
+const BOSTON_NBHD = ["allston","brighton","charlestown","dorchester","east boston","hyde park","jamaica plain",
+  "mattapan","roslindale","roxbury","south boston","west roxbury","back bay","beacon hill","north end","south end",
+  "fenway","mission hill","chinatown","west end","readville"];
+function townKey(s){
+  return String(s||"").toLowerCase().replace(/[.,]/g," ")
+    .replace(/\b(ma|mass|massachusetts)\s*$/,"").replace(/^\s*(the\s+)?(town|city)\s+of\s+/,"")
+    .replace(/\s+(town|city)\s*$/,"").replace(/[^a-z ]/g,"").replace(/\s+/g," ").trim();
+}
+function townLookup(s){
+  if(!TOWNS || !s) return null;
+  if(!TOWN_IDX){ TOWN_IDX={}; for(const n in TOWNS) TOWN_IDX[townKey(n)]=n; }
+  let k=townKey(s), n=TOWN_IDX[k];
+  if(!n && BOSTON_NBHD.includes(k)) n="Boston";
+  return n ? {name:n, ...TOWNS[n]} : null;
+}
+function fillTownList(){
+  const dl=document.getElementById("ma-towns");
+  if(dl && TOWNS && !dl.options.length) dl.innerHTML=Object.keys(TOWNS).map(n=>`<option value="${n}">`).join("");
+}
+try{
+  fetch("data/towns.json").then(r=>r.ok?r.json():null).then(d=>{
+    if(d&&d.towns){ TOWNS=d.towns; AGENCIES=d.agencies||{}; fillTownList(); }
+  }).catch(()=>{});
+}catch(e){}
+function agencyHTML(ids){
+  const list=(Array.isArray(ids)?ids:[ids]).map(i=>AGENCIES[i]).filter(Boolean);
+  return list.map(a=>`${a.u?`<a href="${a.u}" target="_blank" rel="noopener">${a.n}</a>`:a.n}${a.p?` — <a href="tel:${a.p.replace(/[^0-9+]/g,"")}">${a.p}</a>`:""}`).join("<br>");
+}
+function townCard(){
+  const t=townLookup(A.town);
+  if(!A.town) return "";
+  if(!t) return `<div class="towncard"><h3>📍 Your town</h3><p>We couldn't match "${String(A.town).replace(/[<>&"]/g,"")}" to one of Massachusetts' 351 cities and towns, so we can't show town-specific details. If it's a village or neighborhood, tap <b>Change</b> next to "Town" below and pick the town it's part of.</p></div>`;
+  const owner=A.housing==="own", age=Math.max(num(A.age)||0, num(A.spouseAge)||0);
+  const rows=[];
+  if(owner){
+    let ex="";
+    if(t.c==="41C½") ex=`<b>Senior exemption (Clause 41C½)</b> — a larger version tied to home values in town, with <b>no savings limit</b> and an income limit that follows the state Circuit Breaker limit.`;
+    else if(t.c==="41C"||t.c==="41B") ex=`<b>Senior exemption (Clause ${t.c})</b> — usually $500–$1,000 a year off the bill, with income and savings limits the town sets.`;
+    if(ex){ ex+= t.age ? ` State records list the qualifying age as <b>${t.age}</b>.` : ` Starts at age 70, or 65 if the town lowered it.`; rows.push(ex); }
+    if(t.mt) rows.push(`<b>A local means-tested senior exemption</b> — ${t.name} has its own extra tax break for lower-income seniors.`);
+    if(t.ss && (age>=70 || A.marital==="widowed")) rows.push(t.ss==="17D" ? `<b>Age 70+ / surviving spouse exemption (Clause 17D)</b> — about $175 a year, no income test, savings limit about $40,000 (home not counted).` : `<b>Age 70+ / surviving spouse exemption (Clause ${t.ss})</b> — about $175 a year, with a savings limit the town can confirm.`);
+    if(A.veteran==="vet") rows.push(`<b>Veterans exemption (Clause 22)</b> — every town offers it: $400+ a year with a 10%+ service-connected rating, more for higher ratings.`);
+    if(A.blind==="yes") rows.push(t.b37?`<b>Blind exemption (Clause 37A)</b> — $500 a year.`:`<b>Blind exemption</b> — $437.50 a year (or $500 if the town adopted Clause 37A).`);
+    if(t.cpa && t.cpas) rows.push(`<b>Community Preservation Act surcharge exemption</b> — ${t.name} has the CPA surcharge on tax bills and exempts qualifying low- and moderate-income seniors from it.`);
+    if(t.res) rows.push(`<b>Residential exemption (${t.res}%)</b> — ${t.name} lowers the taxable value of homes that are the owner's main residence. If it isn't on the bill, apply.`);
+    if(age>=60) rows.push(`<b>Senior tax work-off</b> — many towns let people 60+ volunteer for up to <b>$2,000 a year</b> off the bill. State records don't list which towns run it, so ask.`);
+    if(age>=65) rows.push(`<b>Tax deferral (Clause 41A)</b> — postpone the tax until the home is sold (with interest).${t.d41?` ${t.d41} ${t.d41===1?"homeowner":"homeowners"} in ${t.name} used it last year.`:""}`);
+  }
+  const svc=[];
+  if(t.fuel) svc.push(`<b>Heating help (fuel assistance):</b><br>${agencyHTML(t.fuel)}`);
+  if(t.asap) svc.push(`<b>Home care (Aging Services Access Point):</b><br>${agencyHTML(t.asap)}`);
+  if(t.coa) svc.push(`<b>Council on Aging / senior center:</b><br>${t.coa.u?`<a href="${t.coa.u}" target="_blank" rel="noopener">${t.coa.n||"Council on Aging"}</a>`:(t.coa.n||"Council on Aging")}${t.coa.p?` — <a href="tel:${t.coa.p.replace(/[^0-9+]/g,"")}">${t.coa.p}</a>`:""}`);
+  if(t.shine) svc.push(`<b>Free Medicare counseling (SHINE):</b><br>${agencyHTML(t.shine)}`);
+  if(t.rta) svc.push(`<b>Reduced-fare buses:</b><br>${agencyHTML(t.rta)}`);
+  if(!rows.length && !svc.length) return "";
+  let h=`<div class="towncard"><h3>📍 Your town: ${t.name}</h3>`;
+  if(rows.length){
+    h+=`<p class="tc-lead"><b>Call the ${t.name} assessor's office</b> (usually in town or city hall) and ask about these. Nobody signs you up automatically, and the deadline is <b>April 1 or 3 months after the tax bill is mailed</b>, whichever is later — late applications can't be accepted.</p><ul class="tc-list">${rows.map(r=>`<li>${r}</li>`).join("")}</ul>`;
+    h+=`<p class="tc-more"><a href="property-tax-exemptions.html" target="_blank" rel="noopener">What each of these means, and what to ask →</a></p>`;
+  }
+  if(svc.length) h+=`<div class="tc-svc"><div class="tc-svch">Where to apply in ${t.name}</div>${svc.map(x=>`<p>${x}</p>`).join("")}</div>`;
+  h+=`<p class="tc-src">From state Division of Local Services records and state agency directories (checked September 2026). Towns change these by vote, so confirm with the office before relying on it.</p></div>`;
+  return h;
+}
+
 const STATS_URL = "https://benefighter-stats.pangserve.workers.dev/c";
 const STATS_OFF = (navigator.doNotTrack==="1" || window.doNotTrack==="1" || navigator.globalPrivacyControl===true || navigator.webdriver===true || !/benefighter\.com$/.test(location.hostname));   // webdriver: skip automated browsers (our own tests, bots)
 const SID = (()=>{ try{ const a=new Uint8Array(9); crypto.getRandomValues(a); return Array.from(a,b=>"abcdefghijklmnopqrstuvwxyz0123456789"[b%36]).join(""); }catch(e){ return "s"+Date.now().toString(36); } })();
@@ -254,7 +326,7 @@ function render(){
     }
     inner += `<div class="ipwrap ${isCur?'cur':''}">${isCur?'<span class="pre">$</span>':''}
       <input id="ip" type="${q.type==='text'?'text':'number'}" inputmode="${q.type==='text'?'text':'decimal'}"
-      value="${val}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}"></div>`;
+      value="${val}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}"${q.id==="town"?' list="ma-towns" autocomplete="off"':''}></div>${q.id==="town"?'<datalist id="ma-towns"></datalist>':''}`;
     if(per) inner += `<p class="hint" style="margin:8px 0 0" id="perhint">${per==='mo'?'dollars per month':'dollars per year'}</p>`;
     else if(q.suffix) inner += `<p class="hint" style="margin:8px 0 0">in ${q.suffix}</p>`;
   }
@@ -267,6 +339,7 @@ function render(){
   if(editMode && !isLast){ inner += `<button class="btn backres" id="backres">Done changing — back to my results</button>`; }
   inner += `</div></div></div>`;
   app.innerHTML = inner;
+  if(q && q.id==="town") fillTownList();
   wireNav(vis);
 
   // wire choices
@@ -446,8 +519,8 @@ function programs(){
 
   // 5. Blind exemption 37A
   if(A.blind==="yes" && owner){
-    out.push({id:"blind37a",name:"Blind Person's Exemption (Cl. 37A)",status:"likely",val:500,valTxt:"~$500/yr",
-      why:"Legally blind homeowner — straightforward exemption.",
+    out.push({id:"blind37a",name:"Blind Person's Exemption (Cl. 37 / 37A)",status:"likely",val:500,valTxt:"~$440–$500/yr",
+      why:"Legally blind homeowner — straightforward exemption: $500/yr in towns that adopted Clause 37A, $437.50 (Clause 37) elsewhere.",
       form:"State Tax Form 96-3 + Mass. Commission for the Blind certificate.",forml:"https://www.mass.gov/lists/property-tax-forms-and-guides",
       docs:["Certificate of blindness from the Mass. Commission for the Blind","Proof of ownership"],
       where:`${A.town||"Town"} Assessor (annual).`});
@@ -579,13 +652,13 @@ function programs(){
       why:"Lets a 65+ owner defer property tax, repaid (with interest up to 8%, or lower if the town sets it) when the home is sold or transferred; the total deferred plus interest is capped at 50% of your share of the home's value. The fallback when income is too high for the 41C exemption.",
       form:"State Tax Form 97 (town assessor) + a tax-deferral agreement.",forml:"https://www.mass.gov/info-details/ask-dls-property-tax-deferrals-for-qualifying-seniors",
       docs:["Proof of ownership & residency","Income statement","Note: it's a lien repaid later, not a giveaway"],
-      where:`${A.town||"Town"} Assessor. Income limit is $20,000 by default; towns may raise it up to the Circuit Breaker single limit ($75,000 for 2025) — ask what ${A.town||"your town"} adopted. Discuss with family since it reduces home equity over time.`});
+      where:`${A.town||"Town"} Assessor. Income limit is $20,000 by default; towns may raise it up to the Circuit Breaker single limit ($75,000 for 2025) — ask what ${A.town||"your town"} adopted. Once the home is sold or the owner dies, interest rises to 16% until paid; a surviving spouse can keep deferring. Joint owners and any mortgage holder must agree in writing. Discuss with family since it reduces home equity over time.`});
   }
 
   // 15. Senior property-tax Work-Off (owner 60+)
   if(owner && age>=60){
     out.push({id:"workoff",name:"Senior Property Tax Work-Off",status:"maybe",val:1500,valTxt:"up to ~$2,000/yr off the bill",
-      why:"Many MA towns let seniors volunteer for the town in exchange for up to ~$2,000 off the property tax bill. Town-specific program.",
+      why:"Many MA towns let seniors volunteer for the town in exchange for up to $2,000 off the property tax bill (some towns cap it at 125 hours instead). The credit isn't taxable income, and it comes on top of any exemption. Town-specific program; sign up every year.",
       form:"Sign up through the town (Council on Aging or Assessor).",forml:"https://www.mass.gov/lists/property-tax-forms-and-guides",
       docs:["Proof of age & residency"],
       where:`Ask the ${A.town||"town"} Council on Aging or Assessor if they run a Senior Work-Off program and whether slots are open.`});
@@ -900,12 +973,14 @@ function results(){
     <div class="nextsteps">
       <h3>What to do next</h3>
       <ol>
+        ${A.housing==="own"&&A.town?`<li><b>Call the ${townLookup(A.town)?.name||"town"} assessor's office</b> about senior property-tax breaks — see <b>"Your town"</b> just below for what to ask. This is the one people most often miss.</li>`:""}
         <li><b>Start with the green "Apply for these" cards below.</b> Tap <b>How to claim it</b> on each one to see the exact form, what to gather, and where to file.</li>
         ${unknownN?`<li><b>Track down the ${unknownN} answer${unknownN>1?"s":""} you weren't sure about</b> — the yellow box explains where to find each one.</li>`:""}
         <li><b>Print or save this page</b> with the button at the bottom, so you have the list when you make calls.</li>
         <li><b>Want help doing it?</b> Our Full Benefits Check turns this into a written plan and walks through it with you on a call — see the bottom of this page.</li>
       </ol>
     </div>`;
+  h+=townCard();
   // Review / change answers — tap "Change" to jump back to any question, then return here.
   const visQ=visible();
   h+=`<details class="answers"><summary>✏️ Review or change your answers (${visQ.length})</summary><ul>`;
