@@ -9,3 +9,4 @@ redesign_v1/
 *.log
 .DS_Store
 reviews/
+__pycache__/
