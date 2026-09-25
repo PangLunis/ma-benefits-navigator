@@ -1,4 +1,10 @@
 PLAN.md
 WISP-DRAFT.md
+CLARIDEED_SITE_CONTENT.md
+# redesign_v1/ was the staging copy of the Benefighter redesign — its contents
+# are now deployed at the repo root (index.html/styles.css/precheck.js/images/).
+# Keep it local only (working copy + internal DESIGN_NOTES.md) so it doesn't
+# duplicate the live site in the public repo.
+redesign_v1/
 *.log
 .DS_Store
