@@ -426,6 +426,23 @@ img { max-width: 100%; display: block; }
 .founder p:last-child { margin-bottom: 0; }
 @media (max-width: 760px) { .founders { grid-template-columns: 1fr; } }
 
+/* NP card: our own checklist illustration tilted behind her, a credential
+   badge in front — three layers on the panel instead of a flat headshot. */
+.np-panel .np-form {
+  position: absolute; left: 5%; top: 11%; width: 33%; height: auto; z-index: 0;
+  transform: rotate(-8deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.28));
+}
+.np-panel img.cutout { z-index: 1; left: 58%; }
+.np-badge {
+  position: absolute; right: 4%; bottom: 7%; z-index: 2;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--honey); color: #2A2007; font-weight: 800; font-size: .82rem; line-height: 1.15;
+  padding: 8px 12px; border-radius: 999px; box-shadow: 0 6px 16px rgba(0,0,0,.25);
+  max-width: 44%;
+}
+.np-badge svg { flex: none; }
+@media (max-width: 420px) { .np-badge { font-size: .74rem; padding: 7px 10px; } }
+
 /* ---- Free check promo (homepage) -------------------------------------- */
 .freecheck {
   background: var(--white); border: 1px solid var(--line); border-radius: var(--radius);
