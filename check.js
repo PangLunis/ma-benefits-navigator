@@ -189,7 +189,7 @@ function wireNav(vis){
    and not stored, so visits can't be linked. Skipped if the browser asks not to be
    tracked (Do Not Track / Global Privacy Control). Worker: stats-worker/ ---------- */
 const STATS_URL = "https://benefighter-stats.pangserve.workers.dev/c";
-const STATS_OFF = (navigator.doNotTrack==="1" || window.doNotTrack==="1" || navigator.globalPrivacyControl===true || !/benefighter\.com$/.test(location.hostname));
+const STATS_OFF = (navigator.doNotTrack==="1" || window.doNotTrack==="1" || navigator.globalPrivacyControl===true || navigator.webdriver===true || !/benefighter\.com$/.test(location.hostname));   // webdriver: skip automated browsers (our own tests, bots)
 const SID = (()=>{ try{ const a=new Uint8Array(9); crypto.getRandomValues(a); return Array.from(a,b=>"abcdefghijklmnopqrstuvwxyz0123456789"[b%36]).join(""); }catch(e){ return "s"+Date.now().toString(36); } })();
 let statStarted=false, statFinished=false, statLeft=false, furthestN=0, furthestId=null, lastTotal=0;
 function stat(ev, extra){
