@@ -540,12 +540,15 @@ ul.rotator.is-rotating > li.is-active { opacity: 1; transform: none; pointer-eve
   position: relative; display: block; height: 100%; width: auto; max-width: none; z-index: 1;
   filter: drop-shadow(0 10px 18px rgba(35,32,27,.28));
 }
-.np-panel .np-figure .np-form {
-  position: absolute; z-index: 0; left: -46%; top: 44%; width: 66%; height: auto;
-  transform: rotate(-9deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.30));
+/* Big "Benefits check" sign on the wall BEHIND her (Ryan 2026-09-25: "make the
+   sign much bigger behind her so it looks like she's standing in front of it").
+   The checklist items sit on the sign's left half so they stay readable. */
+.np-panel .np-sign {
+  position: absolute; z-index: 0; left: 5%; top: 9%; width: 76%; height: auto;
+  transform: rotate(-2.5deg); filter: drop-shadow(0 10px 20px rgba(0,0,0,.30));
 }
 .np-badge {
-  position: absolute; left: 4%; top: 6%; z-index: 2;
+  position: absolute; left: 4%; bottom: 5%; z-index: 2;
   display: inline-flex; align-items: center; gap: 7px;
   background: var(--honey); color: #2A2007; font-weight: 800; font-size: .82rem; line-height: 1.15;
   padding: 8px 12px; border-radius: 999px; box-shadow: 0 6px 16px rgba(0,0,0,.25);
