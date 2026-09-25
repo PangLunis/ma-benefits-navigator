@@ -363,13 +363,13 @@ img { max-width: 100%; display: block; }
    up, advances every few seconds; pauses while hovered/focused/touched so a
    slow reader is never rushed; dots let you jump. Without JS, or with
    prefers-reduced-motion, every item is simply shown as a normal list. ----- */
-ul.rotator.is-rotating { position: relative; margin-bottom: 0; }
-ul.rotator.is-rotating > li {
-  position: absolute; left: 0; right: 0; top: 0; margin: 0;
+.rotator.is-rotating { position: relative; margin-bottom: 0; display: block !important; }
+.rotator.is-rotating > * {
+  position: absolute; left: 0; right: 0; top: 0; margin: 0; height: auto !important;
   opacity: 0; transform: translateY(10px); pointer-events: none;
   transition: opacity .55s ease, transform .55s ease;
 }
-ul.rotator.is-rotating > li.is-active { opacity: 1; transform: none; pointer-events: auto; }
+.rotator.is-rotating > .is-active { opacity: 1; transform: none; pointer-events: auto; }
 .rot-dots { display: flex; gap: 8px; margin-top: 10px; }
 .rot-dots button {
   width: 11px; height: 11px; padding: 0; border-radius: 50%; cursor: pointer;
@@ -378,8 +378,11 @@ ul.rotator.is-rotating > li.is-active { opacity: 1; transform: none; pointer-eve
 .rot-dots button[aria-current="true"] { background: currentColor; opacity: 1; }
 .free-promise .rot-dots { color: var(--honey); }
 .freecheck .rot-dots { color: var(--pine); justify-content: flex-start; }
+.rot-dots { color: var(--pine); justify-content: center; }
+.free-promise .rot-dots, .freecheck .rot-dots { justify-content: flex-start; }
+.band-pine .rot-dots { color: #fff; }
 @media (prefers-reduced-motion: reduce) {
-  ul.rotator.is-rotating > li { transition: none; }
+  .rotator.is-rotating > * { transition: none; }
 }
 /* programs list: names + worth only — descriptions were most of the words */
 .programs .p-desc { display: none; }

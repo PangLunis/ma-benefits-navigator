@@ -201,12 +201,14 @@
 (function () {
   "use strict";
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  var lists = document.querySelectorAll("ul.rotator");
+  var lists = document.querySelectorAll(".rotator");
+  var PHONE = window.matchMedia ? window.matchMedia("(max-width: 720px)") : { matches: false };
   Array.prototype.forEach.call(lists, function (ul) {
     var items = Array.prototype.slice.call(ul.children);
     if (items.length < 2) return;
+    var mobileOnly = ul.getAttribute("data-mobile") === "1";   // long card sections rotate on phones only
     var interval = parseInt(ul.getAttribute("data-interval"), 10) || 3800;
-    var idx = 0, timer = null, paused = false;
+    var idx = 0, timer = null, paused = false, on = false;
 
     var dots = document.createElement("div");
     dots.className = "rot-dots";
@@ -223,9 +225,11 @@
     function fit() {
       // Height = tallest item, so the page never jumps as items change.
       ul.classList.remove("is-rotating");
+      ul.style.height = "";
+      var w = ul.getBoundingClientRect().width;
       var h = 0;
-      items.forEach(function (li) { h = Math.max(h, li.getBoundingClientRect().height); });
       ul.classList.add("is-rotating");
+      items.forEach(function (li) { li.style.width = w + "px"; h = Math.max(h, li.getBoundingClientRect().height); li.style.width = ""; });
       ul.style.height = Math.ceil(h) + "px";
     }
     function show(k) {
@@ -239,6 +243,14 @@
     function restart() { clearInterval(timer); timer = setInterval(tick, interval); }
     function pause() { paused = true; }
     function resume() { paused = false; }
+    function start() { if (on) return; on = true; dots.style.display = ""; fit(); show(idx); restart(); }
+    function stop() {
+      if (!on) return; on = false; clearInterval(timer);
+      ul.classList.remove("is-rotating"); ul.style.height = "";
+      items.forEach(function (li) { li.classList.remove("is-active"); });
+      dots.style.display = "none";
+    }
+    function apply() { if (!mobileOnly || PHONE.matches) start(); else stop(); }
 
     [ul, dots].forEach(function (el) {
       el.addEventListener("mouseenter", pause);
@@ -248,8 +260,9 @@
       el.addEventListener("touchstart", pause, { passive: true });
       el.addEventListener("touchend", function () { setTimeout(resume, 6000); }, { passive: true });
     });
-    window.addEventListener("resize", fit);
+    window.addEventListener("resize", function () { apply(); if (on) fit(); });
 
-    fit(); show(0); restart();
+    dots.style.display = "none";
+    apply();
   });
 })();
