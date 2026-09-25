@@ -358,6 +358,32 @@ img { max-width: 100%; display: block; }
   .cta-glow::after, .spark { display: none; }
 }
 
+/* ---- Rotating bullet lists (Ryan 2026-09-25: "too much to read — make the
+   bullets show up and disappear to save space"). One item at a time, fades
+   up, advances every few seconds; pauses while hovered/focused/touched so a
+   slow reader is never rushed; dots let you jump. Without JS, or with
+   prefers-reduced-motion, every item is simply shown as a normal list. ----- */
+ul.rotator.is-rotating { position: relative; margin-bottom: 0; }
+ul.rotator.is-rotating > li {
+  position: absolute; left: 0; right: 0; top: 0; margin: 0;
+  opacity: 0; transform: translateY(10px); pointer-events: none;
+  transition: opacity .55s ease, transform .55s ease;
+}
+ul.rotator.is-rotating > li.is-active { opacity: 1; transform: none; pointer-events: auto; }
+.rot-dots { display: flex; gap: 8px; margin-top: 10px; }
+.rot-dots button {
+  width: 11px; height: 11px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1.5px solid currentColor; background: transparent; opacity: .55;
+}
+.rot-dots button[aria-current="true"] { background: currentColor; opacity: 1; }
+.free-promise .rot-dots { color: var(--honey); }
+.freecheck .rot-dots { color: var(--pine); justify-content: flex-start; }
+@media (prefers-reduced-motion: reduce) {
+  ul.rotator.is-rotating > li { transition: none; }
+}
+/* programs list: names + worth only — descriptions were most of the words */
+.programs .p-desc { display: none; }
+
 /* Header tagline under the logo (replaces "Massachusetts Senior Benefits") */
 .brand-sub.brand-tag { font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: 0; font-size: .82rem; font-weight: 700; color: var(--clay); margin-top: 4px; }
 
@@ -504,10 +530,17 @@ img { max-width: 100%; display: block; }
 /* NP card: our own checklist illustration tilted behind her, a credential
    badge in front — three layers on the panel instead of a flat headshot. */
 .np-panel .np-form {
-  position: absolute; left: 5%; top: 11%; width: 33%; height: auto; z-index: 0;
+  position: absolute; left: 6%; top: auto; bottom: 12%; width: 34%; max-width: 190px; height: auto; z-index: 0;
   transform: rotate(-8deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.28));
 }
-.np-panel img.cutout { z-index: 1; left: 58%; }
+/* Base cutout placement lives here (not under .founder) since the NP card
+   moved out of the old founders grid: she stands on the panel's bottom edge,
+   right of centre, with the checklist to her left so it never covers her face. */
+.np-panel img.cutout {
+  position: absolute; bottom: 0; right: 9%; left: auto; transform: none;
+  height: 94%; width: auto; max-width: none; z-index: 1;
+  filter: drop-shadow(0 10px 18px rgba(35,32,27,.28));
+}
 .np-badge {
   position: absolute; right: 4%; bottom: 7%; z-index: 2;
   display: inline-flex; align-items: center; gap: 7px;
@@ -517,6 +550,25 @@ img { max-width: 100%; display: block; }
 }
 .np-badge svg { flex: none; }
 @media (max-width: 420px) { .np-badge { font-size: .74rem; padding: 7px 10px; } }
+
+/* ---- Nurse practitioner feature (directly under the hero) ------------- */
+.np-feature-band { padding-block: clamp(34px, 5vw, 56px); }
+.np-feature {
+  display: grid; grid-template-columns: minmax(280px, 1fr) 1.1fr; align-items: stretch;
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-soft); overflow: hidden; max-width: 940px; margin-inline: auto;
+}
+.np-feature .portrait {
+  position: relative; min-height: 380px; overflow: hidden;
+  background: linear-gradient(135deg, var(--pine-soft), var(--pine-deep));
+}
+.np-feature .np-copy { padding: clamp(22px, 4vw, 40px); display: flex; flex-direction: column; justify-content: center; }
+.np-feature .np-copy h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); margin-bottom: .35em; }
+.np-feature .np-copy p:last-child { margin: 0; font-size: 1.15rem; color: var(--ink-soft); }
+@media (max-width: 720px) {
+  .np-feature { grid-template-columns: 1fr; }
+  .np-feature .portrait { min-height: 0; aspect-ratio: 3 / 2; }
+}
 
 /* ---- Free check promo (homepage) -------------------------------------- */
 .freecheck {

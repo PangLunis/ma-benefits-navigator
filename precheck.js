@@ -191,3 +191,65 @@
     });
   }
 })();
+
+/* ---------------------------------------------------------------------
+   3) ROTATING BULLET LISTS — <ul class="rotator" data-interval="3800">
+   Shows one item at a time to cut the amount of text on screen. Pauses on
+   hover / keyboard focus / touch; dots jump to an item. Skipped entirely
+   for prefers-reduced-motion (the list just stays a normal, full list).
+   --------------------------------------------------------------------- */
+(function () {
+  "use strict";
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var lists = document.querySelectorAll("ul.rotator");
+  Array.prototype.forEach.call(lists, function (ul) {
+    var items = Array.prototype.slice.call(ul.children);
+    if (items.length < 2) return;
+    var interval = parseInt(ul.getAttribute("data-interval"), 10) || 3800;
+    var idx = 0, timer = null, paused = false;
+
+    var dots = document.createElement("div");
+    dots.className = "rot-dots";
+    dots.setAttribute("aria-label", "Show item");
+    items.forEach(function (li, k) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-label", "Show point " + (k + 1) + " of " + items.length);
+      b.addEventListener("click", function () { show(k); restart(); });
+      dots.appendChild(b);
+    });
+    ul.parentNode.insertBefore(dots, ul.nextSibling);
+
+    function fit() {
+      // Height = tallest item, so the page never jumps as items change.
+      ul.classList.remove("is-rotating");
+      var h = 0;
+      items.forEach(function (li) { h = Math.max(h, li.getBoundingClientRect().height); });
+      ul.classList.add("is-rotating");
+      ul.style.height = Math.ceil(h) + "px";
+    }
+    function show(k) {
+      idx = (k + items.length) % items.length;
+      items.forEach(function (li, j) { li.classList.toggle("is-active", j === idx); });
+      Array.prototype.forEach.call(dots.children, function (d, j) {
+        d.setAttribute("aria-current", j === idx ? "true" : "false");
+      });
+    }
+    function tick() { if (!paused) show(idx + 1); }
+    function restart() { clearInterval(timer); timer = setInterval(tick, interval); }
+    function pause() { paused = true; }
+    function resume() { paused = false; }
+
+    [ul, dots].forEach(function (el) {
+      el.addEventListener("mouseenter", pause);
+      el.addEventListener("mouseleave", resume);
+      el.addEventListener("focusin", pause);
+      el.addEventListener("focusout", resume);
+      el.addEventListener("touchstart", pause, { passive: true });
+      el.addEventListener("touchend", function () { setTimeout(resume, 6000); }, { passive: true });
+    });
+    window.addEventListener("resize", fit);
+
+    fit(); show(0); restart();
+  });
+})();
