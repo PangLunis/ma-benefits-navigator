@@ -28,7 +28,7 @@ const OFFER_PRICE = "$179";
 
 /* ---------- Adaptive question set (branching via showIf) ---------- */
 const Q = [
-  {id:"name", type:"text", q:"Whose benefits are we checking?", hint:"Just a first name, so the results read clearly.", placeholder:"e.g. Dad / Robert", optional:true, noSkip:true},
+  {id:"name", type:"text", q:"Whose benefits are we checking?", hint:"Just a first name, so the results read clearly.", optional:true, noSkip:true},
   {id:"age", type:"number", q:n=>`How old is ${who(n)}?`, hint:"Age as of December 31 this year.", suffix:"years", noSkip:true},
   {id:"marital", type:"single", q:n=>`${whoC(n)} marital status?`, noSkip:true,
     opts:[{v:"single",l:"Single"},{v:"married",l:"Married"},{v:"widowed",l:"Widowed"}]},
@@ -45,9 +45,9 @@ const Q = [
     opts:[{v:"citizen",l:"U.S. citizen"},{v:"qualified",l:"Green card / lawful permanent resident"},{v:"other",l:"Other immigration status"}]},
   {id:"housing", type:"single", q:n=>`Does ${who(n)} own or rent?`, noSkip:true,
     opts:[{v:"own",l:"Owns the home"},{v:"rent",l:"Rents"},{v:"family",l:"Lives with family (no rent)"}]},
-  {id:"town", type:"text", q:"Which city or town in Massachusetts?", hint:"Property-tax breaks are set town-by-town, so we need this.", placeholder:"e.g. Framingham", noSkip:true},
+  {id:"town", type:"text", q:"Which city or town in Massachusetts?", hint:"Property-tax breaks are set town-by-town, so we need this.", noSkip:true},
   {id:"hhSize", type:"number", q:n=>`How many people live in the home, counting ${who(n)}?`, hint:"Include a spouse, adult children, grandchildren — everyone who lives there.", suffix:"people"},
-  {id:"hhOtherInc", type:"currency", q:"Yearly income of everyone ELSE in the home?", hint:"Not counting them or their spouse. Heating help and utility discounts look at the whole household. Enter 0 if none.", optional:true,
+  {id:"hhOtherInc", type:"currency", period:"yr", q:"Income of everyone ELSE in the home?", hint:"Not counting them or their spouse. Heating help and utility discounts look at the whole household. Enter 0 if none.", optional:true,
     help:"Add up wages, Social Security, pensions and other income of the other people who live there. A rough number is fine.",
     showIf:a=>num(a.hhSize) > (a.marital==="married"?2:1)},
   {id:"ownYears", type:"number", q:"About how many years owned?", hint:"Some senior exemptions require owning ~5 years.", suffix:"years",
@@ -58,9 +58,9 @@ const Q = [
     help:"Check the deed or the top of the tax bill. \"In a trust\" = a family/living trust owns the home. \"Life estate\" is a legal arrangement (often for Medicaid planning). Don't know? Tap \"I'm not sure.\"",
     opts:[{v:"own_name",l:"In their own name"},{v:"trust",l:"In a trust"},{v:"life_estate",l:"Life estate"},{v:"multi",l:"Shared with others on the deed"}],
     showIf:a=>a.housing==="own"},
-  {id:"incomeSS", type:"currency", q:n=>`${whoC(n)} yearly Social Security income?`, hint:"Just Social Security. Enter 0 if none.",
+  {id:"incomeSS", type:"currency", period:"mo", q:n=>`${whoC(n)} Social Security income?`, hint:"Just Social Security, before Medicare is taken out. Pick per month or per year. Enter 0 if none.",
     help:"The yearly Social Security total BEFORE the Medicare premium comes out — it's on the annual Social Security letter (Form SSA-1099). If you only know the monthly deposit, add about $203/month for Medicare Part B, then × 12. A rough number is fine."},
-  {id:"incomeOther", type:"currency", q:"Other yearly income?", hint:"Everything except Social Security.",
+  {id:"incomeOther", type:"currency", period:"yr", q:"Other income?", hint:"Everything except Social Security — pensions, wages, IRA withdrawals, interest. Pick per month or per year.",
     help:"Add up pensions, any wages, IRA/401(k) withdrawals, interest & dividends, and rental income — everything EXCEPT Social Security. A close estimate is fine."},
   {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Do NOT count the home or one car.",
     help:"Add up checking, savings, CDs, and investment/IRA accounts. Do NOT count the home they live in or one car. A ballpark is fine."},
@@ -140,20 +140,64 @@ let i = 0;            // index into a freshly computed visible list
 
 function visible(){ return Q.filter(q=>!q.showIf || q.showIf(A)); }
 
+/* ---------- Question list / navigation (added 2026-09-25 after Dad's test:
+   he typed the wrong income and couldn't find a way back, especially from the
+   results page). Every question is listed with a dot — green when answered,
+   amber "?" when marked not sure, empty when not answered yet — and any item
+   can be tapped to jump straight to it. ---------- */
+const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",already:"Already getting",working:"Still working"};
+let editMode = false;   // true when the person jumped back from the results page
+function ansState(q){
+  const v=A[q.id];
+  if(v==="unknown") return "unsure";
+  if(v==null) return "empty";
+  if(Array.isArray(v)) return v.length?"done":"empty";
+  return String(v).trim()===""?"empty":"done";
+}
+function fmtAns(q){
+  const v=A[q.id], st=ansState(q);
+  if(st==="unsure") return "Not sure";
+  if(st==="empty") return "—";
+  if(q.type==="single"){ const o=(q.opts||[]).find(o=>o.v===v); return o?o.l:String(v); }
+  if(q.type==="multi"){ return v.map(x=>{const o=q.opts.find(o=>o.v===x); return o?o.l.replace(/^🤔\s*/,""):x;}).join(", "); }
+  if(q.type==="currency"){ const per=A[q.id+"_per"]; return per==="mo" ? money(num(v)/12)+"/month" : money(num(v))+(["incomeSS","incomeOther","hhOtherInc","medExpenses","propTax"].includes(q.id)?"/year":""); }
+  if(q.type==="number") return String(v)+(q.suffix?" "+q.suffix:"");
+  return String(v);
+}
+function navHTML(vis){
+  const done=vis.filter(q=>ansState(q)!=="empty").length;
+  const allDone = done===vis.length;
+  let h=`<details class="qnav" id="qnav"><summary><span class="qnav-t">All questions</span> <span class="qnav-c">${done} of ${vis.length} answered</span></summary><ol>`;
+  vis.forEach((q,k)=>{
+    const st=ansState(q), cur=(k===i);
+    h+=`<li><button type="button" class="qn ${cur?'cur':''} st-${st}" data-k="${k}" ${cur?'aria-current="step"':''}><span class="dot" aria-hidden="true">${st==="done"?"✓":(st==="unsure"?"?":"")}</span><span class="qn-l">${k+1}. ${NAV[q.id]||q.id}</span><span class="sr-only">${st==="done"?" — answered":(st==="unsure"?" — marked not sure":" — not answered yet")}</span></button></li>`;
+  });
+  h+=`</ol>${allDone?`<button type="button" class="btn prim qnav-res" id="navres">See my results &rarr;</button>`:""}</details>`;
+  return h;
+}
+function wireNav(vis){
+  const nav=document.getElementById("qnav"); if(!nav) return;
+  if(window.innerWidth>=900) nav.open=true;
+  nav.querySelectorAll(".qn").forEach(b=>b.onclick=()=>{ i=parseInt(b.dataset.k,10); render(); const m=document.querySelector(".qmain"); if(m&&window.innerWidth<900) m.scrollIntoView({block:"start"}); });
+  const r=document.getElementById("navres"); if(r) r.onclick=()=>{ editMode=false; i=visible().length; render(); };
+}
+
 /* ---------- Render question ---------- */
 function render(){
   const vis = visible();
-  if(i>=vis.length){ return results(); }
+  if(i>=vis.length){ editMode=false; return results(); }
   const q = vis[i];
-  document.getElementById("bar").style.width = Math.round((i/(vis.length))*100)+"%";
+  const doneN = vis.filter(x=>ansState(x)!=="empty").length;
+  document.getElementById("bar").style.width = Math.round((doneN/(vis.length))*100)+"%";
   const qt = typeof q.q==="function"?q.q(A):q.q;
   const app = document.getElementById("app");
-  let inner = i===0 ? `<div class="reassure">Answer what you can. Not sure about something? Tap <b>"I'm not sure"</b> — we'll list it at the end so you can look it up.</div>` : "";
+  let inner = `<div class="qwrap">`+navHTML(vis)+`<div class="qmain">`;
+  inner += i===0 ? `<div class="reassure">Answer what you can. Not sure about something? Tap <b>"I'm not sure"</b> — we'll list it at the end so you can look it up. You can go back to any question from the list.</div>` : "";
   const isLast = (i===vis.length-1);
   const doWhat = q.type==="single" ? "Tap the answer that fits — it moves on by itself."
                : q.type==="multi" ? "Tap every one that applies, then tap Next."
                : "Type your answer, then tap Next.";
-  inner += `<div class="card"><div class="qstep">Question ${i+1} &middot; <span>${doWhat}</span></div><div class="q">${qt}</div>`;
+  inner += `<div class="card"><div class="qstep">Question ${i+1} of ${vis.length} &middot; <span>${doWhat}</span></div><div class="q">${qt}</div>`;
   if(q.hint) inner += `<p class="hint">${q.hint}</p>`;
   if(q.help) inner += `<details class="help"><summary>ⓘ What's this? Where do I find it?</summary><div class="hbox">${q.help}</div></details>`;
 
@@ -171,20 +215,31 @@ function render(){
     inner += `</div>`;
   } else {
     const isCur = q.type==="currency";
-    const val = (A[q.id]!=null && A[q.id]!=="unknown")?A[q.id]:"";
+    const per = q.period ? (A[q.id+"_per"] || q.period) : null;
+    let val = (A[q.id]!=null && A[q.id]!=="unknown")?A[q.id]:"";
+    if(per==="mo" && val!=="") val = String(Math.round(num(val)/12));
+    if(per){
+      inner += `<div class="pertoggle" role="radiogroup" aria-label="Per month or per year">
+        <button type="button" class="per ${per==='mo'?'sel':''}" data-per="mo" role="radio" aria-checked="${per==='mo'}">Per month</button>
+        <button type="button" class="per ${per==='yr'?'sel':''}" data-per="yr" role="radio" aria-checked="${per==='yr'}">Per year</button>
+      </div>`;
+    }
     inner += `<div class="ipwrap ${isCur?'cur':''}">${isCur?'<span class="pre">$</span>':''}
       <input id="ip" type="${q.type==='text'?'text':'number'}" inputmode="${q.type==='text'?'text':'decimal'}"
-      value="${val}" placeholder="${q.placeholder||''}"></div>`;
-    if(q.suffix) inner += `<p class="hint" style="margin:8px 0 0">in ${q.suffix}</p>`;
+      value="${val}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}"></div>`;
+    if(per) inner += `<p class="hint" style="margin:8px 0 0" id="perhint">${per==='mo'?'dollars per month':'dollars per year'}</p>`;
+    else if(q.suffix) inner += `<p class="hint" style="margin:8px 0 0">in ${q.suffix}</p>`;
   }
 
   inner += `<div class="nav">
-      <button class="btn ghost" id="back" ${i===0?'disabled':''}>Back</button>
+      <button class="btn ghost" id="back" ${i===0?'disabled':''}>&larr; Back</button>
       <button class="btn prim" id="next">${isLast?"See my results &rarr;":"Next &rarr;"}</button>
     </div>`;
   if(isInput && !q.noSkip){ inner += `<button class="skip" id="skip">🤔 I'm not sure — skip &amp; flag it for later</button>`; }
-  inner += `</div>`;
+  if(editMode && !isLast){ inner += `<button class="btn backres" id="backres">Done changing — back to my results</button>`; }
+  inner += `</div></div></div>`;
   app.innerHTML = inner;
+  wireNav(vis);
 
   // wire choices
   if(q.type==="single"){
@@ -200,17 +255,35 @@ function render(){
   } else {
     const ip=document.getElementById("ip"); ip.focus();
     ip.onkeydown=e=>{if(e.key==="Enter")document.getElementById("next").click();};
+    app.querySelectorAll(".per").forEach(b=>b.onclick=()=>{
+      A[q.id+"_per"]=b.dataset.per;
+      app.querySelectorAll(".per").forEach(x=>{const on=x===b; x.classList.toggle("sel",on); x.setAttribute("aria-checked",on);});
+      const ph=document.getElementById("perhint"); if(ph) ph.textContent = b.dataset.per==="mo"?"dollars per month":"dollars per year";
+      ip.focus();
+    });
   }
   const back=document.getElementById("back"); if(back) back.onclick=()=>{i=Math.max(0,i-1);render();};
   const skip=document.getElementById("skip"); if(skip) skip.onclick=()=>{A[q.id]="unknown"; i++; render();};
+  const br=document.getElementById("backres"); if(br) br.onclick=()=>{
+    if(isInput){ const v=document.getElementById("ip").value.trim(); if(v) saveInput(q,v); }
+    editMode=false; i=visible().length; render();
+  };
   document.getElementById("next").onclick=()=>{
     if(isInput){
       const v=document.getElementById("ip").value.trim();
       if(!v && !q.optional){ document.getElementById("ip").focus(); document.getElementById("ip").style.borderColor="#d23"; return;}
-      A[q.id]=v;
+      saveInput(q,v);
     }
     i++; render();
   };
+}
+// Store the answer the engine expects: currency questions with a month/year
+// toggle are always stored as a YEARLY amount (the engine is unchanged).
+function saveInput(q,v){
+  if(q.period && v!==""){
+    const per=A[q.id+"_per"]||q.period; A[q.id+"_per"]=per;
+    A[q.id] = per==="mo" ? String(Math.round(num(v)*12)) : v;
+  } else { A[q.id]=v; }
 }
 
 /* ---------- Eligibility engine ---------- */
@@ -751,6 +824,11 @@ function results(){
         <li><b>Want help doing it?</b> Our Full Benefits Check turns this into a written plan and walks through it with you on a call — see the bottom of this page.</li>
       </ol>
     </div>`;
+  // Review / change answers — tap "Change" to jump back to any question, then return here.
+  const visQ=visible();
+  h+=`<details class="answers"><summary>✏️ Review or change your answers (${visQ.length})</summary><ul>`;
+  visQ.forEach((q,k)=>{ h+=`<li><span class="a-q">${NAV[q.id]||q.id}</span><span class="a-v">${fmtAns(q)}</span><button type="button" class="a-edit" data-k="${k}">Change</button></li>`; });
+  h+=`</ul></details>`;
 
   // "I'm not sure" checklist — resurface every skipped answer with how-to-find-it help
   const unknownQs = Q.filter(q=>A[q.id]==="unknown");
@@ -823,6 +901,7 @@ function results(){
     </div>
     <div class="disc"><b>Important:</b> This tool gives general information based on public Massachusetts and federal program rules (2026 figures). It is <b>not</b> legal, tax, or financial advice. Dollar amounts and eligibility shown are estimates — income limits, exemption amounts, and town rules change and must be confirmed with each program or a licensed professional before you rely on them. Figures last checked September 2026. Property-tax exemptions usually can't be combined — take the one that saves the most. MassHealth/long-term-care planning should go to a licensed elder-law attorney.</div>`;
   document.getElementById("app").innerHTML=h;
+  document.querySelectorAll(".a-edit").forEach(b=>b.onclick=()=>{ editMode=true; i=parseInt(b.dataset.k,10); render(); window.scrollTo(0,0); });
   const dl=document.getElementById("dl");
   if(dl) dl.onclick=()=>{
     const blob=new Blob([JSON.stringify({answers:A,generated:"client-side",programs:ps},null,2)],{type:"application/json"});
