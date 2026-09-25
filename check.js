@@ -386,7 +386,7 @@ function programs(){
       form:"Schedule CB (filed with the MA income tax return).",
       forml:"https://www.mass.gov/info-details/massachusetts-senior-circuit-breaker-tax-credit",
       docs:["Property tax bills + water/sewer bills (homeowners), or rent receipts/landlord statement","Last year's tax return / all income statements","Proof of age 65+ and MA principal residence"],
-      where:`File Schedule CB with the MA Form 1. NOTE: "total income" on Schedule CB has its own definition (it adds back tax-exempt interest and counts Social Security) — verify the exact figure on the form. ${A.filing==="none"?"Even if "+who(A)+" doesn't normally file, they can file a return just to claim this refundable credit. ":""}Missed prior years? You can usually AMEND the last 3 years and claim it retroactively.`};}
+      where:`File Schedule CB with the MA Form 1. NOTE: "total income" on Schedule CB has its own definition (it adds back tax-exempt interest and counts Social Security) — verify the exact figure on the form. ${A.filing==="none"?"Even if "+who(A)+" doesn't normally file, they can file a return just to claim this refundable credit. ":""}Missed prior years? A Schedule CB can be filed up to 3 years after that year's original filing deadline (not counting extensions) — so tax year 2023 can still be claimed until April 2027.`};}
   })();
 
   // 2. Property tax exemption Clause 41C/41C½ (owner)
@@ -417,7 +417,7 @@ function programs(){
       form:"State Tax Form 96-1 (filed with your town assessor).",
       forml:"https://www.mass.gov/lists/property-tax-forms-and-guides",
       docs:["Prior-year income (tax return / SS statement)","Bank & investment balances","Deed / proof of ownership & residency","Birth date proof"],
-      where:`Contact the ${A.town||"town"} Assessor's office — they confirm the town's adopted clause, limits, and amount. Statewide adopted values: https://dls-gw.dor.state.ma.us/reports/rdpage.aspx?rdreport=localoptions.propertytax . Deadline is usually April 1.`});
+      where:`Contact the ${A.town||"town"} Assessor's office — they confirm the town's adopted clause, limits, and amount. Statewide adopted values: https://dls-gw.dor.state.ma.us/reports/rdpage.aspx?rdreport=localoptions.propertytax . Deadline: April 1, or 3 months after the tax bills are mailed, whichever is later. Also ask: if ${A.town||"your town"} adopted the Community Preservation Act, low/moderate-income seniors (60+) can be exempted from the CPA surcharge (Form CP-4, apply each year).`});
   }
 
   // 3. Clause 17D (owner, 70+ or widowed — asset test, no income test)
@@ -620,7 +620,7 @@ function programs(){
         why:"Free insulation, air-sealing, and heating-system help for income-eligible homes (owners AND renters) — cuts heating bills long-term.",
         form:"Through the local Community Action / fuel-assistance agency.",forml:"https://www.mass.gov/info-details/weatherization-assistance-program-wap",
         docs:["Proof of income","A recent energy bill"],
-        where:"Apply at the same local CAP agency as Fuel Assistance — they often screen for both together."});
+        where:"Apply at the same local CAP agency as Fuel Assistance — they often screen for both together. Mass Save also offers a free Home Energy Assessment for any 1–4 unit home (masssave.com)."});
     }
   }
 
@@ -771,6 +771,55 @@ function programs(){
       where:"On the family member's own Massachusetts tax return."});
   }
 
+
+  // ================= Batch 2 (2026-09-25, from the coverage review; each fact verified on the cited page) =================
+
+  // 32. Senior public housing / vouchers — renters with a heavy rent burden
+  if(renter && A.subsidized!=="yes" && (olderAge>=60 || disabled) && num(A.rent)>0 && inc>0 && (num(A.rent)*12)/inc > 0.30){
+    const burden = Math.round(100*num(A.rent)*12/inc);
+    out.push({id:"housing",name:"Senior Public Housing & Rental Vouchers",status:"maybe",val:0,valTxt:"rent at about 30% of income",
+      why:`Rent takes about ${burden}% of income. Massachusetts public housing for older adults and people with disabilities, and MRVP rental vouchers (income up to 80% of area median), generally set rent at about 30% of income. Waiting lists are long, so getting on them NOW matters. Note: the state's Section 8 mobile-voucher waiting list has been closed since January 13, 2025 — public housing (through CHAMP) and MRVP are the open paths; some local housing authorities keep their own lists.`,
+      form:"One online application (CHAMP) covers most state public housing; MRVP through local housing agencies.",forml:"https://www.mass.gov/how-to/apply-for-state-funded-public-housing",
+      docs:["Proof of income","ID","Current lease"],
+      where:"Apply online through CHAMP and pick the towns you'd accept. A local housing authority can help with the application."});
+  }
+
+  // 33. MA rental deduction (renters who file a MA return)
+  if(renter && A.filing!=="none" && num(A.rent)>0){
+    const cap = A.filing==="mfs" ? 2000 : 4000;
+    const ded = Math.min(0.5*num(A.rent)*12, cap);
+    out.push({id:"rentdeduct",name:"Massachusetts Rent Deduction (state taxes)",status:"maybe",val:Math.round(ded*0.05),valTxt:`up to ~${money(ded*0.05)}/yr in tax`,
+      why:`Renters can deduct 50% of the rent paid for their Massachusetts home on the state return, up to a $4,000 deduction — about ${money(ded)} here, worth roughly ${money(ded*0.05)} in state tax. Only helps if they owe Massachusetts income tax; it can be claimed alongside the Circuit Breaker.`,
+      form:"Claimed on the Massachusetts Form 1 return.",forml:"https://www.mass.gov/info-details/deductions-on-rent-paid-in-massachusetts",
+      docs:["Landlord name and address","Total rent paid for the year"],
+      where:"On the Massachusetts tax return — tax software or a preparer will ask for rent paid."});
+  }
+
+  // 34. Energy help just ABOVE the fuel-assistance line (60–80% of state median income)
+  if(A.housing!=="family"){
+    const lim60 = HEAP_SMI60[homeHH]||HEAP_SMI60[10], lim80 = Math.round(lim60*80/60);
+    if(homeInc>lim60 && homeInc<=lim80){
+      out.push({id:"energy6080",name:"Energy Help Just Above the Fuel-Assistance Limit",status:"maybe",val:0,valTxt:"one-time grant + low/no-cost upgrades",
+        why:`Household income is a little over the Fuel Assistance limit, but between 60% and 80% of state median income. That opens: (1) the Salvation Army's Good Neighbor Energy Fund — a one-time grant when a month's energy bill is a hardship (call 800-334-3047); and (2) Mass Save's moderate-income offers — insulation, air-sealing and heating upgrades for up to no cost. A Mass Save Home Energy Assessment is free for any 1–4 unit home.`,
+        form:"Good Neighbor: through the Salvation Army. Mass Save: book a free Home Energy Assessment.",forml:"https://www.mass.gov/info-details/learn-about-home-energy-assistance-heap-0",
+        docs:["Proof of household income","A recent energy bill"],
+        where:"Good Neighbor Energy Fund: 800-334-3047. Mass Save: book online at masssave.com."});
+    }
+  }
+
+  // 35. Senior food extras: farmers-market coupons (SFMNP) + CSFP food boxes
+  if(olderAge>=60){
+    const SFMNP={1:29526,2:40034};   // Jul 1 2026 – Jun 30 2027, mass.gov
+    const sf = SFMNP[hh]||SFMNP[2], csfp = Math.round(1.5*fplFor(hh));
+    if(inc<=sf){
+      out.push({id:"seniorfood",name:"Senior Food Extras (Farmers-Market Coupons, Food Boxes)",status:"maybe",val:0,valTxt:"free produce + monthly food box",
+        why:`Adults 60+ under ~${money(sf)} (household of ${hh}) can get Senior Farmers Market coupons each summer while the season's supply lasts.${inc<=csfp?` At this income (under ~${money(csfp)}), the federal senior food box program (CSFP) is also available — a free monthly box of groceries through local food banks and Councils on Aging.`:""}`,
+        form:"Coupons: apply through the state program. Food box: through the local food bank or Council on Aging.",forml:"https://www.mass.gov/info-details/applying-for-senior-farmers-market-nutrition-program-coupons",
+        docs:["Proof of age","Proof of income"],
+        where:"Ask the local Council on Aging — they usually hand out coupons and know the food-box sites."});
+    }
+  }
+
   // ---- Unknown-answer handling: a created card that depends on a skipped ("not sure") field becomes "verify — needs info" ----
   const DEP={
     cb:["filing","dependent","incomeSS","incomeOther","propTax","assessed","rent","subsidized","spouseAge"],
@@ -786,6 +835,10 @@ function programs(){
     wap:["incomeSS","incomeOther","hhSize","hhOtherInc"],
     lifeline:["incomeSS","incomeOther","hhSize"],
     health6064:["incomeSS","incomeOther"],
+    housing:["incomeSS","incomeOther","rent"],
+    rentdeduct:["rent","filing"],
+    energy6080:["incomeSS","incomeOther","hhSize","hhOtherInc"],
+    seniorfood:["incomeSS","incomeOther"],
     vacomp:["vetService"]
   };
   out.forEach(p=>{
