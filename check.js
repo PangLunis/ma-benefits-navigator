@@ -219,9 +219,11 @@ try{
     if(d&&d.towns){ TOWNS=d.towns; AGENCIES=d.agencies||{}; fillTownList(); }
   }).catch(()=>{});
 }catch(e){}
-function agencyHTML(ids){
-  const list=(Array.isArray(ids)?ids:[ids]).map(i=>AGENCIES[i]).filter(Boolean);
-  return list.map(a=>`${a.u?`<a href="${a.u}" target="_blank" rel="noopener">${a.n}</a>`:a.n}${a.p?` — <a href="tel:${a.p.replace(/[^0-9+]/g,"")}">${a.p}</a>`:""}`).join("<br>");
+function agencyHTML(ids, nbhd){
+  let list=(Array.isArray(ids)?ids:[ids]).map(i=>AGENCIES[i]).filter(Boolean);
+  // Boston has 3 home-care agencies split by neighborhood: if we know the neighborhood, show just that one.
+  if(list.length>1 && nbhd){ const m=list.filter(a=>(a.a||[]).some(x=>x.toLowerCase()===nbhd)); if(m.length) list=m; }
+  return list.map(a=>`${a.u?`<a href="${a.u}" target="_blank" rel="noopener">${a.n}</a>`:a.n}${a.p?` — <a href="tel:${a.p.replace(/[^0-9+]/g,"")}">${a.p}</a>`:""}${list.length>1&&a.a?`<br><span class="tc-areas">Serves: ${a.a.join(", ")}</span>`:""}`).join("<br>");
 }
 function townCard(){
   const t=townLookup(A.town);
@@ -245,10 +247,11 @@ function townCard(){
   }
   const svc=[];
   if(t.fuel) svc.push(`<b>Heating help (fuel assistance):</b><br>${agencyHTML(t.fuel)}`);
-  if(t.asap) svc.push(`<b>Home care (Aging Services Access Point):</b><br>${agencyHTML(t.asap)}`);
+  if(t.asap) svc.push(`<b>Home care and elder services (Aging Services Access Point):</b><br>${agencyHTML(t.asap, townKey(A.town))}`);
   if(t.coa) svc.push(`<b>Council on Aging / senior center:</b><br>${t.coa.u?`<a href="${t.coa.u}" target="_blank" rel="noopener">${t.coa.n||"Council on Aging"}</a>`:(t.coa.n||"Council on Aging")}${t.coa.p?` — <a href="tel:${t.coa.p.replace(/[^0-9+]/g,"")}">${t.coa.p}</a>`:""}`);
   if(t.shine) svc.push(`<b>Free Medicare counseling (SHINE):</b><br>${agencyHTML(t.shine)}`);
-  if(t.rta) svc.push(`<b>Reduced-fare buses:</b><br>${agencyHTML(t.rta)}`);
+  if(t.rta) svc.push(`<b>Local buses (reduced fares for seniors):</b><br>${agencyHTML(t.rta)}`);
+  if(t.ride) svc.push(`<b>MBTA:</b> reduced fares with a Senior CharlieCard (65+). The RIDE offers door-to-door rides for people who can't use regular buses and trains${t.ride==="partial"?" (in parts of town)":""}.`);
   if(!rows.length && !svc.length) return "";
   let h=`<div class="towncard"><h3>📍 Your town: ${t.name}</h3>`;
   if(rows.length){
