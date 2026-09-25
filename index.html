@@ -46,7 +46,7 @@
           <span>Call us</span>
           <span class="num">(978) 555-0179</span>
         </a>
-        <a class="btn btn-primary" href="#start">Start free check</a>
+        <a class="btn btn-primary" href="check.html">Start free check</a>
       </div>
     </div>
   </header>
@@ -83,8 +83,8 @@
           <p class="lede">Every year, older Massachusetts residents miss out on money they've earned — property-tax credits, heating help, Medicare savings — simply because no one sat down and walked them through it. We do exactly that, and hand you the steps to claim it.</p>
           <div class="hero-cta">
             <div class="hero-cta-primary">
-              <a class="btn btn-primary btn-xl" href="#precheck">Start the free 2-minute check</a>
-              <span class="cta-note">100% free · takes about 2 minutes · no card needed</span>
+              <a class="btn btn-primary btn-xl" href="check.html">Start the free benefits check</a>
+              <span class="cta-note">100% free · about 5 minutes · no card needed</span>
             </div>
             <a class="link-secondary" href="#what-you-get">See what's included →</a>
           </div>
@@ -323,7 +323,7 @@
     </section>
 
     <!-- ============================ FOUNDERS =========================== -->
-    <section class="section" id="who" aria-labelledby="who-h">
+    <section class="section" id="about" aria-labelledby="who-h">
       <div class="wrap">
         <p class="eyebrow center">Who's behind this</p>
         <h2 id="who-h" class="center">A nurse practitioner and her brother — for families like ours</h2>
@@ -331,9 +331,8 @@
 
         <div class="founders">
           <article class="founder">
-            <div class="portrait clay">
-              <span class="mono" aria-hidden="true">P</span>
-              <span class="ph-note">photo to be added</span>
+            <div class="portrait has-photo">
+              <img class="cutout" src="images/np-portrait.png" width="352" height="660" alt="Our nurse practitioner co-founder, in scrubs" loading="lazy" />
             </div>
             <div class="body">
               <p class="role">Clinical &amp; eldercare lead · Nurse Practitioner</p>
@@ -343,7 +342,7 @@
           </article>
 
           <article class="founder">
-            <div class="portrait">
+            <div class="portrait clay">
               <span class="mono" aria-hidden="true">R</span>
               <span class="ph-note">photo to be added</span>
             </div>
@@ -357,83 +356,39 @@
       </div>
     </section>
 
-    <!-- ============================ PRE-CHECK ========================== -->
+    <!-- ============================ FREE CHECK ========================= -->
+    <!-- The 6-question teaser that used to live here was replaced 2026-09-25 by
+         the full original tool (check.html, engine ported verbatim from
+         classic/). Ryan's dad tried the teaser and came away with nothing
+         useful; the full check is the free product now. -->
     <section class="section band-tint" id="precheck" aria-labelledby="pc-h">
-      <div class="wrap" style="max-width:760px;">
-        <p class="eyebrow center">Free · no email required · nothing to buy</p>
-        <h2 id="pc-h" class="center">The free 2-minute check</h2>
-        <p class="lede center measure" style="margin-bottom:30px;">Answer a few quick questions to see roughly which programs you may qualify for — before you decide whether the full $179 check is worth it. This is a rough estimate, not a determination.</p>
-
-        <div class="precheck">
-          <div class="pc-head">
-            <h3>Quick eligibility snapshot</h3>
-            <p>For yourself, or for a parent you help. Your answers stay in your browser — we don't collect them.</p>
+      <div class="wrap" style="max-width:820px;">
+        <p class="eyebrow center">Free · private · nothing to buy</p>
+        <h2 id="pc-h" class="center">The free benefits check</h2>
+        <p class="lede center measure" style="margin-bottom:28px;">Answer about 20 plain-English questions — for yourself or for a parent — and see every Massachusetts program that looks like a match, roughly what each one is worth, and exactly how to claim it.</p>
+        <div class="freecheck">
+          <ul class="checklist">
+            <li>
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#1E4E3C"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Checks 20+ programs: Circuit Breaker, property-tax exemptions, fuel assistance, SNAP, Medicare savings, veterans' benefits and more
+            </li>
+            <li>
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#1E4E3C"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              For each match: the form, what to gather, and where to file it
+            </li>
+            <li>
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#1E4E3C"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Not sure of an answer? Tap "I'm not sure" — we'll tell you where to find it
+            </li>
+            <li>
+              <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#1E4E3C"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Your answers never leave your device — no email, no sign-up
+            </li>
+          </ul>
+          <div class="center" style="margin-top:24px;">
+            <a class="btn btn-primary btn-xl" href="check.html">Start the free benefits check</a>
+            <p class="cta-note" style="margin-top:10px;">100% free · about 5 minutes · no card needed</p>
           </div>
-          <form class="pc-body" id="precheckForm">
-            <fieldset class="pc-q">
-              <legend>Is the person 65 or older?</legend>
-              <div class="pc-options">
-                <label class="pc-opt"><input type="radio" name="age" value="yes"><span>Yes, 65+</span></label>
-                <label class="pc-opt"><input type="radio" name="age" value="near"><span>60–64</span></label>
-                <label class="pc-opt"><input type="radio" name="age" value="no"><span>Under 60</span></label>
-              </div>
-            </fieldset>
-
-            <fieldset class="pc-q">
-              <legend>Do they live in Massachusetts?</legend>
-              <div class="pc-options">
-                <label class="pc-opt"><input type="radio" name="ma" value="yes"><span>Yes</span></label>
-                <label class="pc-opt"><input type="radio" name="ma" value="no"><span>No</span></label>
-              </div>
-            </fieldset>
-
-            <fieldset class="pc-q">
-              <legend>Do they own or rent their home?</legend>
-              <div class="pc-options">
-                <label class="pc-opt"><input type="radio" name="home" value="own"><span>Own</span></label>
-                <label class="pc-opt"><input type="radio" name="home" value="rent"><span>Rent</span></label>
-              </div>
-            </fieldset>
-
-            <fieldset class="pc-q">
-              <legend>Roughly, what's their yearly household income?</legend>
-              <div class="pc-options">
-                <label class="pc-opt"><input type="radio" name="income" value="low"><span>Under $45,000</span></label>
-                <label class="pc-opt"><input type="radio" name="income" value="mid"><span>$45,000–$70,000</span></label>
-                <label class="pc-opt"><input type="radio" name="income" value="high"><span>Over $70,000</span></label>
-              </div>
-            </fieldset>
-
-            <fieldset class="pc-q">
-              <legend>Do heating and utility bills feel like a strain in winter?</legend>
-              <div class="pc-options">
-                <label class="pc-opt"><input type="radio" name="heat" value="yes"><span>Yes</span></label>
-                <label class="pc-opt"><input type="radio" name="heat" value="no"><span>No / not sure</span></label>
-              </div>
-            </fieldset>
-
-            <fieldset class="pc-q">
-              <legend>Is the person a U.S. military veteran (or a surviving spouse)?</legend>
-              <div class="pc-options">
-                <label class="pc-opt"><input type="radio" name="vet" value="yes"><span>Yes</span></label>
-                <label class="pc-opt"><input type="radio" name="vet" value="no"><span>No</span></label>
-              </div>
-            </fieldset>
-
-            <div class="pc-actions">
-              <button type="submit" class="btn btn-primary btn-lg">See what they may qualify for</button>
-              <button type="reset" class="btn btn-ghost">Start over</button>
-            </div>
-
-            <div class="pc-result" id="pcResult" hidden aria-live="polite" tabindex="-1">
-              <h4 id="pcResultTitle">Here's your rough snapshot</h4>
-              <p id="pcResultLead" style="margin:0;"></p>
-              <p style="margin:.4em 0 0;"><span class="est" id="pcResultEst"></span> <span style="color:var(--ink-soft);font-weight:600;">estimated benefits worth reviewing per year</span></p>
-              <ul class="pc-hits" id="pcResultHits"></ul>
-              <a class="btn btn-pine" id="pcResultCta" href="#start" style="margin-top:16px;">Get the full $179 check →</a>
-              <p class="pc-disclaimer">This snapshot is a rough, automated estimate based only on your answers — it is <strong>not</strong> a determination of eligibility, an application, or a promise of any specific dollar amount. Actual eligibility depends on program rules, your town, and details a full review confirms.</p>
-            </div>
-          </form>
         </div>
       </div>
     </section>
@@ -563,7 +518,7 @@
           <details>
             <summary>What happens to my personal information?</summary>
             <div class="answer">
-              <p>We use what you share only to complete your review and deliver your plan. We don't sell it, and we don't share it for marketing. The free 2-minute check on this page runs entirely in your browser — those answers are never sent to us. See our full <a href="#footer-legal">privacy note</a> below.</p>
+              <p>We use what you share only to complete your review and deliver your plan. We don't sell it, and we don't share it for marketing. The free benefits check runs entirely in your browser — those answers are never sent to us. See our full <a href="#footer-legal">privacy note</a> below.</p>
             </div>
           </details>
         </div>
@@ -574,9 +529,9 @@
     <section class="section final-cta" aria-labelledby="final-h">
       <div class="wrap measure center">
         <h2 id="final-h">Find out what your family is owed.</h2>
-        <p class="lede center" style="margin-bottom:8px;">Start with the free 2-minute check, or go straight to the full review. Either way, you'll finally know exactly what's on the table.</p>
+        <p class="lede center" style="margin-bottom:8px;">Start with the free benefits check, or go straight to the full review. Either way, you'll finally know exactly what's on the table.</p>
         <div class="hero-cta" style="justify-content:center;">
-          <a class="btn btn-primary btn-lg" href="#precheck">Try the free check</a>
+          <a class="btn btn-primary btn-lg" href="check.html">Start the free check</a>
           <a class="btn btn-pine btn-lg" href="#start">Start my $179 check</a>
         </div>
       </div>
@@ -601,14 +556,14 @@
             <li><a href="#what-you-get">What you get</a></li>
             <li><a href="#programs">What we check</a></li>
             <li><a href="#how">How it works</a></li>
-            <li><a href="#precheck">Free 2-minute check</a></li>
+            <li><a href="check.html">Free benefits check</a></li>
             <li><a href="#start">Start my check</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4>The company</h4>
           <ul>
-            <li><a href="#who">Who's behind this</a></li>
+            <li><a href="#about">Who's behind this</a></li>
             <li><a href="#faq">Questions</a></li>
             <li><a href="terms.html" target="_blank">Terms of service</a></li>
             <li><a href="privacy.html" target="_blank">Privacy policy</a></li>
