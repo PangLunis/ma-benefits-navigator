@@ -25,6 +25,16 @@
   function setText(form, name, val){ if(val==null||val==="") return; try{ form.getTextField(name).setText(String(val)); }catch(e){ /* field absent on this form */ } }
   function check(form, name){ try{ form.getCheckBox(name).check(); }catch(e){ console.warn("box", name, e.message); } }
   const MARITAL={single:"Single",married:"Married",widowed:"Widowed",divorced:"Divorced",separated:"Separated"};
+  function mdy(iso){ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||"")); return m?`${m[2]}/${m[3]}/${m[1]}`:""; }
+  function money$(v){ return (v==null||v===""||isNaN(v))?"":"$"+usd(v); }
+  // Optional detail boxes (typed in the claim packet, kept in page memory only). Income/asset splits are yearly
+  // amounts; if the person gave a split, use it, otherwise fall back to the single "other income" total.
+  function split(extra){
+    const g=k=>{ const v=extra&&extra[k]; return (v==null||v==="")?null:n(v); };
+    return { pension:g("incPension"), wages:g("incWages"), interest:g("incInterest"), rental:g("incRental"), other:g("incOther"),
+             bank:g("assetBank"), invest:g("assetInvest"), mortgage:g("mortgage") };
+  }
+  function hasSplit(S){ return [S.pension,S.wages,S.interest,S.rental,S.other].some(v=>v!=null); }
 
   // ---- Shared header of the DOR assessor forms (96-1, 96-2, 96-3, 96-4, 97) ----
   // own: checkbox names for [owned-on-July-1 Yes, sole owner, co-owner with others] on THIS form (verified by render).
@@ -53,14 +63,23 @@
       }
     }
   }
-  function fillIncome(form, A){
+  function fillIncome(form, A, extra){
     // "C. Gross receipts ... Applicant & Spouse" column: row 1 = Social Security/retirement benefits, last = TOTALS
     const all=names(form);
     const base=all.find(k=>/^Applicant\s+Spouse.*TOTALS$/.test(k));
     if(!base) return;
-    const ss=n(A.incomeSS), other=n(A.incomeOther);
+    const ss=n(A.incomeSS), other=n(A.incomeOther), S=split(extra||{});
     if(known(A.incomeSS)) setText(form, base, "$"+usd(ss));
-    if(known(A.incomeSS) && known(A.incomeOther) && (ss+other)>0 && all.includes(base+"_7")) setText(form, base+"_7", "$"+usd(ss+other));
+    if(hasSplit(S)){
+      // rows: _2 other pensions, _3 wages, _4 net profits/rental, _5 interest & dividends, _6 other receipts, _7 totals
+      if(S.pension!=null) setText(form, base+"_2", money$(S.pension));
+      if(S.wages!=null) setText(form, base+"_3", money$(S.wages));
+      if(S.rental!=null) setText(form, base+"_4", money$(S.rental));
+      if(S.interest!=null) setText(form, base+"_5", money$(S.interest));
+      if(S.other!=null) setText(form, base+"_6", money$(S.other));
+      const tot=(known(A.incomeSS)?ss:0)+[S.pension,S.wages,S.rental,S.interest,S.other].reduce((a,v)=>a+(v||0),0);
+      if(tot>0 && all.includes(base+"_7")) setText(form, base+"_7", money$(tot));
+    } else if(known(A.incomeSS) && known(A.incomeOther) && (ss+other)>0 && all.includes(base+"_7")) setText(form, base+"_7", "$"+usd(ss+other));
   }
 
   // ---- Form 96-1: senior exemption (clauses 17, 17C, 17C½, 17D, 41, 41B, 41C, 41C½) ----
@@ -70,8 +89,14 @@
     const age=Math.max(n(A.age), A.marital==="married"?n(A.spouseAge):0);
     if(age>=65) check(form,"Check Box33");                          // "SENIOR 70 OR OLDER (65 or older by local option)"
     if(known(A.ownYears) && n(A.ownYears)>=11) check(form,"Check Box27");   // owned & occupied 11+ years: Yes
-    fillIncome(form, A);
+    fillIncome(form, A, extra);
     if(known(A.assessed)) setText(form,"Assessed Valuation", "$"+usd(n(A.assessed)));
+    const dobField=names(form).find(k=>k.startsWith("If first year of application attach copy of birth"));
+    if(dobField) setText(form, dobField, mdy(extra.dob));
+    const S=split(extra);
+    if(S.mortgage!=null) setText(form,"Amount Due on Mortgage 1", money$(S.mortgage));
+    if(S.bank!=null){ setText(form,"Bank Accounts Name  Address of Bank 1","Checking & savings (total — list each account if asked)"); setText(form,"Text38", money$(S.bank)); }
+    if(S.invest!=null){ const k=names(form).find(x=>x.startsWith("Stocks Bonds Securities etc Description")&&x.endsWith("1")); if(k) setText(form,k,"Stocks, bonds, mutual funds, IRAs (total)"); setText(form,"Text41", money$(S.invest)); }
     form.updateFieldAppearances();
     return await doc.save();
   }
@@ -81,6 +106,10 @@
     fillDORHeader(form, A, extra, townName, {yes:"Check Box10", sole:"Check Box12", others:"Check Box14"});
     if(A.marital==="widowed"){ check(form,"Check Box31"); check(form,"Check Box34"); }   // SURVIVING SPOUSE; remarried: No
     if(known(A.assessed)) setText(form,"Domicile 1", "$"+usd(n(A.assessed)));
+    const S=split(extra);
+    if(S.mortgage!=null) setText(form,"Amount due on mortgage 1", money$(S.mortgage));
+    if(S.bank!=null){ setText(form,"1","Checking & savings (total)"); setText(form,"1_5", money$(S.bank)); }
+    if(S.invest!=null){ setText(form,"1_2","Stocks, bonds, mutual funds, IRAs (total)"); setText(form,"1_6", money$(S.invest)); }
     form.updateFieldAppearances();
     return await doc.save();
   }
@@ -103,7 +132,10 @@
     const doc=await PDFLib.PDFDocument.load(bytes), form=doc.getForm();
     fillDORHeader(form, A, extra, townName, {sole:"Check Box23", others:"Check Box25"});
     if(A.housing==="own" && known(A.ownYears) && n(A.ownYears)>=10) check(form,"Check Box7");   // owned July 1 and prior 10 years: Yes
-    fillIncome(form, A);
+    setText(form,"Date of birth", mdy(extra.dob));
+    fillIncome(form, A, extra);
+    const S=split(extra);
+    if(S.mortgage!=null){ setText(form,"Was there a mortgage on the property as of July 1", String(fy()-1)); check(form, S.mortgage>0?"Check Box26":"Check Box27"); if(S.mortgage>0) setText(form,"If yes amount due on mortgage", usd(S.mortgage)); }
     form.updateFieldAppearances();
     return await doc.save();
   }
@@ -142,8 +174,31 @@
     if(A.marital!=="married" && known(A.incomeSS)){                    // Schedule: applicant's own Social Security (single only)
       if(extra.fullName) setText(form,"Name", extra.fullName);
       setText(form,"Social Security", "$"+usd(n(A.incomeSS)));
+      const S=split(extra);
+      if(S.pension!=null) setText(form,"Other pensionretirement benefits", money$(S.pension));
+      if(S.interest!=null) setText(form,"Interestdividends", money$(S.interest));
+      if(S.rental!=null) setText(form,"Rental income", money$(S.rental));
     }
     form.updateFieldAppearances();
+    return await doc.save();
+  }
+
+  // ---- DTA SNAP Application for Seniors (SNAP-App-Seniors Rev. 7/2026): NO fillable fields, so text is
+  // printed at measured positions (pdfplumber label coordinates, verified by render). Only page 1 (the page DTA
+  // needs to accept the application: name, address, signature) and date of birth on page 4. ----
+  async function fillSNAP(PDFLib, bytes, A, extra, townName){
+    const doc=await PDFLib.PDFDocument.load(bytes);
+    const font=await doc.embedFont(PDFLib.StandardFonts.Helvetica);
+    const pages=doc.getPages(), H=792, ink=PDFLib.rgb(0.1,0.2,0.55);
+    const put=(pg,text,x,topBaseline,size)=>{ if(!text) return; pages[pg].drawText(String(text),{x, y:H-topBaseline, size:size||11, font, color:ink}); };
+    const parts=String(extra.fullName||"").trim().split(/\s+/).filter(Boolean);
+    if(parts.length>=2){ put(0, parts[parts.length-1], 48, 347); put(0, parts[0], 222, 347); if(parts.length===3) put(0, parts[1].replace(".",""), 381, 347); }
+    else if(parts.length===1) put(0, parts[0], 222, 347);
+    put(0, extra.street, 48, 387);
+    const town=townName||A.town;
+    if(town) put(0, `${town}, MA ${extra.zip||""}`.trim(), 381, 387);
+    put(0, extra.phone, 48, 467);
+    put(3, mdy(extra.dob), 291, 101);
     return await doc.save();
   }
 
@@ -161,12 +216,27 @@
     if(A.marital!=="married") check(form,"You");                     // "Who is applying?  [x] You"
     setText(form,"You: ZIP", extra.zip);
     setText(form,"telephone number", extra.phone);
-    // Income (gross MONTHLY). Social Security is only split per person when single.
-    if(A.marital!=="married" && known(A.incomeSS) && n(A.incomeSS)>0) setText(form,"Your", "$"+usd(n(A.incomeSS)/12));
+    setText(form,"Date of birth (MM)", mdy(extra.dob));
+    setText(form,"Medicare claim number", extra.medicareNo);
+    if(A.marital==="married" && extra.spouseName){
+      const sp=String(extra.spouseName).trim().split(/\s+/);
+      if(sp.length>=2){ setText(form,"First name", sp[0]); setText(form,"Last name", sp[sp.length-1]); } else setText(form,"First name", sp[0]);
+      setText(form,"Date of birth_2", mdy(extra.spouseDob));
+    }
+    // Income (gross MONTHLY). Only split per person when single; a couple's combined totals can't be divided honestly.
+    if(A.marital!=="married"){
+      if(known(A.incomeSS) && n(A.incomeSS)>0) setText(form,"Your", "$"+usd(n(A.incomeSS)/12));
+      const S=split(extra), mo=v=>v!=null&&v>0?"$"+usd(v/12):"";
+      if(S.pension!=null) setText(form,"Your_2", mo(S.pension));
+      if(S.interest!=null) setText(form,"Your_5", mo(S.interest));
+      if(S.wages!=null) setText(form,"Your_6", mo(S.wages));
+      if(S.rental!=null) setText(form,"Your_7", mo(S.rental));
+      if(S.other!=null && S.other>0){ setText(form,"Your_8", mo(S.other)); setText(form,"Other please specify","Other income"); }
+    }
     form.updateFieldAppearances();
     return await doc.save();
   }
 
-  const api={ fy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillMSP };
+  const api={ fy, mdy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillSNAP, fillMSP };
   if(typeof module!=="undefined" && module.exports) module.exports=api; else global.BFForms=api;
 })(typeof window!=="undefined"?window:globalThis);

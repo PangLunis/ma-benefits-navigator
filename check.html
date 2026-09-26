@@ -132,6 +132,16 @@
     .tool details[open] .nomore { display: none; }
 
     /* results: "What to do next" (new) + optional paid next step (new) */
+    .tool .restored { background: var(--pine-tint); border: 1px solid #BFD6C7; color: var(--pine-deep); border-radius: 12px; padding: 10px 14px; margin: 0 0 12px; font-size: 16px; }
+    .tool .restored button, .tool .forget button { background: none; border: none; color: var(--pine-soft); font-weight: 800; text-decoration: underline; cursor: pointer; font-size: 16px; padding: 0 4px; }
+    .tool .forget { text-align: center; margin: 14px 0 0; }
+    .tool .remember { display: flex; gap: 10px; align-items: center; font-size: 15.5px; color: var(--ink-soft); margin-top: 10px; }
+    .tool .remember input { width: 20px; height: 20px; }
+    .tool .packet .pk-h2 { font-weight: 800; color: var(--pine-deep); margin-top: 8px; font-size: 16px; }
+    .tool .packet .pk-sub { font-weight: 600; color: var(--t-muted); font-size: 14px; }
+    .tool .packet .pk-mini { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 6px 2px 0; }
+    .tool .packet .pk-link { background: none; border: none; padding: 4px 0; color: var(--pine-soft); font-weight: 700; font-size: 15px; text-decoration: underline; cursor: pointer; }
+    .tool .packet .pk-links { margin: 6px 0; padding-left: 18px; font-size: 15px; line-height: 1.5; }
     .tool .packet { background: #fff; border: 2px solid var(--honey, #E4A126); border-radius: 16px; padding: 18px 20px; margin: 0 0 18px; }
     .tool .packet h3 { margin: 0 0 6px; font-size: 21px; color: var(--pine-deep); }
     .tool .packet .pk-lead { margin: 0 0 12px; font-size: 16px; max-width: none; }
@@ -288,7 +298,10 @@
       <p class="eyebrow">Free · private · Massachusetts only, for now</p>
       <h1>Your free benefits check</h1>
       <p>About 20–25 quick questions (a few more for veterans and couples), 5–10 minutes — for yourself or for a parent. At the end you'll see every Massachusetts program that looks like a match, roughly what each is worth, and exactly how to claim it.</p>
-      <p class="freeline"><strong>100% free.</strong> You'll never be asked for a card or payment, there's no sign-up, and your results appear on the screen the moment you finish. We don't collect or save anything you enter — your answers stay on this device.</p>
+      <p class="freeline"><strong>100% free.</strong> You'll never be asked for a card or payment, there's no sign-up, and your results appear on the screen the moment you finish. We never receive anything you enter — your answers stay on this device.</p>
+      <label class="remember"><input type="checkbox" id="rememberBox" checked> Remember my answers on this device, so I can stop and come back later</label>
+      <script>(function(){var b=document.getElementById("rememberBox");try{b.checked=localStorage.getItem("bf_remember")!=="0";}catch(e){b.checked=false;b.disabled=true;}
+        b.addEventListener("change",function(){try{localStorage.setItem("bf_remember",b.checked?"1":"0");if(!b.checked)localStorage.removeItem("bf_check_v1");}catch(e){}});})();</script>
     </div>
 
     <div class="tool-top">
