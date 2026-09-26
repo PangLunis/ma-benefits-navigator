@@ -367,7 +367,7 @@ function medicareSheet(){
     <label class="pk-ta">Pharmacy you use<input type="text" data-pk="pharmacy" value="${v("pharmacy")}" placeholder="e.g. CVS on Main St"></label>
     <label class="pk-ta">Doctors you want to keep<textarea data-pk="doctors" rows="2" placeholder="e.g. Dr. Lee (primary care), Dr. Patel (cardiology)">${v("doctors")}</textarea></label>
     <label class="pk-ta">Current plan (name on the card)<input type="text" data-pk="currentPlan" value="${v("currentPlan")}" placeholder="e.g. Original Medicare + Medigap Core"></label>
-    <p><b>Compare plans yourself:</b> <a href="https://www.medicare.gov/plan-compare" target="_blank" rel="noopener">Medicare Plan Finder</a> — enter the drugs and pharmacy above, and it shows each plan's yearly cost.</p>
+    <p><b>Compare plans yourself:</b> <a href="medicare.html" target="_blank" rel="noopener">Benefighter's plan comparison</a> ranks every plan in your county for your drugs, or use <a href="https://www.medicare.gov/plan-compare" target="_blank" rel="noopener">Medicare's Plan Finder</a>.</p>
     <p><b>Or get free, unbiased help:</b> ${shine?`${shine.n} — <a href="tel:${(shine.p||"").replace(/[^0-9+]/g,"")}">${shine.p||""}</a>`:"SHINE"} (statewide line: <a href="tel:8002434636">(800) 243-4636</a>). SHINE counselors don't sell insurance.</p>
     <button type="button" class="btn ghost pk-medprint">🖨 Print this sheet</button>
   </div></details>`;
@@ -1077,7 +1077,7 @@ function programs(){
       why:"Plans change their drug lists, costs and doctor networks every year. From October 15 to December 7, 2026, anyone on Medicare can switch plans for 2027 (the new plan starts January 1). In 2027, out-of-pocket costs for covered drugs are capped at $2,400. Someone in a Medicare Advantage plan also gets one change between January 1 and March 31. In Massachusetts, Medigap plans can't turn anyone down or charge more because of their health. A free SHINE counselor compares plans and doesn't sell insurance.",
       form:"Compare on Medicare's Plan Finder, or book a free SHINE appointment.",forml:"https://www.mass.gov/shine-program",
       docs:["Medicare card","Every prescription, with the dose and how often","The pharmacy they use","Doctors they want to keep"],
-      where:"Medicare Plan Finder: medicare.gov/plan-compare. SHINE (free, unbiased): (800) 243-4636. The Medicare plan check-up sheet on this page keeps the list in one place."});
+      where:"<a href=\"medicare.html\" target=\"_blank\" rel=\"noopener\"><b>Compare every plan in your county for your drugs →</b></a> (Benefighter's free plan comparison, built from Medicare's own files). Or use Medicare's Plan Finder (medicare.gov/plan-compare), or call SHINE free at (800) 243-4636. The Medicare plan check-up sheet on this page keeps your list in one place."});
   }
 
   // 30. Unclaimed property — everyone

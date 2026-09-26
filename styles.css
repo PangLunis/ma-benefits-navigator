@@ -815,3 +815,8 @@ img { max-width: 100%; display: block; }
   .fd-stamp { opacity: 1; transform: rotate(-8deg); transition: none; }
   .sticky-cta { transition: none; }
 }
+
+/* Medicare plan comparison card (homepage, 2026-09-26) */
+.mcompare-band { background: var(--pine-tint); }
+.mcompare { max-width: 760px; }
+.mc-lead { font-size: 1.15rem; color: var(--ink-soft); }
