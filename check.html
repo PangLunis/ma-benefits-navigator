@@ -132,6 +132,13 @@
     .tool details[open] .nomore { display: none; }
 
     /* results: "What to do next" (new) + optional paid next step (new) */
+    .tool .packet .pk-ta { display: grid; gap: 4px; font-size: 15px; font-weight: 700; margin: 8px 0; }
+    .tool .packet .pk-ta textarea, .tool .packet .pk-ta input { font-size: 16px; padding: 10px 12px; border: 1.5px solid var(--t-line); border-radius: 10px; font-family: var(--sans); width: 100%; box-sizing: border-box; }
+    @media print {
+      body.print-med .tool > *:not(#app), body.print-med #app > *:not(.packet), body.print-med .packet > *:not(.pk-med) { display: none !important; }
+      body.print-med .pk-med { display: block !important; border: none; } body.print-med .pk-med .pk-medprint { display: none !important; }
+      body.print-med .pk-med textarea, body.print-med .pk-med input { border: none; resize: none; }
+    }
     .tool .restored { background: var(--pine-tint); border: 1px solid #BFD6C7; color: var(--pine-deep); border-radius: 12px; padding: 10px 14px; margin: 0 0 12px; font-size: 16px; }
     .tool .restored button, .tool .forget button { background: none; border: none; color: var(--pine-soft); font-weight: 800; text-decoration: underline; cursor: pointer; font-size: 16px; padding: 0 4px; }
     .tool .forget { text-align: center; margin: 14px 0 0; }

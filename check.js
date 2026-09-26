@@ -286,7 +286,8 @@ function townCard(ps){
    The optional name/address/phone boxes exist only in this page's memory: they are
    not saved, not added to A, and not included in anything sent anywhere. */
 let PK = {fullName:"", dob:"", street:"", zip:"", phone:"", medicareNo:"", spouseName:"", spouseDob:"",
-          incPension:"", incWages:"", incInterest:"", incRental:"", incOther:"", assetBank:"", assetInvest:"", mortgage:""};
+          incPension:"", incWages:"", incInterest:"", incRental:"", incOther:"", assetBank:"", assetInvest:"", mortgage:"",
+          rxList:"", pharmacy:"", doctors:"", currentPlan:""};
 function loadScriptOnce(src){
   return new Promise((ok,bad)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok();
     const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=()=>bad(new Error("could not load "+src)); document.head.appendChild(el); });
@@ -354,7 +355,22 @@ function readySheets(ps){
     <p>${num(A.age)>=60?`At 60 and up, call the DTA <b>Senior Assistance Office</b> at <a href="tel:8337128027">(833) 712-8027</a> for help applying, or use the shorter <a href="https://www.mass.gov/lists/snap-application-for-seniors" target="_blank" rel="noopener">SNAP Application for Seniors</a>.`:"Apply online at DTAConnect.com, by phone, or at a local DTA office."}</p>
     <p><b>Have ready:</b> photo ID · Social Security and other income letters · rent or mortgage statement and utility bills · out-of-pocket medical costs (these can raise the benefit for people 60+).</p>
   </div></details>`;
+  if(A.medicare==="yes" || open("medicareoe")) h+=medicareSheet();
   return h;
+}
+function medicareSheet(){
+  const v=k=>String(PK[k]||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+  const t=townLookup(A.town)||{}, shine=t.shine&&AGENCIES[t.shine];
+  return `<details class="pk-ws pk-med"><summary>💊 Medicare plan check-up sheet</summary><div class="pk-body">
+    <p>Plans change every year. Between <b>October 15 and December 7</b> anyone on Medicare can switch plans for next year. Fill this in once, then use it on Medicare's plan finder or bring it to a free SHINE counselor. It stays on this device.</p>
+    <label class="pk-ta">Prescriptions — one per line: name, dose, how often<textarea data-pk="rxList" rows="4" placeholder="e.g. Metformin 500 mg, twice a day">${v("rxList")}</textarea></label>
+    <label class="pk-ta">Pharmacy you use<input type="text" data-pk="pharmacy" value="${v("pharmacy")}" placeholder="e.g. CVS on Main St"></label>
+    <label class="pk-ta">Doctors you want to keep<textarea data-pk="doctors" rows="2" placeholder="e.g. Dr. Lee (primary care), Dr. Patel (cardiology)">${v("doctors")}</textarea></label>
+    <label class="pk-ta">Current plan (name on the card)<input type="text" data-pk="currentPlan" value="${v("currentPlan")}" placeholder="e.g. Original Medicare + Medigap Core"></label>
+    <p><b>Compare plans yourself:</b> <a href="https://www.medicare.gov/plan-compare" target="_blank" rel="noopener">Medicare Plan Finder</a> — enter the drugs and pharmacy above, and it shows each plan's yearly cost.</p>
+    <p><b>Or get free, unbiased help:</b> ${shine?`${shine.n} — <a href="tel:${(shine.p||"").replace(/[^0-9+]/g,"")}">${shine.p||""}</a>`:"SHINE"} (statewide line: <a href="tel:8002434636">(800) 243-4636</a>). SHINE counselors don't sell insurance.</p>
+    <button type="button" class="btn ghost pk-medprint">🖨 Print this sheet</button>
+  </div></details>`;
 }
 const FORM_INFO={
   "961":{title:"Senior exemption application (State Tax Form 96-1)", to:"assessor", docs:["Copy of birth certificate (first year only)","Last year's income (tax return or Social Security statement)","Bank and investment statements"]},
@@ -484,12 +500,14 @@ function wirePacket(){
   document.querySelectorAll("[data-pk]").forEach(el=>el.addEventListener("input",()=>{ PK[el.dataset.pk]=el.value; updSum(); saveProgress(); }));
   updSum();
   document.querySelectorAll(".pk-letter").forEach(b=>b.addEventListener("click",()=>downloadLetter(b.dataset.form)));
+  const mp=document.querySelector(".pk-medprint");
+  if(mp) mp.addEventListener("click",()=>{ document.body.classList.add("print-med"); window.print(); });
   document.querySelectorAll(".pk-cal").forEach(b=>b.addEventListener("click",()=>downloadICS(b.dataset.form)));
   document.querySelectorAll(".pk-dl").forEach(b=>b.addEventListener("click",()=>downloadForm(b.dataset.form,b)));
   const pr=document.querySelector(".pk-print");
   if(pr) pr.addEventListener("click",()=>{ document.body.classList.add("print-packet"); document.querySelectorAll(".pk-ws").forEach(d=>d.open=true); window.print(); });
 }
-window.addEventListener("afterprint",()=>document.body.classList.remove("print-packet"));
+window.addEventListener("afterprint",()=>{ document.body.classList.remove("print-packet"); document.body.classList.remove("print-med"); });
 
 const STATS_URL = "https://benefighter-stats.pangserve.workers.dev/c";
 const STATS_OFF = (navigator.doNotTrack==="1" || window.doNotTrack==="1" || navigator.globalPrivacyControl===true || navigator.webdriver===true || !/benefighter\.com$/.test(location.hostname));   // webdriver: skip automated browsers (our own tests, bots)
@@ -1053,13 +1071,13 @@ function programs(){
       where:"MassOptions 800-243-4636."});
   }
 
-  // 29. Medicare plan check-up (annual open enrollment)
+  // 29. Medicare plan check-up (annual open enrollment) — dates/cap from Medicare & You 2027; Medigap rule 211 CMR 71.10 (medical factsheet §4)
   if(A.medicare==="yes"){
     out.push({id:"medicareoe",name:"Medicare Plan Check-Up (Oct 15 – Dec 7)",status:"maybe",val:0,valTxt:"often lowers drug & plan costs",
-      why:"Every fall (Oct 15 – Dec 7) Medicare plans can be switched. A free, unbiased SHINE counselor can compare drug plans and Medicare Advantage vs. Medigap — plans change every year.",
-      form:"Free SHINE appointment.",forml:"https://www.mass.gov/health-insurance-counseling",
-      docs:["Medicare card","List of current prescriptions and doctors"],
-      where:"Call 800-243-4636 (MassOptions) and ask for SHINE."});
+      why:"Plans change their drug lists, costs and doctor networks every year. From October 15 to December 7, 2026, anyone on Medicare can switch plans for 2027 (the new plan starts January 1). In 2027, out-of-pocket costs for covered drugs are capped at $2,400. Someone in a Medicare Advantage plan also gets one change between January 1 and March 31. In Massachusetts, Medigap plans can't turn anyone down or charge more because of their health. A free SHINE counselor compares plans and doesn't sell insurance.",
+      form:"Compare on Medicare's Plan Finder, or book a free SHINE appointment.",forml:"https://www.mass.gov/shine-program",
+      docs:["Medicare card","Every prescription, with the dose and how often","The pharmacy they use","Doctors they want to keep"],
+      where:"Medicare Plan Finder: medicare.gov/plan-compare. SHINE (free, unbiased): (800) 243-4636. The Medicare plan check-up sheet on this page keeps the list in one place."});
   }
 
   // 30. Unclaimed property — everyone
@@ -1127,6 +1145,68 @@ function programs(){
     }
   }
 
+  // ================= Medical help (2026-09-26; every fact from reviews/2026-09-26_medical_factsheet.md, fetched that day) =================
+
+  // 36. Health Safety Net — pays hospital & community-health-center bills; any age; income up to 300% of poverty (101 CMR 613)
+  (()=>{
+    const has=(A.already||[]);
+    if(has.includes("masshealth") || A.healthCov==="masshealth") return;   // MassHealth itself covers these bills
+    const f=fplFor(hh), pct=inc/f, lim150=Math.round(1.5*f), lim300=Math.round(3*f);
+    const mc=A.medicare==="yes", priv=A.healthCov==="employer";
+    const pays = mc ? " With Medicare, it pays the Medicare copays, coinsurance and deductibles."
+               : (priv ? " Alongside a job or retiree plan, it pays only for services the plan doesn't cover — not the plan's copays." : "");
+    const common=" It works only at Massachusetts hospitals and community health centers, and doctors at many hospitals bill separately (HSN doesn't cover those doctor bills). There's no card, and it renews every year.";
+    let st, why, name="Health Safety Net (hospital & health-center bills)";
+    if(mc && has.includes("msp")){ st="have"; why="✓ Comes with the Medicare Savings Program they already get: it pays Medicare copays, coinsurance and deductibles at Massachusetts hospitals and community health centers. Tell the billing office they have Health Safety Net."+common; }
+    else if(pct<=1.5){ st=priv?"maybe":"likely"; why=`Income (~${money(inc)}) is under ~${money(lim150)} for a household of ${hh}, so Health Safety Net has no deductible.`+pays+common; }
+    else if(pct<=3){ st="maybe"; why=`Income (~${money(inc)}) is under the ~${money(lim300)} limit for a household of ${hh}. At this income it's "Partial" Health Safety Net: it pays after a yearly deductible that depends on income.`+pays+common; }
+    else {
+      const thr = pct<=3.05?0.15:pct<=4.05?0.20:pct<=6.05?0.30:0.40;   // Medical Hardship: bills over this share of income (101 CMR 613.05)
+      if(!(med>0 && med>thr*inc)) return;
+      st="maybe"; name="Health Safety Net: Medical Hardship (big medical bills)";
+      why=`Income is over the regular Health Safety Net limit, but medical bills (~${money(med)} a year) are more than ${Math.round(thr*100)}% of income. "Medical Hardship" works at any income and can pay hospital and health-center bills from the past 12 months. It's a one-time decision, not ongoing coverage.`;
+    }
+    if(mc && st!=="have" && name.indexOf("Hardship")<0 && inc<=(MSP_INC[hh]||MSP_INC[2])) why+=" Applying for the Medicare Savings Program gets this too — the same application.";
+    out.push({id:"hsn",name,status:st,val:0,valTxt:st==="have"?"already included":"pays hospital & health-center bills",why,
+      form: age>=65 ? "The MassHealth senior application (SACA-2) — it checks MassHealth, the Medicare Savings Program and Health Safety Net together." : "The Massachusetts health coverage application (ACA-3, or online through the Health Connector) — it checks MassHealth and Health Safety Net together.",
+      forml:"https://www.mass.gov/info-details/health-safety-net-for-patients",
+      docs:["Proof of income (Social Security letter, pension statements)","Proof of Massachusetts address","ID","Hospital or health-center bills, if asking about past bills"],
+      where:"Apply through MassHealth — customer service (800) 841-2900. No tax return is needed to apply. Keep receipts toward any deductible yourself; HSN doesn't track it."});
+  })();
+
+  // 37. Rides to medical appointments
+  if(age>=60 || disabled || A.veteran==="vet"){
+    const t=townLookup(A.town);
+    const mh=(A.already||[]).includes("masshealth") || A.healthCov==="masshealth";
+    const bits=[];
+    if(mh) bits.push("MassHealth Standard, CommonHealth and CarePlus members who can't use the bus or a car get free rides to medical and dental appointments — the doctor's office asks for them online (a \"PT-1\"). The Medicare Savings Program alone doesn't include rides.");
+    if(age>=60) bits.push("Councils on Aging often run rides to appointments for people 60+ — each town sets its own rules.");
+    if(disabled) bits.push("With a disability that makes buses and trains hard, door-to-door paratransit is available: The RIDE around Boston ($3.35 a trip, $1.70 with a senior card), or the local transit authority's version elsewhere (by law no more than twice the bus fare).");
+    if(A.veteran==="vet") bits.push("Veterans enrolled in VA health care can get free rides to VA appointments (VetRide, or DAV vans in some areas), and some get mileage paid back.");
+    if(A.medicare==="yes") bits.push("Some Medicare Advantage plans include rides — check the plan's benefits.");
+    const coa = t&&t.coa ? `${t.coa.n||"The Council on Aging"}${t.coa.p?` — <a href="tel:${t.coa.p.replace(/[^0-9+]/g,"")}">${t.coa.p}</a>`:""}` : "the town Council on Aging";
+    out.push({id:"rides",name:"Rides to Medical Appointments",status:"maybe",val:0,valTxt:"free or low-cost rides",
+      why:bits.join(" "),
+      form: mh ? "The doctor's office submits a PT-1 request; then book the ride." : "Call to register — rules vary by town and program.",
+      forml: mh ? "https://www.mass.gov/info-details/get-a-ride-to-masshealth-medical-appointments" : "https://www.mass.gov/info-details/health-care-transportation",
+      docs:["Appointment dates and addresses","MassHealth or Medicare card","Proof of disability, for paratransit"],
+      where:`Start with ${coa}.`+(mh?` MassHealth rides: MART (866) 834-9991 or GATRA (800) 431-1713 — book at least 3 days ahead.`:"")+(disabled?` The RIDE: (617) 337-2727 (needs an in-person assessment).`:"")+(A.veteran==="vet"?` VA: ask the transportation office at the VA clinic, or request a ride through VetRide on va.gov.`:"")});
+  }
+
+  // 38. Dental, glasses & hearing aids — Original Medicare doesn't cover them
+  if(age>=60 || A.medicare==="yes"){
+    const mh=(A.already||[]).includes("masshealth") || A.healthCov==="masshealth";
+    const hsnOK = !isUnknown("incomeSS") && !isUnknown("incomeOther") && inc <= 3*fplFor(hh);
+    let why;
+    if(mh) why="MassHealth (Standard, CommonHealth, CarePlus or Family Assistance) covers adult dental — cleanings, fillings, root canals, crowns and dentures — up to $1,750 a year (a new limit since August 1, 2026; certain emergency care, extractions and first full dentures after extractions are still covered past it). It also pays for an eye exam and glasses every 24 months, and hearing aids. The Medicare Savings Program alone covers none of these.";
+    else why=`${A.medicare==="yes"?"Original Medicare doesn't pay for routine dental care, glasses or hearing aids, and Medigap generally doesn't either. ":""}Lower-cost options: the Tufts, BU and Harvard dental school clinics charge less than most private dentists (all three accept MassHealth); over-the-counter hearing aids need no prescription for mild to moderate hearing loss${A.medicare==="yes"?"; and some Medicare Advantage plans add dental, vision and hearing (compare during the fall plan check-up)":""}.${hsnOK?" At this income, Health Safety Net can also cover adult dental at a community health center (up to $1,750 a year).":""}`;
+    out.push({id:"dvh",name:"Dental, Glasses & Hearing Aids",status:"maybe",val:0,valTxt:mh?"covered by MassHealth":"lower-cost options",why,
+      form: mh ? "Covered with the MassHealth card — use a dentist or eye doctor who takes MassHealth." : "No application — call a clinic, or buy OTC hearing aids in a store or online.",
+      forml: mh ? "https://www.mass.gov/info-details/learn-about-masshealth-dental-benefits" : "https://www.medicare.gov/coverage/dental-services",
+      docs:["Insurance cards","A list of any dental or hearing problems"],
+      where: mh ? "MassHealth dental customer service: (866) 616-2699 (finds dentists who take MassHealth)." : "Dental school clinics: Tufts (617) 636-6998 · BU (617) 358-8310 · Harvard (617) 432-1434 ext. 1. If hearing loss seems severe, see an audiologist or doctor rather than buying over the counter."});
+  }
+
   // ---- Unknown-answer handling: a created card that depends on a skipped ("not sure") field becomes "verify — needs info" ----
   const DEP={
     cb:["filing","dependent","incomeSS","incomeOther","propTax","assessed","rent","subsidized","spouseAge"],
@@ -1146,7 +1226,8 @@ function programs(){
     rentdeduct:["rent","filing"],
     energy6080:["incomeSS","incomeOther","hhSize","hhOtherInc"],
     seniorfood:["incomeSS","incomeOther"],
-    vacomp:["vetService"]
+    vacomp:["vetService"],
+    hsn:["incomeSS","incomeOther"]
   };
   out.forEach(p=>{
     if(p.status==="have"||p.status==="refer"||p.status==="no") return;
