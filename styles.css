@@ -728,3 +728,16 @@ img { max-width: 100%; display: block; }
 .guide-page .header-cta { margin-left: auto; }
 .guide-page .check-footer { background: var(--pine-deep); color: #A9C3B5; padding: 26px 0; font-size: .92rem; }
 .guide-page .check-footer a { color: #fff; }
+
+/* ---- A real story (our own family story) ---- */
+.story-band { padding-block: clamp(30px, 5vw, 54px); }
+.story { display: grid; grid-template-columns: minmax(220px, 340px) 1fr; gap: clamp(20px, 4vw, 44px); align-items: center; margin: 0; background: #fff; border: 1px solid var(--paper-3); border-radius: 22px; padding: clamp(16px, 3vw, 28px); box-shadow: var(--shadow-soft); }
+.story-photo { width: 100%; height: auto; border-radius: 16px; display: block; object-fit: cover; aspect-ratio: 4 / 5; }
+.story-copy .eyebrow { margin-bottom: .5em; }
+.story-quote { margin: 0 0 .6em; font-family: var(--serif); font-size: clamp(1.35rem, 3.2vw, 1.85rem); line-height: 1.3; color: var(--pine-deep); }
+.story-who { margin: 0 0 1em; font-size: 1.08rem; color: var(--ink); }
+.story-fact { margin: 0 0 1.2em; font-size: 1.05rem; background: var(--pine-tint); border-radius: 12px; padding: 12px 14px; }
+@media (max-width: 720px) {
+  .story { grid-template-columns: 1fr; }
+  .story-photo { max-width: 300px; margin: 0 auto; }
+}

@@ -290,17 +290,25 @@ function loadScriptOnce(src){
   return new Promise((ok,bad)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok();
     const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=()=>bad(new Error("could not load "+src)); document.head.appendChild(el); });
 }
+const FORMS={
+  msp:{file:"forms/medicare-savings-programs-application.pdf", fn:"fillMSP", out:"Medicare-Savings-application-prefilled.pdf"},
+  "961":{file:"forms/form-96-1-senior-exemption.pdf", fn:"fill961", out:"Form-96-1-senior-exemption-prefilled.pdf"},
+  "962":{file:"forms/form-96-2-surviving-spouse.pdf", fn:"fill962", out:"Form-96-2-surviving-spouse-exemption-prefilled.pdf"},
+  "963":{file:"forms/form-96-3-blind.pdf", fn:"fill963", out:"Form-96-3-blind-exemption-prefilled.pdf"},
+  "964":{file:"forms/form-96-4-veterans.pdf", fn:"fill964", out:"Form-96-4-veterans-exemption-prefilled.pdf"},
+  "97":{file:"forms/form-97-senior-tax-deferral.pdf", fn:"fill97", out:"Form-97-senior-tax-deferral-prefilled.pdf"}
+};
 async function downloadForm(kind, btn){
   const old=btn.innerHTML; btn.disabled=true; btn.innerHTML="Filling in…";
   try{
     await loadScriptOnce("vendor/pdf-lib.min.js"); await loadScriptOnce("forms.js");
-    const file = kind==="msp" ? "forms/medicare-savings-programs-application.pdf" : "forms/form-96-1-senior-exemption.pdf";
-    const r=await fetch(file); if(!r.ok) throw new Error("form download failed ("+r.status+")");
+    const F=FORMS[kind]; if(!F) throw new Error("unknown form "+kind);
+    const r=await fetch(F.file); if(!r.ok) throw new Error("form download failed ("+r.status+")");
     const bytes=new Uint8Array(await r.arrayBuffer());
     const town=(townLookup(A.town)||{}).name||A.town;
-    const out = kind==="msp" ? await BFForms.fillMSP(PDFLib, bytes, A, PK, town) : await BFForms.fill961(PDFLib, bytes, A, PK, town);
+    const out = await BFForms[F.fn](PDFLib, bytes, A, PK, town);
     const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
-    const a=document.createElement("a"); a.href=url; a.download = kind==="msp" ? "Medicare-Savings-application-prefilled.pdf" : "Form-96-1-senior-exemption-prefilled.pdf";
+    const a=document.createElement("a"); a.href=url; a.download = F.out;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 60000);
     btn.innerHTML="✓ Downloaded — tap again for a fresh copy";
   }catch(e){ btn.innerHTML="Couldn't build the form — try again"; console.error(e); }
@@ -332,6 +340,16 @@ function packetCard(ps){
     <p class="pk-note">Still to add by hand: date of birth, SSN, Medicare number, citizenship questions, each person's income by type, and the signature on page 3 (both spouses sign if married and living together). Mail to MassHealth Enrollment Center, PO Box 4405, Taunton, MA 02780-0968, or fax (857) 323-8300. Free help: SHINE, (800) 243-4636.</p></div>`);
   if(A.housing==="own" && (open("ex41c")||open("ex17d"))) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="961">⬇ Senior exemption application (Form 96-1) — pre-filled</button>
     <p class="pk-note">Still to add by hand: date of birth, a breakdown of other income, bank and investment details, and the signature on page 3. Bring or mail it to the ${town} Board of Assessors by April 1, or within 3 months after the actual tax bills are mailed — whichever is later.</p></div>`);
+  const age=Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0);
+  const assessorLine=`Bring or mail it to the ${town} Board of Assessors by April 1, or within 3 months after the actual tax bills are mailed — whichever is later.`;
+  if(A.housing==="own" && open("ex17d") && A.marital==="widowed" && age<70) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="962">⬇ Surviving-spouse exemption (Form 96-2) — pre-filled</button>
+    <p class="pk-note">Still to add by hand: your late spouse's name and date of death, your bank and investment details, and your signature. Attach a copy of the death certificate the first year. ${assessorLine}</p></div>`);
+  if(A.housing==="own" && open("vet22")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="964">⬇ Veterans exemption (Form 96-4) — pre-filled</button>
+    <p class="pk-note">Still to add by hand: service details, your VA disability rating letter, and your signature. Attach discharge papers (DD-214) the first year. ${assessorLine} A free Veterans Service Officer can help.</p></div>`);
+  if(A.housing==="own" && open("blind37a")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="963">⬇ Blind exemption (Form 96-3) — pre-filled</button>
+    <p class="pk-note">Still to add by hand: your Mass. Commission for the Blind registration (or a doctor's letter) and your signature. ${assessorLine}</p></div>`);
+  if(A.housing==="own" && open("defer41a")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="97">⬇ Senior tax deferral (Form 97) — pre-filled</button>
+    <p class="pk-note">Still to add by hand: date of birth, how much tax to defer, mortgage details, a breakdown of other income, and your signature. It also needs the Tax Deferral and Recovery Agreement (Form 97-1) from the assessor. Talk it over with family first — it's repaid when the home is sold. ${assessorLine}</p></div>`);
   const ws=cbWorksheet(ps);
   // Keep the checklist short: every "apply now" match, then the most valuable "worth verifying" ones, max 8.
   const likely=(ps||[]).filter(p=>p.status==="likely"), maybes=(ps||[]).filter(p=>p.status==="maybe").sort((a,b)=>(b.val||0)-(a.val||0));
