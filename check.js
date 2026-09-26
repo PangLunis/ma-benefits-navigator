@@ -659,6 +659,8 @@ function wirePacket(){
   document.querySelectorAll(".pk-letter").forEach(b=>b.addEventListener("click",()=>downloadLetter(b.dataset.form)));
   const gd=document.querySelector(".pk-guide");
   if(gd) gd.addEventListener("click",openGuide);
+  const fg=document.querySelector(".fr-guide");
+  if(fg) fg.addEventListener("click",openGuide);
   const ms=document.querySelector(".pk-mailsheet");
   if(ms) ms.addEventListener("click",downloadMailingSheet);
   const hp=document.querySelector(".pk-heatprint");
@@ -1436,6 +1438,13 @@ function results(){
 
   const maybeN=ps.filter(p=>p.status==="maybe").length;
   const unknownN=Q.filter(q=>A[q.id]==="unknown").length;
+  // Forms callout near the top: the claim packet is far down the page, and older users may never scroll to it.
+  const pkHtml=packetCard(ps);
+  const nForms=new Set([...pkHtml.matchAll(/class="btn [^"]*pk-dl[^"]*" [^>]*data-form="([^"]+)"/g)].map(m=>m[1])).size;
+  const nQ=nForms?guideSteps(pkHtml).length:0;
+  const formsReady = nForms ? `<div class="formsready"><div class="fr-t">📄 ${nForms} official form${nForms>1?"s are":" is"} ready for ${nm==="this person"?"you":nm}, already filled in from these answers</div>
+      <button type="button" class="btn prim fr-guide">✍️ Fill in my forms — ${nQ} quick questions</button>
+      <a class="fr-see" href="#packet">See the forms ↓</a></div>` : "";
   let h=`<div class="headline">
       <div class="pill" style="color:#fff;background:rgba(255,255,255,.18)">${(A.town||"Massachusetts")}</div>
       <div class="big">${total>0?"≈ "+money(total)+"/yr":"Let's dig in"}</div>
@@ -1443,6 +1452,7 @@ function results(){
       ${maybeTotal>0?`<div class="lbl" style="opacity:.9;margin-top:4px;">+ up to ~${money(maybeTotal)}/yr more in programs worth verifying</div>`:""}
       <div class="sub">${likely.length} to apply for now &middot; ${maybeN} worth verifying${haveN?` &middot; ${haveN} already active`:""}. Tap any card for the exact form, documents, and where to file.</div>
     </div>
+    ${formsReady}
     ${Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0)<60 && A.disability!=="yes" ? `<div class="estnote" style="background:#FFF6E0;border-color:#EFD891"><b>Note:</b> most programs here are for people 60 and older (many start at 65). ${nm==="this person"?"They are":nm+" is"} ${num(A.age)||"under 60"}, so only programs with no age requirement are shown as possible matches.</div>`:""}
     <div class="estnote">These are <b>estimates, not guarantees</b> — each program must be applied for and confirmed, and amounts vary by income and town. This tool finds what to chase; it doesn't approve anything.</div>
     <div class="legend">
@@ -1461,7 +1471,7 @@ function results(){
       </ol>
     </div>`;
   h+=townCard(ps);
-  h+=packetCard(ps);
+  h+=pkHtml;
   // Review / change answers — tap "Change" to jump back to any question, then return here.
   const visQ=visible();
   h+=`<details class="answers"><summary>✏️ Review or change your answers (${visQ.length})</summary><ul>`;
