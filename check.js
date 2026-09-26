@@ -58,9 +58,9 @@ const Q = [
     help:"Check the deed or the top of the tax bill. \"In a trust\" = a family/living trust owns the home. \"Life estate\" is a legal arrangement (often for Medicaid planning). Don't know? Tap \"I'm not sure.\"",
     opts:[{v:"own_name",l:"In their own name"},{v:"trust",l:"In a trust"},{v:"life_estate",l:"Life estate"},{v:"multi",l:"Shared with others on the deed"}],
     showIf:a=>a.housing==="own"},
-  {id:"incomeSS", type:"currency", period:"mo", q:n=>`${whoC(n)} Social Security income?`, hint:"Just Social Security, before Medicare is taken out. Pick per month or per year. Enter 0 if none.",
+  {id:"incomeSS", type:"currency", period:"mo", q:n=>n.marital==="married"?`Social Security income for ${who(n)==="this person"?"them":who(n)} and their spouse, combined?`:`${whoC(n)} Social Security income?`, hint:"Just Social Security, before Medicare is taken out. If married, add both spouses together. Pick per month or per year. Enter 0 if none.",
     help:"The yearly Social Security total BEFORE the Medicare premium comes out — it's on the annual Social Security letter (Form SSA-1099). If you only know the monthly deposit, add about $203/month for Medicare Part B, then × 12. A rough number is fine."},
-  {id:"incomeOther", type:"currency", period:"yr", q:"Other income?", hint:"Everything except Social Security — pensions, wages, IRA withdrawals, interest. Pick per month or per year.",
+  {id:"incomeOther", type:"currency", period:"yr", q:n=>n.marital==="married"?"Other income — both spouses combined?":"Other income?", hint:"Everything except Social Security — pensions, wages, IRA withdrawals, interest. If married, include the spouse's income too, even if the spouse still works. Pick per month or per year.",
     help:"Add up pensions, any wages, IRA/401(k) withdrawals, interest & dividends, and rental income — everything EXCEPT Social Security. A close estimate is fine."},
   {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Do NOT count the home or one car.",
     help:"Add up checking, savings, CDs, and investment/IRA accounts. Do NOT count the home they live in or one car. A ballpark is fine."},
@@ -225,26 +225,35 @@ function agencyHTML(ids, nbhd){
   if(list.length>1 && nbhd){ const m=list.filter(a=>(a.a||[]).some(x=>x.toLowerCase()===nbhd)); if(m.length) list=m; }
   return list.map(a=>`${a.u?`<a href="${a.u}" target="_blank" rel="noopener">${a.n}</a>`:a.n}${a.p?` — <a href="tel:${a.p.replace(/[^0-9+]/g,"")}">${a.p}</a>`:""}${list.length>1&&a.a?`<br><span class="tc-areas">Serves: ${a.a.join(", ")}</span>`:""}`).join("<br>");
 }
-function townCard(){
-  const t=townLookup(A.town);
-  if(!A.town) return "";
-  if(!t) return `<div class="towncard"><h3>📍 Your town</h3><p>We couldn't match "${String(A.town).replace(/[<>&"]/g,"")}" to one of Massachusetts' 351 cities and towns, so we can't show town-specific details. If it's a village or neighborhood, tap <b>Change</b> next to "Town" below and pick the town it's part of.</p></div>`;
-  const owner=A.housing==="own", age=Math.max(num(A.age)||0, num(A.spouseAge)||0);
+function townTaxRows(t, ps){
+  // Only list a town tax break if the engine did NOT rule the person out (age, income, assets, years owned).
+  // 2026-09-25 bug: a 47-year-old saw the senior exemption because this card re-decided on its own.
+  const st=id=>{ const p=(ps||[]).find(x=>x.id===id); return p?p.status:null; };
+  const open=id=>{ const s=st(id); return s!==null && s!=="no"; };
+  const age=Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0);
   const rows=[];
-  if(owner){
+  if(A.housing!=="own" || !t) return rows;
+  if(open("ex41c")){
     let ex="";
     if(t.c==="41C½") ex=`<b>Senior exemption (Clause 41C½)</b> — a larger version tied to home values in town, with <b>no savings limit</b> and an income limit that follows the state Circuit Breaker limit.`;
     else if(t.c==="41C"||t.c==="41B") ex=`<b>Senior exemption (Clause ${t.c})</b> — usually $500–$1,000 a year off the bill, with income and savings limits the town sets.`;
     if(ex){ ex+= t.age ? ` State records list the qualifying age as <b>${t.age}</b>.` : ` Starts at age 70, or 65 if the town lowered it.`; rows.push(ex); }
-    if(t.mt) rows.push(`<b>A local means-tested senior exemption</b> — ${t.name} has its own extra tax break for lower-income seniors.`);
-    if(t.ss && (age>=70 || A.marital==="widowed")) rows.push(t.ss==="17D" ? `<b>Age 70+ / surviving spouse exemption (Clause 17D)</b> — about $175 a year, no income test, savings limit about $40,000 (home not counted).` : `<b>Age 70+ / surviving spouse exemption (Clause ${t.ss})</b> — about $175 a year, with a savings limit the town can confirm.`);
-    if(A.veteran==="vet") rows.push(`<b>Veterans exemption (Clause 22)</b> — every town offers it: $400+ a year with a 10%+ service-connected rating, more for higher ratings.`);
-    if(A.blind==="yes") rows.push(t.b37?`<b>Blind exemption (Clause 37A)</b> — $500 a year.`:`<b>Blind exemption</b> — $437.50 a year (or $500 if the town adopted Clause 37A).`);
-    if(t.cpa && t.cpas) rows.push(`<b>Community Preservation Act surcharge exemption</b> — ${t.name} has the CPA surcharge on tax bills and exempts qualifying low- and moderate-income seniors from it.`);
-    if(t.res) rows.push(`<b>Residential exemption (${t.res}%)</b> — ${t.name} lowers the taxable value of homes that are the owner's main residence. If it isn't on the bill, apply.`);
-    if(age>=60) rows.push(`<b>Senior tax work-off</b> — many towns let people 60+ volunteer for up to <b>$2,000 a year</b> off the bill. State records don't list which towns run it, so ask.`);
-    if(age>=65) rows.push(`<b>Tax deferral (Clause 41A)</b> — postpone the tax until the home is sold (with interest).${t.d41?` ${t.d41} ${t.d41===1?"homeowner":"homeowners"} in ${t.name} used it last year.`:""}`);
   }
+  if(t.mt && open("ex41c")) rows.push(`<b>A local means-tested senior exemption</b> — ${t.name} has its own extra tax break for lower-income seniors.`);
+  if(t.ss && open("ex17d")) rows.push(t.ss==="17D" ? `<b>Age 70+ / surviving spouse exemption (Clause 17D)</b> — about $175 a year, no income test, savings limit about $40,000 (home not counted).` : `<b>Age 70+ / surviving spouse exemption (Clause ${t.ss})</b> — about $175 a year, with a savings limit the town can confirm.`);
+  if(open("vet22")) rows.push(`<b>Veterans exemption (Clause 22)</b> — every town offers it: $400+ a year with a 10%+ service-connected rating, more for higher ratings.`);
+  if(open("blind37a")) rows.push(t.b37?`<b>Blind exemption (Clause 37A)</b> — $500 a year.`:`<b>Blind exemption</b> — $437.50 a year (or $500 if the town adopted Clause 37A).`);
+  if(t.cpa && t.cpas && age>=60 && (open("ex41c")||open("cb"))) rows.push(`<b>Community Preservation Act surcharge exemption</b> — ${t.name} has the CPA surcharge on tax bills and exempts qualifying low- and moderate-income seniors from it.`);
+  if(t.res) rows.push(`<b>Residential exemption (${t.res}%)</b> — ${t.name} lowers the taxable value of homes that are the owner's main residence. If it isn't on the bill, apply.`);
+  if(open("workoff")) rows.push(`<b>Senior tax work-off</b> — many towns let people 60+ volunteer for up to <b>$2,000 a year</b> off the bill. State records don't list which towns run it, so ask.`);
+  if(open("defer41a")) rows.push(`<b>Tax deferral (Clause 41A)</b> — postpone the tax until the home is sold (with interest).${t.d41?` ${t.d41} ${t.d41===1?"homeowner":"homeowners"} in ${t.name} used it last year.`:""}`);
+  return rows;
+}
+function townCard(ps){
+  const t=townLookup(A.town);
+  if(!A.town) return "";
+  if(!t) return `<div class="towncard"><h3>📍 Your town</h3><p>We couldn't match "${String(A.town).replace(/[<>&"]/g,"")}" to one of Massachusetts' 351 cities and towns, so we can't show town-specific details. If it's a village or neighborhood, tap <b>Change</b> next to "Town" below and pick the town it's part of.</p></div>`;
+  const rows=townTaxRows(t, ps);
   const svc=[];
   if(t.fuel) svc.push(`<b>Heating help (fuel assistance):</b><br>${agencyHTML(t.fuel)}`);
   if(t.asap) svc.push(`<b>Home care and elder services (Aging Services Access Point):</b><br>${agencyHTML(t.asap, townKey(A.town))}`);
@@ -833,7 +842,7 @@ function programs(){
 
   // 30. Unclaimed property — everyone
   out.push({id:"unclaimed",name:"Unclaimed Money Held by the State",status:"maybe",val:0,valTxt:"one in ten people have some",
-    why:"The State Treasurer holds about $2 billion in unclaimed property — old bank accounts, uncashed checks, insurance. Especially worth a search for widows and widowers (a late spouse's accounts).",
+    why:"The State Treasurer holds billions of dollars in unclaimed property — old bank accounts, uncashed checks, insurance. Especially worth a search for widows and widowers (a late spouse's accounts).",
     form:"Free search and claim at FindMassMoney.gov.",forml:"https://www.mass.gov/how-to/find-unclaimed-property",
     docs:["ID","Proof of past address, if asked"],
     where:"Search online at findmassmoney.gov, or call (617) 367-0400. It's free — never pay a 'finder' to claim it."});
@@ -966,6 +975,7 @@ function results(){
       ${maybeTotal>0?`<div class="lbl" style="opacity:.9;margin-top:4px;">+ up to ~${money(maybeTotal)}/yr more in programs worth verifying</div>`:""}
       <div class="sub">${likely.length} to apply for now &middot; ${maybeN} worth verifying${haveN?` &middot; ${haveN} already active`:""}. Tap any card for the exact form, documents, and where to file.</div>
     </div>
+    ${Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0)<60 && A.disability!=="yes" ? `<div class="estnote" style="background:#FFF6E0;border-color:#EFD891"><b>Note:</b> most programs here are for people 60 and older (many start at 65). ${nm==="this person"?"They are":nm+" is"} ${num(A.age)||"under 60"}, so only programs with no age requirement are shown as possible matches.</div>`:""}
     <div class="estnote">These are <b>estimates, not guarantees</b> — each program must be applied for and confirmed, and amounts vary by income and town. This tool finds what to chase; it doesn't approve anything.</div>
     <div class="legend">
       <span><i style="background:var(--green)"></i>Apply now</span>
@@ -976,14 +986,14 @@ function results(){
     <div class="nextsteps">
       <h3>What to do next</h3>
       <ol>
-        ${A.housing==="own"&&A.town?`<li><b>Call the ${townLookup(A.town)?.name||"town"} assessor's office</b> about senior property-tax breaks — see <b>"Your town"</b> just below for what to ask. This is the one people most often miss.</li>`:""}
+        ${townTaxRows(townLookup(A.town), ps).length?`<li><b>Call the ${townLookup(A.town)?.name||"town"} assessor's office</b> about senior property-tax breaks — see <b>"Your town"</b> just below for what to ask. This is the one people most often miss.</li>`:""}
         <li><b>Start with the green "Apply for these" cards below.</b> Tap <b>How to claim it</b> on each one to see the exact form, what to gather, and where to file.</li>
         ${unknownN?`<li><b>Track down the ${unknownN} answer${unknownN>1?"s":""} you weren't sure about</b> — the yellow box explains where to find each one.</li>`:""}
         <li><b>Print or save this page</b> with the button at the bottom, so you have the list when you make calls.</li>
         <li><b>Want help doing it?</b> Our Full Benefits Check turns this into a written plan and walks through it with you on a call — see the bottom of this page.</li>
       </ol>
     </div>`;
-  h+=townCard();
+  h+=townCard(ps);
   // Review / change answers — tap "Change" to jump back to any question, then return here.
   const visQ=visible();
   h+=`<details class="answers"><summary>✏️ Review or change your answers (${visQ.length})</summary><ul>`;
