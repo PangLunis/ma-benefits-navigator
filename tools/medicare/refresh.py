@@ -60,8 +60,10 @@ def main():
     today = datetime.date.today()
     years = [today.year, today.year + 1]
     changed_years = []
+    force = os.environ.get("BF_FORCE_YEAR")              # test hook: treat this year as changed (runs the full pipeline)
     for y in years:
         ch, info = sources_changed(y)
+        if force and str(y) == force and ch is not None: ch = True
         if ch is None: say(f"{y}: not posted yet ({info})"); continue
         if ch: changed_years.append(y); say(f"{y}: new CMS files -> {info}")
         else: say(f"{y}: unchanged")
@@ -88,8 +90,11 @@ def main():
         subprocess.run(["git", "clean", "-fdq", "data/medicare"], cwd=ROOT)
     if ok and not bad:
         subprocess.run(["git", "add", "data/medicare"], cwd=ROOT)
-        subprocess.run(["git", "commit", "-qm", f"Medicare data refresh {', '.join(map(str, ok))} (verified vs Plan Finder)"], cwd=ROOT)
-        subprocess.run(["git", "push", "-q", "origin", BRANCH], cwd=ROOT)
+        if not subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=ROOT).returncode:
+            say("verified; data identical to what is committed - nothing to commit")
+        else:
+          subprocess.run(["git", "commit", "-qm", f"Medicare data refresh {', '.join(map(str, ok))} (verified vs Plan Finder)"], cwd=ROOT)
+          subprocess.run(["git", "push", "-q", "origin", BRANCH], cwd=ROOT)
     lines = [f"Medicare data refresh ({today}):"] + [f"- {y}: {s}" for y, s in results.items()]
     if bad: lines.append("Nothing was published; the site keeps the last verified data.")
     elif not PUBLISH: lines.append(f"Saved to the {BRANCH} branch (not live until launch).")
