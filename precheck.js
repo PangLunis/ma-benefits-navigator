@@ -266,3 +266,95 @@
     apply();
   });
 })();
+
+/* ===================== Motion pass (2026-09-26) =====================
+   Scroll reveals, count-up numbers, the "form fills itself" demo and the
+   phone sticky CTA. Content is fully visible without JS; everything is
+   instant (no motion) under prefers-reduced-motion. */
+(function () {
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var hasIO = "IntersectionObserver" in window;
+  var root = document.documentElement;
+
+  function countUp(el) {
+    var to = parseFloat(el.getAttribute("data-to")), pre = el.getAttribute("data-prefix") || "";
+    if (!to || reduce) { return; }
+    var t0 = null, dur = 1200;
+    function step(t) {
+      if (!t0) t0 = t;
+      var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = pre + Math.round(to * e).toLocaleString("en-US");
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ---- "We fill in the forms" demo ----
+  var demoTimers = [];
+  function demoReset(box) {
+    demoTimers.forEach(clearTimeout); demoTimers = [];
+    box.querySelectorAll(".fd-val").forEach(function (v) { v.textContent = ""; v.classList.remove("typing"); });
+    box.querySelectorAll(".fd-box").forEach(function (b) { b.classList.remove("on"); });
+    var st = box.querySelector(".fd-stamp"); if (st) st.classList.remove("on");
+  }
+  function demoFill(box, instant) {
+    var items = box.querySelectorAll(".fd-val, .fd-box"), t = 300;
+    items.forEach(function (it) {
+      if (it.classList.contains("fd-box")) {
+        if (instant) { it.classList.add("on"); return; }
+        demoTimers.push(setTimeout(function () { it.classList.add("on"); }, t)); t += 380; return;
+      }
+      var txt = it.getAttribute("data-type") || "";
+      if (instant) { it.textContent = txt; return; }
+      (function (el, text, start) {
+        demoTimers.push(setTimeout(function () { el.classList.add("typing"); }, start));
+        for (var i = 1; i <= text.length; i++) {
+          (function (j) { demoTimers.push(setTimeout(function () { el.textContent = text.slice(0, j); }, start + j * 55)); })(i);
+        }
+        demoTimers.push(setTimeout(function () { el.classList.remove("typing"); }, start + text.length * 55 + 120));
+      })(it, txt, t);
+      t += txt.length * 55 + 260;
+    });
+    var st = box.querySelector(".fd-stamp");
+    if (st) { if (instant) st.classList.add("on"); else demoTimers.push(setTimeout(function () { st.classList.add("on"); }, t + 200)); }
+  }
+
+  var demo = document.querySelector(".formsdemo-band");
+  if (!hasIO || reduce) {
+    document.querySelectorAll(".reveal").forEach(function (s) { s.classList.add("in"); });
+    if (demo) demoFill(demo, true);
+  } else {
+    root.classList.add("reveal-on");
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var s = en.target;
+        if (!s.classList.contains("in")) {
+          s.classList.add("in");
+          s.querySelectorAll(".count").forEach(countUp);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+    document.querySelectorAll(".reveal").forEach(function (s) { io.observe(s); });
+
+    if (demo) {
+      var playing = false;
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting && !playing) { playing = true; demoReset(demo); demoFill(demo, false); }
+          else if (!en.isIntersecting && playing) { playing = false; demoReset(demo); }
+        });
+      }, { threshold: 0.35 }).observe(demo.querySelector(".fd-paper") || demo);
+    }
+  }
+
+  // ---- Sticky "Start the free check" on phones ----
+  var sticky = document.querySelector(".sticky-cta");
+  if (sticky && hasIO) {
+    var heroCta = document.querySelector(".hero-cta"), finalCta = document.querySelector(".final-cta");
+    var heroVisible = true, finalVisible = false;
+    function upd() { sticky.classList.toggle("show", !heroVisible && !finalVisible); }
+    if (heroCta) new IntersectionObserver(function (e) { heroVisible = e[0].isIntersecting; upd(); }).observe(heroCta);
+    if (finalCta) new IntersectionObserver(function (e) { finalVisible = e[0].isIntersecting; upd(); }).observe(finalCta);
+  }
+})();
