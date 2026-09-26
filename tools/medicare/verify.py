@@ -20,6 +20,8 @@ LISTS = [
     ("brands", [("Eliquis 5 MG Oral Tablet", 60), ("Jardiance 10 MG Oral Tablet", 30)]),
     ("insulin", [("Lantus 100 UNT/ML in 3 ML Pen Injector", 1), ("gabapentin 300 MG Oral Capsule", 90), ("furosemide 20 MG Oral Tablet", 30)]),
     ("non-pills", [("TRELEGY ELLIPTA 100 MCG / 62.5 MCG / 25 MCG", 1), ("latanoprost 0.005 % Ophthalmic Solution", 1), ("atorvastatin calcium 20 MG Oral Tablet", 30)]),
+    # heavy brand use: reaches the yearly cap in Enhanced Alternative plans early in the year
+    ("heavy", [("Eliquis 5 MG Oral Tablet", 60), ("TRELEGY ELLIPTA 100 MCG / 62.5 MCG / 25 MCG", 1), ("OZEMPIC 2 MG in 3 ML Pen Injector", 1), ("atorvastatin calcium 20 MG Oral Tablet", 30)]),
 ]
 TOL_ABS, TOL_REL = 10.0, 0.10
 
