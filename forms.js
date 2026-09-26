@@ -146,7 +146,8 @@
       const f=form.getField(name);
       if(f.constructor && f.constructor.name==="PDFRadioGroup"){ f.select(onValue); return; }
       const af=f.acroField, N=PDFLib.PDFName;
-      af.setValue(N.of(onValue));
+      // pdf-lib only accepts the FIRST widget's "on" value here; for the second option of a pair, set /V directly.
+      try{ af.setValue(N.of(onValue)); }catch(e){ af.dict.set(N.of("V"), N.of(onValue)); }
       af.getWidgets().forEach(w=>{ const on=w.getOnValue(); w.setAppearanceState(on && on.decodeText && on.decodeText()===onValue ? N.of(onValue) : (on && on.asString && on.asString()==="/"+onValue ? N.of(onValue) : N.of("Off"))); });
     }catch(e){ console.warn("choose", name, e.message); }
   }
@@ -274,6 +275,81 @@
     return await doc.save();
   }
 
-  const api={ fy, mdy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillSNAP, fillMSP, fillCB };
+  // ---- MassHealth senior application (SACA-2, 08/26): MassHealth + Health Safety Net for people 65+ ----
+  // 42 pages / 1,259 fields; we fill only what the person told us. Yes/No questions are radio pairs whose export
+  // values are "1"/"2" (Yes/No, left/right) or "Yes"/"No". Income questions are PER PERSON: our income answers are
+  // a couple's combined totals, so for a married couple the per-person income lines are left for them to split.
+  function yesNo(PDFLib, form, name, yes){
+    // These pairs are one field with two widgets whose "on" values are 1/2 or Yes/No (pdf-lib sees a checkbox).
+    try{
+      const f=form.getField(name);
+      const ons=f.acroField.getWidgets().map(w=>{ const o=w.getOnValue(); return o ? (o.decodeText ? o.decodeText() : String(o).replace(/^\//,"")) : null; });
+      const want=ons.find(o=>o && (yes?/^(1|yes)$/i:/^(2|no)$/i).test(o));
+      if(want) choose(PDFLib, form, name, want); else console.warn("yesNo: no option for", name, ons);
+    }catch(e){ console.warn("yesNo", name, e.message); }
+  }
+  async function fillSACA2(PDFLib, bytes, A, extra, townName){
+    const doc=await PDFLib.PDFDocument.load(bytes), form=doc.getForm();
+    const town=townName||A.town, married=A.marital==="married";
+    const dob=d=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d||"")); return m?`${m[2]}/${m[3]}/${m[1]}`:""; };
+    check(form,"MassHealth or the Health Safety Net HSN");
+    // Step 1: contact person (the applicant) and address
+    setText(form,"1 First name middle name last name and suffix", extra.fullName);
+    setText(form,"2 Date of birth mmddyy", dob(extra.dob));
+    setText(form,"3 Street address Check this box if homeless You must provide a mailing address", extra.street);
+    setText(form,"5 City", town);
+    setText(form,"6 State", "MA");
+    if(/^\d{5}$/.test(String(extra.zip||"").trim())) setText(form,"7 ZIP code", String(extra.zip).trim());
+    if(extra.street) check(form,"Check if same as street address");
+    setText(form,"17 Other phone number", extra.phone);
+    setText(form,"19. # of people listed on the application", married?"2":"1");
+    yesNo(PDFLib, form,"14. Are you living in Massachusetts?", true);
+    // Step 2: Person 1
+    setText(form,"1 First name middle name last name and suffix_2", extra.fullName);
+    yesNo(PDFLib, form,"4 Are you applying for health or dental coverage for YOURSELF?", true);
+    if(["married","single","widowed","divorced"].includes(A.marital)) yesNo(PDFLib, form,"Are you legally married?", married);
+    if(married && (extra.spouseName||extra.spouseDob)) setText(form,"If Yes, list name of spouse and date of birth", [extra.spouseName, dob(extra.spouseDob)].filter(Boolean).join(", "));
+    if(A.dependent==="yes"||A.dependent==="no") yesNo(PDFLib, form,"Will you be claimed as a dependent on someone else's federal income tax return?", A.dependent==="yes");
+    if(A.citizen==="citizen") yesNo(PDFLib, form,"12. Are you a U.S. citizen or U.S. national?", true);
+    else if(A.citizen==="qualified") yesNo(PDFLib, form,"12. Are you a U.S. citizen or U.S. national?", false);
+    if(A.housing==="rent") yesNo(PDFLib, form,"18. Do you rent or own your property?", true);        // "1" = Rent (left)
+    else if(A.housing==="own") yesNo(PDFLib, form,"18. Do you rent or own your property?", false);   // "2" = Own
+    if(A.disability==="yes"||A.disability==="no") yesNo(PDFLib, form,"19. Do you have a disability?", A.disability==="yes");
+    const ss=n(A.incomeSS), other=n(A.incomeOther), S=split(extra);
+    if(known(A.incomeSS) && known(A.incomeOther)) yesNo(PDFLib, form,"22. Do you have any income?", ss+other>0);
+    if(!married){
+      if(known(A.incomeSS) && ss>0){ check(form,"28. Social Security benefits"); setText(form,"Social Security benefits  $", usd(ss/12)); setText(form,"How often Social Security benefits","Monthly"); }
+      if(S.pension){ check(form,"28. Retirement or Pension"); setText(form,"Retirement or Pension   $", usd(S.pension)); setText(form,"How often Retirement or Pension","Yearly"); }
+      if(S.interest){ check(form,"29 Interest dividends and other investment income"); setText(form,"Interest, dividends, and other investment income   $", usd(S.interest)); setText(form,"How often Interest, dividends, and other investment income","Yearly"); }
+      if(S.wages){ setText(form,"24a.  Wagestips before taxes", usd(S.wages)); check(form,"Yearly Subtract any pretax deductions such as nontaxable health insurance premiums"); }
+      if(known(A.incomeSS) && known(A.incomeOther) && ss+other>0) setText(form,"33. What is your total expected income for the current calendar year?", "$"+usd(ss+other));
+    }
+    // Person 2: the spouse (name, birth date, same address)
+    if(married){
+      setText(form,"1 First name middle name last name and suffix_P2", extra.spouseName);
+      setText(form,"2 Date of birth mmddyy_P2", dob(extra.spouseDob));
+      setText(form,"4 Relationship to Person 1_P2", "Spouse");
+      setText(form,"5 Provide street address_P2", extra.street);
+      setText(form,"9 City_P2", town); setText(form,"10 State_P2", "MA");
+      if(/^\d{5}$/.test(String(extra.zip||"").trim())) setText(form,"11 ZIP code_P2", String(extra.zip).trim());
+    }
+    // Step 5: assets (a couple's assets count together, so totals are fine here)
+    if(A.housing==="own"||A.housing==="rent") yesNo(PDFLib, form,"Do you own or have a legal interest in your primary residence?", A.housing==="own");
+    if(S.bank!=null){ setText(form,"Name on account", extra.fullName); setText(form,"Account type","Checking & savings (total - list each account)"); setText(form,"Current balance", usd(S.bank)); }
+    if(S.invest!=null) yesNo(PDFLib, form,"Securities brokerage accounts?", S.invest>0);
+    // Step 6: Medicare
+    if(A.medicare==="yes"){
+      yesNo(PDFLib, form,"2. Does anyone qualify for or is anyone enrolled in the following types of health coverage?", true);
+      check(form,"Enrolled in Medicare or qualifies for a Medicare Part A plan with no premium");
+      setText(form,"Name_3", extra.fullName);
+      setText(form,"Medicare claim number", extra.medicareNo);
+      yesNo(PDFLib, form,"2b. Do any of the persons above want to apply for help paying for the Medicare Part B premiums?", true);
+      setText(form,"If Yes names", extra.fullName);
+    }
+    form.updateFieldAppearances();
+    return await doc.save();
+  }
+
+  const api={ fy, mdy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillSNAP, fillMSP, fillCB, fillSACA2 };
   if(typeof module!=="undefined" && module.exports) module.exports=api; else global.BFForms=api;
 })(typeof window!=="undefined"?window:globalThis);

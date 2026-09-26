@@ -303,7 +303,8 @@ const FORMS={
   snap:{file:"forms/snap-application-for-seniors.pdf", fn:"fillSNAP", out:"SNAP-application-for-seniors-prefilled.pdf"},
   cb:{file:"forms/schedule-cb-2025-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2025-Circuit-Breaker-prefilled.pdf", year:2025},
   cb2024:{file:"forms/schedule-cb-2024-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2024-Circuit-Breaker-prefilled.pdf", year:2024},
-  cb2023:{file:"forms/schedule-cb-2023-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2023-Circuit-Breaker-prefilled.pdf", year:2023}
+  cb2023:{file:"forms/schedule-cb-2023-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2023-Circuit-Breaker-prefilled.pdf", year:2023},
+  saca2:{file:"forms/masshealth-senior-application-saca2.pdf", fn:"fillSACA2", out:"MassHealth-senior-application-SACA-2-prefilled.pdf"}
 };
 async function downloadForm(kind, btn){
   const old=btn.innerHTML; btn.disabled=true; btn.innerHTML="Filling in…";
@@ -383,7 +384,8 @@ const FORM_INFO={
   "97":{title:"Senior tax deferral application (State Tax Form 97)", to:"assessor", docs:["Tax Deferral and Recovery Agreement (Form 97-1)","Last year's income (tax return or Social Security statement)"]},
   cp4:{title:"Community Preservation Act surcharge exemption application (Form CP-4)", to:"assessor", docs:["Income documents for everyone in the household (last year)"]},
   msp:{title:"Medicare Savings Programs application", to:"masshealth", docs:["Copy of Medicare card","Proof of income (Social Security letter, pension statements)"]},
-  snap:{title:"SNAP Application for Seniors", to:"dta", docs:["Proof of income","Rent or mortgage statement and utility bills","Out-of-pocket medical costs"]}
+  snap:{title:"SNAP Application for Seniors", to:"dta", docs:["Proof of income","Rent or mortgage statement and utility bills","Out-of-pocket medical costs"]},
+  saca2:{title:"Application for Health Coverage for Seniors (SACA-2)", to:"saca", docs:["Copy of Medicare card","Proof of income (Social Security letter, pension statements)","Bank statements updated within the last 45 days","Proof of identity"]}
 };
 async function downloadLetter(kind){
   const F=FORM_INFO[kind]; if(!F) return;
@@ -401,6 +403,7 @@ async function downloadLetter(kind){
   L(PK.fullName||"[Your full name]"); L(PK.street||"[Street address]"); L(`${town}, MA ${PK.zip||""}`.trim()); if(PK.phone) L(PK.phone); gap(14);
   if(F.to==="assessor"){ L("Board of Assessors"); L(`${town}, Massachusetts`); }
   else if(F.to==="masshealth"){ L("MassHealth Enrollment Center"); L("PO Box 4405"); L("Taunton, MA 02780-0968"); }
+  else if(F.to==="saca"){ L("MassHealth Enrollment Center"); L("PO Box 290794"); L("Charlestown, MA 02129-0214"); }
   else { L("DTA Document Processing Center"); L("P.O. Box 4406"); L("Taunton, MA 02780-0420"); }
   gap(14);
   L(`Re: ${F.title}${F.to==="assessor"?` — Fiscal Year ${fyr}`:""}`,{bold:true}); gap(10);
@@ -458,6 +461,10 @@ function packetCard(ps){
     <p class="pk-note">Name, address, phone and date of birth are printed in. Still to add by hand: the rest of the questions and your signature on page 1. Send page 1 even if you don't finish the rest — DTA accepts it with a name, address and signature, and your benefits can count from that date. Upload at DTAConnect.com, fax (617) 887-8765, or mail to DTA Document Processing Center, P.O. Box 4406, Taunton, MA 02780-0420. Help: Senior Assistance Office, (833) 712-8027.</p></div>`);
   if(open("cb") && (A.housing==="own"||A.housing==="rent")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="cb">⬇ Circuit Breaker tax credit (Schedule CB, 2025) — pre-filled</button>
     <p class="pk-note">Printed in: name, address, ${A.housing==="own"?"homeowner, assessed value, Social Security and property tax":"renter, Social Security and rent"}. Still to add: Social Security number, lines 3, 5, 6 and 8 (they come from the tax return)${A.housing==="own"?", half of water and sewer bills (line 13)":", the landlord's name and address"}, and the math on the lines after that. File it <b>with the Massachusetts Form 1 tax return for 2025</b> — even if ${who(A)==="this person"?"they don't":who(A)+" doesn't"} normally file. Free help: AARP Tax-Aide or the Council on Aging. Missed years can be claimed up to 3 years back, each with that year's Schedule CB.</p></div>`);
+  // MassHealth senior application: for 65+ who need MassHealth in-home care, or Health Safety Net above the
+  // Medicare Savings income limit (the MSP application covers HSN below it).
+  if(num(A.age)>=65 && (open("mhcommunity") || (open("hsn") && !open("msp")))) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="saca2">⬇ MassHealth senior application (SACA-2) — pre-filled</button>
+    <p class="pk-note">Covers MassHealth and the Health Safety Net. Printed in: name, birth date, address, phone, marriage and spouse, citizenship, own or rent, ${A.marital==="married"?"":"income by type, "}savings, and Medicare. Still to add: Social Security number, the optional background questions, ${A.marital==="married"?"each spouse's income separately (our answers were combined), ":""}the details of each bank account, and signatures on page 24. It's a long form — a free SHINE counselor or the local Council on Aging can help. Mail to MassHealth Enrollment Center, PO Box 290794, Charlestown, MA 02129-0214, or fax (617) 887-8799.</p></div>`);
   // Missed years: Schedule CB can be claimed up to 3 years after that year's filing deadline, so in 2026 the
   // 2024 and 2023 credits are still open. Offer only years in which someone (either spouse, if married) was 65+.
   if(open("cb") && (A.housing==="own"||A.housing==="rent")){
