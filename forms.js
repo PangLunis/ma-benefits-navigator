@@ -242,7 +242,10 @@
   // Social Security (line 4), real estate tax (line 10) or yearly rent (line 18a/18). Lines 3, 5, 6 and 8 come from the
   // tax return itself, so they - and every line computed from them - are left for the person or their preparer.
   // Every money box is a comb field of whole dollars with a fixed number of digits: never truncate, skip instead.
-  async function fillCB(PDFLib, bytes, A, extra, townName){
+  async function fillCB(PDFLib, bytes, A, extra, townName, year){
+    // year = tax year of the form (2025 current; 2024/2023 = missed back years). For back years only who and where are
+    // printed - that year's income, tax and assessment aren't the numbers the person gave us for this year.
+    const back = year && year < 2025;
     const doc=await PDFLib.PDFDocument.load(bytes), form=doc.getForm();
     const parts=String(extra.fullName||"").trim().split(/\s+/).filter(Boolean);
     if(parts.length){
@@ -256,7 +259,13 @@
     if(/^\d{5}$/.test(String(extra.zip||"").trim())) setText(form,"Zip Code", String(extra.zip).trim());
     const digits=(field, v, max)=>{ if(!known(v)) return; const d=String(Math.round(n(v))); if(d.length<=max && n(v)>0) setText(form, field, d); };
     const own=A.housing==="own", rent=A.housing==="rent";
-    if(own||rent) choose(PDFLib, form, "Living quarters status during  2025:", own?"homeowner":"renter");
+    // The homeowner/renter radio has a different name and option spelling each year (2023 uses "/Renter").
+    const rq=form.getFields().find(f=>/Living quarters status during/i.test(f.getName()));
+    if(rq && (own||rent)){
+      try{ const want=(rq.getOptions?rq.getOptions():[]).find(o=>new RegExp("^"+(own?"homeowner":"renter")+"$","i").test(o)); if(want) rq.select(want); }
+      catch(e){ console.warn("cb radio", e.message); }
+    }
+    if(back){ form.updateFieldAppearances(); return await doc.save(); }
     if(own) digits("line2", A.assessed, 8);
     digits("line4", A.incomeSS, 6);
     if(own) digits("line10", A.propTax, 5);

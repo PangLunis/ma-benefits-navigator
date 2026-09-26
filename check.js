@@ -301,7 +301,9 @@ const FORMS={
   "97":{file:"forms/form-97-senior-tax-deferral.pdf", fn:"fill97", out:"Form-97-senior-tax-deferral-prefilled.pdf"},
   cp4:{file:"forms/form-cp-4-cpa-exemption.pdf", fn:"fillCP4", out:"Form-CP-4-CPA-surcharge-exemption-prefilled.pdf"},
   snap:{file:"forms/snap-application-for-seniors.pdf", fn:"fillSNAP", out:"SNAP-application-for-seniors-prefilled.pdf"},
-  cb:{file:"forms/schedule-cb-2025-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2025-Circuit-Breaker-prefilled.pdf"}
+  cb:{file:"forms/schedule-cb-2025-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2025-Circuit-Breaker-prefilled.pdf", year:2025},
+  cb2024:{file:"forms/schedule-cb-2024-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2024-Circuit-Breaker-prefilled.pdf", year:2024},
+  cb2023:{file:"forms/schedule-cb-2023-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2023-Circuit-Breaker-prefilled.pdf", year:2023}
 };
 async function downloadForm(kind, btn){
   const old=btn.innerHTML; btn.disabled=true; btn.innerHTML="Filling in…";
@@ -311,7 +313,7 @@ async function downloadForm(kind, btn){
     const r=await fetch(F.file); if(!r.ok) throw new Error("form download failed ("+r.status+")");
     const bytes=new Uint8Array(await r.arrayBuffer());
     const town=(townLookup(A.town)||{}).name||A.town;
-    const out = await BFForms[F.fn](PDFLib, bytes, A, PK, town);
+    const out = await BFForms[F.fn](PDFLib, bytes, A, PK, town, F.year);
     const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
     const a=document.createElement("a"); a.href=url; a.download = F.out;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 60000);
@@ -456,9 +458,18 @@ function packetCard(ps){
     <p class="pk-note">Name, address, phone and date of birth are printed in. Still to add by hand: the rest of the questions and your signature on page 1. Send page 1 even if you don't finish the rest — DTA accepts it with a name, address and signature, and your benefits can count from that date. Upload at DTAConnect.com, fax (617) 887-8765, or mail to DTA Document Processing Center, P.O. Box 4406, Taunton, MA 02780-0420. Help: Senior Assistance Office, (833) 712-8027.</p></div>`);
   if(open("cb") && (A.housing==="own"||A.housing==="rent")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="cb">⬇ Circuit Breaker tax credit (Schedule CB, 2025) — pre-filled</button>
     <p class="pk-note">Printed in: name, address, ${A.housing==="own"?"homeowner, assessed value, Social Security and property tax":"renter, Social Security and rent"}. Still to add: Social Security number, lines 3, 5, 6 and 8 (they come from the tax return)${A.housing==="own"?", half of water and sewer bills (line 13)":", the landlord's name and address"}, and the math on the lines after that. File it <b>with the Massachusetts Form 1 tax return for 2025</b> — even if ${who(A)==="this person"?"they don't":who(A)+" doesn't"} normally file. Free help: AARP Tax-Aide or the Council on Aging. Missed years can be claimed up to 3 years back, each with that year's Schedule CB (<a href="https://www.mass.gov/doc/2024-schedule-cb-circuit-breaker-credit/download" target="_blank" rel="noopener">2024 form</a>).</p></div>`);
+  // Missed years: Schedule CB can be claimed up to 3 years after that year's filing deadline, so in 2026 the
+  // 2024 and 2023 credits are still open. Offer only years in which someone (either spouse, if married) was 65+.
+  if(open("cb") && (A.housing==="own"||A.housing==="rent")){
+    const nowY=new Date().getFullYear(), older=Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0);
+    const yrs=[2024,2023].filter(y=>older-(nowY-y)>=65 && nowY-y<=3);
+    if(yrs.length) forms.push(`<div class="pk-form"><div class="pk-h2" style="margin:0 0 6px">Missed years? Claim them too</div>
+      ${yrs.map(y=>`<button type="button" class="btn ghost pk-dl" data-form="cb${y}">⬇ ${y} Schedule CB — name &amp; address filled in</button>`).join(" ")}
+      <p class="pk-note">If ${who(A)==="this person"?"they":who(A)} qualified in ${yrs.join(" or ")} but didn't claim it, each year can still be claimed with that year's Schedule CB and that year's Massachusetts tax return (an amended one if a return was already filed). Only the name, address and ${A.housing==="own"?"homeowner":"renter"} box are printed in: fill in that year's income, ${A.housing==="own"?"property tax and assessed value":"and rent"} from that year's records. ${yrs.includes(2023)?"<b>The 2023 claim has to be filed by April 2027</b> — 3 years after that year's tax deadline.":""}</p></div>`);
+  }
   // cover letter + calendar under each form (assessor forms + MSP + SNAP)
   for(let k=0;k<forms.length;k++){
-    const m=/data-form="([^"]+)"/.exec(forms[k]); if(!m || m[1]==="cb") continue;   // CB goes with the tax return: no cover letter
+    const m=/data-form="([^"]+)"/.exec(forms[k]); if(!m || /^cb/.test(m[1])) continue;   // CB goes with the tax return: no cover letter
     forms[k]=forms[k].replace("</div>",`<div class="pk-mini"><button type="button" class="pk-link pk-letter" data-form="${m[1]}">📄 Cover letter</button>${["msp","snap"].includes(m[1])?"":`<button type="button" class="pk-link pk-cal" data-form="${m[1]}">📅 Add the deadline to my calendar</button>`}</div></div>`);
   }
   const ws=cbWorksheet(ps)+readySheets(ps)+quickLinks(ps);
