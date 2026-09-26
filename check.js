@@ -285,7 +285,8 @@ function townCard(ps){
    Pre-filled official forms + a Circuit Breaker worksheet, built ON THIS DEVICE.
    The optional name/address/phone boxes exist only in this page's memory: they are
    not saved, not added to A, and not included in anything sent anywhere. */
-let PK = {fullName:"", street:"", zip:"", phone:""};
+let PK = {fullName:"", dob:"", street:"", zip:"", phone:"", medicareNo:"", spouseName:"", spouseDob:"",
+          incPension:"", incWages:"", incInterest:"", incRental:"", incOther:"", assetBank:"", assetInvest:"", mortgage:""};
 function loadScriptOnce(src){
   return new Promise((ok,bad)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok();
     const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=()=>bad(new Error("could not load "+src)); document.head.appendChild(el); });
@@ -297,7 +298,8 @@ const FORMS={
   "963":{file:"forms/form-96-3-blind.pdf", fn:"fill963", out:"Form-96-3-blind-exemption-prefilled.pdf"},
   "964":{file:"forms/form-96-4-veterans.pdf", fn:"fill964", out:"Form-96-4-veterans-exemption-prefilled.pdf"},
   "97":{file:"forms/form-97-senior-tax-deferral.pdf", fn:"fill97", out:"Form-97-senior-tax-deferral-prefilled.pdf"},
-  cp4:{file:"forms/form-cp-4-cpa-exemption.pdf", fn:"fillCP4", out:"Form-CP-4-CPA-surcharge-exemption-prefilled.pdf"}
+  cp4:{file:"forms/form-cp-4-cpa-exemption.pdf", fn:"fillCP4", out:"Form-CP-4-CPA-surcharge-exemption-prefilled.pdf"},
+  snap:{file:"forms/snap-application-for-seniors.pdf", fn:"fillSNAP", out:"SNAP-application-for-seniors-prefilled.pdf"}
 };
 async function downloadForm(kind, btn){
   const old=btn.innerHTML; btn.disabled=true; btn.innerHTML="Filling in…";
@@ -354,6 +356,64 @@ function readySheets(ps){
   </div></details>`;
   return h;
 }
+const FORM_INFO={
+  "961":{title:"Senior exemption application (State Tax Form 96-1)", to:"assessor", docs:["Copy of birth certificate (first year only)","Last year's income (tax return or Social Security statement)","Bank and investment statements"]},
+  "962":{title:"Surviving-spouse exemption application (State Tax Form 96-2)", to:"assessor", docs:["Copy of spouse's death certificate (first year only)","Bank and investment statements"]},
+  "963":{title:"Blind person's exemption application (State Tax Form 96-3)", to:"assessor", docs:["Mass. Commission for the Blind certificate, or a doctor's letter"]},
+  "964":{title:"Veterans exemption application (State Tax Form 96-4)", to:"assessor", docs:["Discharge papers (DD-214) — first year","VA disability rating letter"]},
+  "97":{title:"Senior tax deferral application (State Tax Form 97)", to:"assessor", docs:["Tax Deferral and Recovery Agreement (Form 97-1)","Last year's income (tax return or Social Security statement)"]},
+  cp4:{title:"Community Preservation Act surcharge exemption application (Form CP-4)", to:"assessor", docs:["Income documents for everyone in the household (last year)"]},
+  msp:{title:"Medicare Savings Programs application", to:"masshealth", docs:["Copy of Medicare card","Proof of income (Social Security letter, pension statements)"]},
+  snap:{title:"SNAP Application for Seniors", to:"dta", docs:["Proof of income","Rent or mortgage statement and utility bills","Out-of-pocket medical costs"]}
+};
+async function downloadLetter(kind){
+  const F=FORM_INFO[kind]; if(!F) return;
+  await loadScriptOnce("vendor/pdf-lib.min.js");
+  const doc=await PDFLib.PDFDocument.create(), page=doc.addPage([612,792]);
+  const font=await doc.embedFont(PDFLib.StandardFonts.Helvetica), bold=await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const t=townLookup(A.town)||{}, town=t.name||A.town||"", fyr=(new Date().getMonth()>=6?new Date().getFullYear()+1:new Date().getFullYear());
+  let y=740; const L=(txt,o)=>{ const f=(o&&o.bold)?bold:font, size=(o&&o.size)||11.5;
+    // simple word wrap at ~88 chars
+    const words=String(txt).split(" "); let line="";
+    words.forEach(w=>{ if((line+" "+w).trim().length>88){ page.drawText(line.trim(),{x:72,y,size,font:f}); y-=size+5; line=w; } else line+=" "+w; });
+    if(line.trim()) { page.drawText(line.trim(),{x:72,y,size,font:f}); } y-=size+5; };
+  const gap=n=>{ y-=n; };
+  L(new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})); gap(10);
+  L(PK.fullName||"[Your full name]"); L(PK.street||"[Street address]"); L(`${town}, MA ${PK.zip||""}`.trim()); if(PK.phone) L(PK.phone); gap(14);
+  if(F.to==="assessor"){ L("Board of Assessors"); L(`${town}, Massachusetts`); }
+  else if(F.to==="masshealth"){ L("MassHealth Enrollment Center"); L("PO Box 4405"); L("Taunton, MA 02780-0968"); }
+  else { L("DTA Document Processing Center"); L("P.O. Box 4406"); L("Taunton, MA 02780-0420"); }
+  gap(14);
+  L(`Re: ${F.title}${F.to==="assessor"?` — Fiscal Year ${fyr}`:""}`,{bold:true}); gap(10);
+  L(F.to==="assessor"?"Dear Board of Assessors,":"To whom it may concern,"); gap(4);
+  L(`Please find enclosed my completed ${F.title}${F.to==="assessor"?` for Fiscal Year ${fyr}`:""}. I have included copies of the documents listed below. Please contact me${PK.phone?` at ${PK.phone}`:""} if you need anything else to process my application.`);
+  gap(8); L("Enclosed:",{bold:true}); F.docs.forEach(d=>L("•  "+d)); gap(18);
+  L("Sincerely,"); gap(34); L("______________________________"); L(PK.fullName||"[Your name]");
+  const out=await doc.save(); const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
+  const a=document.createElement("a"); a.href=url; a.download=`Cover-letter-${kind}.pdf`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+function downloadICS(kind){
+  const F=FORM_INFO[kind]; const t=townLookup(A.town)||{}, town=t.name||A.town||"your town";
+  const now=new Date(), fyr=(now.getMonth()>=6?now.getFullYear()+1:now.getFullYear());
+  const due=`${fyr}0401`, stamp=now.toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z");
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Benefighter//Deadlines//EN","BEGIN:VEVENT",
+    `UID:${kind}-${fyr}-${Math.random().toString(36).slice(2)}@benefighter.com`,`DTSTAMP:${stamp}`,
+    `DTSTART;VALUE=DATE:${due}`,`SUMMARY:Deadline: ${F.title} to the ${town} assessor`,
+    `DESCRIPTION:File with the ${town} Board of Assessors by April 1 (or within 3 months after the actual tax bills are mailed\\, whichever is later). Late applications can't be accepted.`,
+    "BEGIN:VALARM","TRIGGER:-P14D","ACTION:DISPLAY","DESCRIPTION:Two weeks until the deadline","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const url=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
+  const a=document.createElement("a"); a.href=url; a.download=`Deadline-${kind}.ics`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+function quickLinks(ps){
+  const open=id=>{ const p=(ps||[]).find(x=>x.id===id); return p && p.status!=="no" && p.status!=="have"; };
+  const L=[];
+  if(open("unclaimed")) L.push(`<li><b>Unclaimed money:</b> search your name (and a late spouse's) at <a href="https://www.findmassmoney.gov" target="_blank" rel="noopener">FindMassMoney.gov</a> — free, 2 minutes.</li>`);
+  if(open("lis")) L.push(`<li><b>Extra Help with drug costs:</b> apply online at <a href="https://www.ssa.gov/medicare/part-d-extra-help" target="_blank" rel="noopener">ssa.gov/extrahelp</a> or call Social Security at (800) 772-1213 (it's automatic if you get the Medicare Savings Program).</li>`);
+  if(open("transit")) L.push(`<li><b>Reduced fares:</b> ask your local bus authority for a senior card${(townLookup(A.town)||{}).ride?" — or get an MBTA Senior CharlieCard (65+)":""}.</li>`);
+  if(open("lifeline")) L.push(`<li><b>Phone/internet discount (Lifeline):</b> apply at <a href="https://www.lifelinesupport.org" target="_blank" rel="noopener">lifelinesupport.org</a>.</li>`);
+  if(open("medicareoe")) L.push(`<li><b>Medicare plan check-up:</b> book a free SHINE counselor at (800) 243-4636 (Oct 15 – Dec 7 is open enrollment).</li>`);
+  return L.length?`<details class="pk-ws"><summary>🔗 Quick links for the rest</summary><div class="pk-body"><ul class="pk-links">${L.join("")}</ul></div></details>`:"";
+}
 function packetCard(ps){
   const open=id=>{ const p=(ps||[]).find(x=>x.id===id); return p && p.status!=="no" && p.status!=="have"; };
   const town=(townLookup(A.town)||{}).name||A.town||"your town";
@@ -375,7 +435,14 @@ function packetCard(ps){
   const tw=townLookup(A.town);
   if(A.housing==="own" && tw && tw.cpa && tw.cpas && age>=60 && (open("ex41c")||open("cb"))) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="cp4">⬇ Community Preservation Act surcharge exemption (Form CP-4) — pre-filled</button>
     <p class="pk-note">For low- and moderate-income seniors 60+ in ${tw.name}. Still to add by hand: household members and their income (Schedules C–E), and your signature. ${assessorLine}</p></div>`);
-  const ws=cbWorksheet(ps)+readySheets(ps);
+  if(open("snap") && Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0)>=60) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="snap">⬇ Food help (SNAP) application for seniors — pre-filled</button>
+    <p class="pk-note">Name, address, phone and date of birth are printed in. Still to add by hand: the rest of the questions and your signature on page 1. Send page 1 even if you don't finish the rest — DTA accepts it with a name, address and signature, and your benefits can count from that date. Upload at DTAConnect.com, fax (617) 887-8765, or mail to DTA Document Processing Center, P.O. Box 4406, Taunton, MA 02780-0420. Help: Senior Assistance Office, (833) 712-8027.</p></div>`);
+  // cover letter + calendar under each form (assessor forms + MSP + SNAP)
+  for(let k=0;k<forms.length;k++){
+    const m=/data-form="([^"]+)"/.exec(forms[k]); if(!m) continue;
+    forms[k]=forms[k].replace("</div>",`<div class="pk-mini"><button type="button" class="pk-link pk-letter" data-form="${m[1]}">📄 Cover letter</button>${["msp","snap"].includes(m[1])?"":`<button type="button" class="pk-link pk-cal" data-form="${m[1]}">📅 Add the deadline to my calendar</button>`}</div></div>`);
+  }
+  const ws=cbWorksheet(ps)+readySheets(ps)+quickLinks(ps);
   // Keep the checklist short: every "apply now" match, then the most valuable "worth verifying" ones, max 8.
   const likely=(ps||[]).filter(p=>p.status==="likely"), maybes=(ps||[]).filter(p=>p.status==="maybe").sort((a,b)=>(b.val||0)-(a.val||0));
   const todo=likely.concat(maybes.filter(p=>(p.val||0)>0)).slice(0,8);
@@ -384,12 +451,22 @@ function packetCard(ps){
   let h=`<div class="packet" id="packet"><h3>📄 Your claim packet</h3>
     <p class="pk-lead">Forms and numbers filled in from your answers, <b>right here on this device — nothing is sent to us.</b></p>`;
   if(forms.length){
-    h+=`<details class="pk-opt"><summary>Optional: add name and address so the forms come out more complete</summary><div class="pk-fields">
-      <label>Full name<input type="text" data-pk="fullName" autocomplete="off" value="${PK.fullName.replace(/"/g,"&quot;")}"></label>
-      <label>Street address<input type="text" data-pk="street" autocomplete="off" value="${PK.street.replace(/"/g,"&quot;")}"></label>
-      <label>ZIP<input type="text" inputmode="numeric" data-pk="zip" autocomplete="off" value="${PK.zip.replace(/"/g,"&quot;")}"></label>
-      <label>Phone<input type="tel" data-pk="phone" autocomplete="off" value="${PK.phone.replace(/"/g,"&quot;")}"></label>
-      <p class="pk-note">Only used to fill in the forms below. Not saved, not sent.</p></div></details>`;
+    const v=k=>String(PK[k]||"").replace(/"/g,"&quot;");
+    const fld=(k,label,type,extra)=>`<label>${label}<input type="${type||"text"}" data-pk="${k}" autocomplete="off" value="${v(k)}"${extra||""}></label>`;
+    const cash=(k,label)=>fld(k,label,"text",' inputmode="decimal" placeholder="$ per year"');
+    h+=`<details class="pk-opt" ${PK.fullName?"open":""}><summary>✍️ Step 1 (optional): add details so the forms come out complete</summary><div class="pk-fields">
+      <p class="pk-note">Everything here stays on this device. It's only used to fill in the forms below — never sent to us. We never ask for a Social Security number.</p>
+      <div class="pk-h2">About ${who(A)==="this person"?"them":who(A)}</div>
+      ${fld("fullName","Full legal name")}${fld("dob","Date of birth","date")}
+      ${fld("street","Street address")}${fld("zip","ZIP code","text",' inputmode="numeric"')}${fld("phone","Phone","tel")}
+      ${fld("medicareNo","Medicare number (optional — on the red, white & blue card)")}
+      ${A.marital==="married"?`<div class="pk-h2">Spouse</div>${fld("spouseName","Spouse's full name")}${fld("spouseDob","Spouse's date of birth","date")}`:""}
+      <div class="pk-h2">Other income last year, by type <span class="pk-sub">(not Social Security)</span></div>
+      ${cash("incPension","Pensions & retirement")}${cash("incWages","Wages from a job")}${cash("incInterest","Interest & dividends")}${cash("incRental","Rental income (after expenses)")}${cash("incOther","Anything else")}
+      <p class="pk-note" id="pk-inc-sum"></p>
+      <div class="pk-h2">Savings & home <span class="pk-sub">(for the exemption forms)</span></div>
+      ${fld("assetBank","Checking & savings (total)","text",' inputmode="decimal" placeholder="$"')}${fld("assetInvest","Stocks, bonds, mutual funds, IRAs (total)","text",' inputmode="decimal" placeholder="$"')}${A.housing==="own"?fld("mortgage","Mortgage still owed on the home","text",' inputmode="decimal" placeholder="$ (0 if none)"'):""}
+      <p class="pk-note">Then tap a form below — it comes out with these filled in.</p></div></details>`;
     h+=forms.join("");
   }
   h+=ws;
@@ -400,7 +477,14 @@ function packetCard(ps){
   return h;
 }
 function wirePacket(){
-  document.querySelectorAll("[data-pk]").forEach(el=>el.addEventListener("input",()=>{ PK[el.dataset.pk]=el.value; }));
+  const sumEl=document.getElementById("pk-inc-sum");
+  const updSum=()=>{ if(!sumEl) return; const ks=["incPension","incWages","incInterest","incRental","incOther"]; const any=ks.some(k=>PK[k]!==""&&PK[k]!=null);
+    const tot=ks.reduce((a,k)=>a+(num(PK[k])||0),0), want=num(A.incomeOther)||0;
+    sumEl.textContent = any ? `These add up to ${money(tot)}${want?` — your answer earlier was ${money(want)} a year`:""}.` : ""; };
+  document.querySelectorAll("[data-pk]").forEach(el=>el.addEventListener("input",()=>{ PK[el.dataset.pk]=el.value; updSum(); saveProgress(); }));
+  updSum();
+  document.querySelectorAll(".pk-letter").forEach(b=>b.addEventListener("click",()=>downloadLetter(b.dataset.form)));
+  document.querySelectorAll(".pk-cal").forEach(b=>b.addEventListener("click",()=>downloadICS(b.dataset.form)));
   document.querySelectorAll(".pk-dl").forEach(b=>b.addEventListener("click",()=>downloadForm(b.dataset.form,b)));
   const pr=document.querySelector(".pk-print");
   if(pr) pr.addEventListener("click",()=>{ document.body.classList.add("print-packet"); document.querySelectorAll(".pk-ws").forEach(d=>d.open=true); window.print(); });
@@ -430,6 +514,7 @@ window.addEventListener("pagehide", statLeave);
 
 /* ---------- Render question ---------- */
 function render(){
+  saveProgress();
   const vis = visible();
   if(i>=vis.length){ editMode=false; return results(); }
   const q = vis[i];
@@ -485,7 +570,9 @@ function render(){
   if(isInput && !q.noSkip){ inner += `<button class="skip" id="skip">🤔 I'm not sure — skip &amp; flag it for later</button>`; }
   if(editMode && !isLast){ inner += `<button class="btn backres" id="backres">Done changing — back to my results</button>`; }
   inner += `</div></div></div>`;
+  if(RESTORED){ inner = `<div class="restored">✓ We brought back your answers from last time. <button type="button" id="freshBtn">Start fresh</button></div>` + inner; RESTORED=false; }
   app.innerHTML = inner;
+  const fb=document.getElementById("freshBtn"); if(fb) fb.onclick=startFresh;
   if(q && q.id==="town") fillTownList();
   wireNav(vis);
 
@@ -1125,7 +1212,6 @@ function results(){
         <li><b>Start with the green "Apply for these" cards below.</b> Tap <b>How to claim it</b> on each one to see the exact form, what to gather, and where to file.</li>
         ${unknownN?`<li><b>Track down the ${unknownN} answer${unknownN>1?"s":""} you weren't sure about</b> — the yellow box explains where to find each one.</li>`:""}
         <li><b>Print or save this page</b> with the button at the bottom, so you have the list when you make calls.</li>
-        <li><b>Want help doing it?</b> Our Full Benefits Check turns this into a written plan and walks through it with you on a call — see the bottom of this page.</li>
       </ol>
     </div>`;
   h+=townCard(ps);
@@ -1196,17 +1282,15 @@ function results(){
       <div class="offer-fine">Optional paid help — everything here can also be done yourself for free. We are not a government agency and are not affiliated with one. We do <b>not</b> prepare VA claims or tax returns for a fee; those are referred to free, accredited experts. By continuing you agree to our <a href="terms.html" target="_blank">Terms</a> &amp; <a href="privacy.html" target="_blank">Privacy Policy</a>.</div>
     </div>`;
   }
-  h+=`<div class="bf-next">
-      <div class="bf-next-h">Want us to do this with you?</div>
-      <p>The <b>Full Benefits Check</b> is $179 flat: a written plan for ${nm==="this person"?"your family":nm}, a 30-minute call to walk through every program, and help with the paperwork. Money-back if we don't find at least $500/yr you aren't already getting.</p>
-      <p class="bf-next-fine">Totally optional — everything on this page can also be done yourself, for free.</p>
-      <a class="btn prim bf-next-btn" href="index.html#start">Tell me about the Full Benefits Check &rarr;</a>
-    </div>
+  h+=`
     <div class="acts">
       <button class="btn prim" onclick="window.print()">Print or save this plan</button>
     </div>
     <div class="disc"><b>Important:</b> This tool gives general information based on public Massachusetts and federal program rules (2026 figures). It is <b>not</b> legal, tax, or financial advice. Dollar amounts and eligibility shown are estimates — income limits, exemption amounts, and town rules change and must be confirmed with each program or a licensed professional before you rely on them. Figures last checked September 2026. Property-tax exemptions usually can't be combined — take the one that saves the most. MassHealth/long-term-care planning should go to a licensed elder-law attorney.</div>`;
+  h+=`<p class="forget"><button type="button" id="forgetBtn">🗑 Forget my answers on this device</button></p>`;
   document.getElementById("app").innerHTML=h;
+  saveProgress();
+  const fg=document.getElementById("forgetBtn"); if(fg) fg.onclick=()=>{ forgetProgress(); fg.textContent="✓ Forgotten — nothing is saved on this device"; fg.disabled=true; try{ localStorage.setItem("bf_remember","0"); }catch(e){} };
   wirePacket();
   document.querySelectorAll(".a-edit").forEach(b=>b.onclick=()=>{ editMode=true; i=parseInt(b.dataset.k,10); render(); window.scrollTo(0,0); });
   const dl=document.getElementById("dl");
@@ -1217,5 +1301,20 @@ function results(){
   };
   window.scrollTo(0,0);
 }
+
+/* ---------- Save progress on THIS device (2026-09-26) ----------
+   Answers (and the optional form details) are kept in this browser's localStorage so an
+   older user can stop and come back. Nothing is sent anywhere. "Remember" is on by default,
+   can be switched off on the first screen, and "Forget my answers" wipes it. */
+const SAVE_KEY="bf_check_v1";
+function remembering(){ try{ return localStorage.getItem("bf_remember")!=="0"; }catch(e){ return false; } }
+function saveProgress(){ if(!remembering()) return; try{ localStorage.setItem(SAVE_KEY, JSON.stringify({A, i, PK, ts:Date.now()})); }catch(e){} }
+function forgetProgress(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+let RESTORED=false;
+(function(){ try{ const sv=JSON.parse(localStorage.getItem(SAVE_KEY)||"null");
+  if(sv && sv.A && Object.keys(sv.A).length && remembering() && (Date.now()-(sv.ts||0)) < 1000*60*60*24*120){
+    A=sv.A; i=Math.max(0, sv.i||0); if(sv.PK) PK=Object.assign(PK, sv.PK); RESTORED=true; }
+}catch(e){} })();
+function startFresh(){ forgetProgress(); A={}; i=0; Object.keys(PK).forEach(k=>PK[k]=""); RESTORED=false; editMode=false; render(); window.scrollTo(0,0); }
 
 render();
