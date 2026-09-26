@@ -296,7 +296,8 @@ const FORMS={
   "962":{file:"forms/form-96-2-surviving-spouse.pdf", fn:"fill962", out:"Form-96-2-surviving-spouse-exemption-prefilled.pdf"},
   "963":{file:"forms/form-96-3-blind.pdf", fn:"fill963", out:"Form-96-3-blind-exemption-prefilled.pdf"},
   "964":{file:"forms/form-96-4-veterans.pdf", fn:"fill964", out:"Form-96-4-veterans-exemption-prefilled.pdf"},
-  "97":{file:"forms/form-97-senior-tax-deferral.pdf", fn:"fill97", out:"Form-97-senior-tax-deferral-prefilled.pdf"}
+  "97":{file:"forms/form-97-senior-tax-deferral.pdf", fn:"fill97", out:"Form-97-senior-tax-deferral-prefilled.pdf"},
+  cp4:{file:"forms/form-cp-4-cpa-exemption.pdf", fn:"fillCP4", out:"Form-CP-4-CPA-surcharge-exemption-prefilled.pdf"}
 };
 async function downloadForm(kind, btn){
   const old=btn.innerHTML; btn.disabled=true; btn.innerHTML="Filling in…";
@@ -332,6 +333,27 @@ function cbWorksheet(ps){
     <p><a href="circuit-breaker-tax-credit.html" target="_blank" rel="noopener">Full Circuit Breaker guide →</a></p>
   </div></details>`;
 }
+function readySheets(ps){
+  const open=id=>{ const p=(ps||[]).find(x=>x.id===id); return p && p.status!=="no" && p.status!=="have"; };
+  const t=townLookup(A.town)||{};
+  const ag=id=>{ const a=AGENCIES[Array.isArray(id)?id[0]:id]; return a?`<b>${a.n}</b>${a.p?` — <a href="tel:${a.p.replace(/[^0-9+]/g,"")}">${a.p}</a>`:""}`:""; };
+  const hh=homeSize(), homeInc=num(A.incomeSS)+num(A.incomeOther)+num(A.hhOtherInc);
+  let h="";
+  if(open("liheap")) h+=`<details class="pk-ws"><summary>🔥 Heating help: have these ready</summary><div class="pk-body">
+    <p>Applications open October 1. Apply online at <a href="https://www.toapply.org/MassHEAP" target="_blank" rel="noopener">toapply.org/MassHEAP</a>, or by phone or in person with ${t.fuel?`your local agency: ${ag(t.fuel)}`:"your local agency (call the Cold Relief Heatline, (800) 632-8175, to find it)"}.</p>
+    <table class="pk-tab">
+      <tr><td>People in the household</td><td>${hh}</td></tr>
+      <tr><td>Household income for the year (estimate)</td><td>${homeInc?money(homeInc):"—"}</td></tr>
+    </table>
+    <p><b>Bring:</b> photo ID · a list of everyone in the home · your heating company name and account number · your lease or mortgage statement · proof of the last 30 days of income (Social Security or pension letter, pay stubs).</p>
+    <p>It's free — nobody legitimate charges an application fee. <a href="fuel-assistance.html" target="_blank" rel="noopener">Heating help guide →</a></p>
+  </div></details>`;
+  if(open("snap")) h+=`<details class="pk-ws"><summary>🛒 Food help (SNAP): have these ready</summary><div class="pk-body">
+    <p>${num(A.age)>=60?`At 60 and up, call the DTA <b>Senior Assistance Office</b> at <a href="tel:8337128027">(833) 712-8027</a> for help applying, or use the shorter <a href="https://www.mass.gov/lists/snap-application-for-seniors" target="_blank" rel="noopener">SNAP Application for Seniors</a>.`:"Apply online at DTAConnect.com, by phone, or at a local DTA office."}</p>
+    <p><b>Have ready:</b> photo ID · Social Security and other income letters · rent or mortgage statement and utility bills · out-of-pocket medical costs (these can raise the benefit for people 60+).</p>
+  </div></details>`;
+  return h;
+}
 function packetCard(ps){
   const open=id=>{ const p=(ps||[]).find(x=>x.id===id); return p && p.status!=="no" && p.status!=="have"; };
   const town=(townLookup(A.town)||{}).name||A.town||"your town";
@@ -350,7 +372,10 @@ function packetCard(ps){
     <p class="pk-note">Still to add by hand: your Mass. Commission for the Blind registration (or a doctor's letter) and your signature. ${assessorLine}</p></div>`);
   if(A.housing==="own" && open("defer41a")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="97">⬇ Senior tax deferral (Form 97) — pre-filled</button>
     <p class="pk-note">Still to add by hand: date of birth, how much tax to defer, mortgage details, a breakdown of other income, and your signature. It also needs the Tax Deferral and Recovery Agreement (Form 97-1) from the assessor. Talk it over with family first — it's repaid when the home is sold. ${assessorLine}</p></div>`);
-  const ws=cbWorksheet(ps);
+  const tw=townLookup(A.town);
+  if(A.housing==="own" && tw && tw.cpa && tw.cpas && age>=60 && (open("ex41c")||open("cb"))) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="cp4">⬇ Community Preservation Act surcharge exemption (Form CP-4) — pre-filled</button>
+    <p class="pk-note">For low- and moderate-income seniors 60+ in ${tw.name}. Still to add by hand: household members and their income (Schedules C–E), and your signature. ${assessorLine}</p></div>`);
+  const ws=cbWorksheet(ps)+readySheets(ps);
   // Keep the checklist short: every "apply now" match, then the most valuable "worth verifying" ones, max 8.
   const likely=(ps||[]).filter(p=>p.status==="likely"), maybes=(ps||[]).filter(p=>p.status==="maybe").sort((a,b)=>(b.val||0)-(a.val||0));
   const todo=likely.concat(maybes.filter(p=>(p.val||0)>0)).slice(0,8);

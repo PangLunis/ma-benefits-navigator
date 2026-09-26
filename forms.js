@@ -108,6 +108,45 @@
     return await doc.save();
   }
 
+  // Pick one option of a Yes/No pair stored as ONE field with two widgets (e.g. CP-4 "undefined_2": /Yes and /No).
+  function choose(PDFLib, form, name, onValue){
+    try{
+      const f=form.getField(name);
+      if(f.constructor && f.constructor.name==="PDFRadioGroup"){ f.select(onValue); return; }
+      const af=f.acroField, N=PDFLib.PDFName;
+      af.setValue(N.of(onValue));
+      af.getWidgets().forEach(w=>{ const on=w.getOnValue(); w.setAppearanceState(on && on.decodeText && on.decodeText()===onValue ? N.of(onValue) : (on && on.asString && on.asString()==="/"+onValue ? N.of(onValue) : N.of("Off"))); });
+    }catch(e){ console.warn("choose", name, e.message); }
+  }
+  // ---- Form CP-4: Community Preservation Act surcharge exemption (low income / low-moderate income seniors) ----
+  // Status for CPA is judged as of JANUARY 1 (not July 1): for FY2027 that is January 1, 2026.
+  async function fillCP4(PDFLib, bytes, A, extra, townName){
+    const doc=await PDFLib.PDFDocument.load(bytes), form=doc.getForm();
+    const FY=fy(), jan1=String(FY-1), town=townName||A.town;
+    setText(form,"Name of City or Town", town);
+    setText(form,"FISCAL YEAR", String(FY));
+    setText(form,"Name of Applicant", extra.fullName);
+    setText(form,"Telephone Number", extra.phone);
+    setText(form,"Marital Status", MARITAL[A.marital]);
+    setText(form,"Year1", jan1);
+    const age=Math.max(n(A.age), A.marital==="married"?n(A.spouseAge):0);
+    if(age>=61) choose(PDFLib, form, "undefined_2", "Yes");          // 60+ on Jan 1 (61+ today is certain)
+    setText(form,"Year2", jan1);                                       // legal residence on Jan 1 / owned on Jan 1 (same field)
+    setText(form,"Street", extra.street); setText(form,"CityTown", town); setText(form,"Zip Code", extra.zip);
+    if(A.housing==="own"){
+      if(extra.street) setText(form,"Location of property", extra.street+", "+town);
+      choose(PDFLib, form, "undefined_3", "Yes_2");                    // owned the property on Jan 1: Yes
+      if(A.titling==="own_name" && A.marital!=="married") check(form,"Sole owner");
+      if(A.titling==="multi") check(form,"Coowner with others");
+    }
+    if(A.marital!=="married" && known(A.incomeSS)){                    // Schedule: applicant's own Social Security (single only)
+      if(extra.fullName) setText(form,"Name", extra.fullName);
+      setText(form,"Social Security", "$"+usd(n(A.incomeSS)));
+    }
+    form.updateFieldAppearances();
+    return await doc.save();
+  }
+
   // ---- MassHealth Medicare Savings Programs application (MSP_2026-03) ----
   async function fillMSP(PDFLib, bytes, A, extra, townName){
     const doc=await PDFLib.PDFDocument.load(bytes), form=doc.getForm();
@@ -128,6 +167,6 @@
     return await doc.save();
   }
 
-  const api={ fy, fill961, fill962, fill963, fill964, fill97, fillMSP };
+  const api={ fy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillMSP };
   if(typeof module!=="undefined" && module.exports) module.exports=api; else global.BFForms=api;
 })(typeof window!=="undefined"?window:globalThis);
