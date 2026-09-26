@@ -105,6 +105,65 @@ def main():
             if isinstance(coa, dict) and (coa.get("name") or coa.get("phone")):
                 t["coa"] = {k2: coa[k1] for k1, k2 in (("name", "n"), ("phone", "p"), ("url", "u")) if coa.get(k1)}
 
+    # ---- Town-website facts (data/town_web/batch_*.json; 50 largest towns, researched 2026-09-25) ----
+    # Conservative on purpose: numbers are shown only when current (FY2026+) and not flagged stale;
+    # long/conflicting free text is dropped in favour of "ask". Each fact keeps its town source URL.
+    import glob
+    def num_or_none(v):
+        if isinstance(v, (int, float)): return v
+        m = re.fullmatch(r"\$?\s*([\d,]+(?:\.\d+)?)", str(v or "").strip())
+        return float(m.group(1).replace(",", "")) if m else None
+    def first_age(v):
+        if isinstance(v, (int, float)): return int(v)
+        m = re.search(r"\b(6[0-9]|70)\b", str(v or ""))
+        return int(m.group(1)) if m else None
+    def fy_of(*vals):
+        for v in vals:
+            m = re.search(r"FY\s?(20\d\d)", str(v or ""))
+            if m: return int(m.group(1))
+        return None
+    def short(v, n=90):
+        v = str(v or "").strip()
+        return v if v and len(v) <= n and "CONFLICT" not in v.upper() and "stale" not in v.lower() else None
+    web_n = 0
+    for f in sorted(glob.glob(os.path.join(ROOT, "data", "town_web", "batch_*.json"))):
+        for name, v in json.load(open(f))["towns"].items():
+            if name not in towns:
+                print(f"WARNING: town_web name not in DLS list: {name!r}", file=sys.stderr); continue
+            w = {}
+            wo = v.get("workoff") or {}
+            if wo.get("status") in ("offered", "not_offered"):
+                o = {"s": wo["status"]}
+                if wo.get("source_url"): o["src"] = wo["source_url"]
+                if wo["status"] == "offered":
+                    mx = num_or_none(wo.get("max_dollars"))
+                    if mx: o["max"] = int(mx)
+                    if short(wo.get("signup_window"), 70): o["win"] = short(wo.get("signup_window"), 70)
+                    if short(wo.get("apply_where"), 90): o["where"] = short(wo.get("apply_where"), 90)
+                    ph = re.search(r"\(?\d{3}\)?[\s.-]?\d{3}-\d{4}", str(wo.get("contact_phone") or ""))
+                    if ph: o["ph"] = ph.group(0)
+                    if wo.get("stale"): o["old"] = True
+                w["wo"] = o
+            ex = v.get("exemption_41c") or {}
+            fy = fy_of(ex.get("fiscal_year"), ex.get("date_or_fy"))
+            e = {}
+            amt = num_or_none(ex.get("amount_dollars"))
+            amt_txt = short(ex.get("amount_dollars"), 16) if amt is None and "$" in str(ex.get("amount_dollars") or "") else None
+            current = fy is not None and fy >= 2026 and not ex.get("stale")
+            if current and (amt or amt_txt):
+                e["amt"] = int(amt) if amt else amt_txt
+                e["fy"] = fy
+            a = first_age(ex.get("qualifying_age"))
+            if a and not ex.get("stale"): e["age"] = a
+            if e and ex.get("source_url"): e["src"] = ex["source_url"]
+            if e: w["ex"] = e
+            asr = v.get("assessor") or {}
+            ph = re.search(r"\(?\d{3}\)?[\s.-]?\d{3}-\d{4}", str(asr.get("phone") or ""))
+            if ph: w["ap"] = ph.group(0)
+            if w:
+                towns[name]["w"] = w; web_n += 1
+    print(f"town_web facts merged for {web_n} towns")
+
     # Positive controls: the instrument must see things we know exist.
     assert towns["Methuen"].get("c") == "41C", "control: Methuen 41C missing"
     assert towns["Boston"].get("res"), "control: Boston residential exemption missing"
@@ -113,6 +172,10 @@ def main():
     if os.path.exists(SVC):
         assert towns["Methuen"].get("fuel") and towns["Methuen"].get("asap"), "control: Methuen agencies missing"
         assert isinstance(towns["Boston"].get("asap"), list) and len(towns["Boston"]["asap"]) == 3, "control: Boston should have 3 ASAPs"
+    if os.path.isdir(os.path.join(ROOT, "data", "town_web")):
+        mw = towns["Methuen"].get("w", {})
+        assert mw.get("wo", {}).get("max") == 2000 and mw.get("ex", {}).get("age") == 65, "control: Methuen town-web facts wrong"
+        assert towns["Boston"].get("w", {}).get("ex", {}).get("amt") == 1000, "control: Boston 41C amount wrong"
 
     out = {"meta": {"tax_source": tax.get("source"), "tax_fetched": tax.get("fetched"),
                     "services": svc_meta, "built": "see git log"},
