@@ -272,6 +272,89 @@ function townCard(ps){
   return h;
 }
 
+/* ---------- Claim packet (2026-09-25) ----------
+   Pre-filled official forms + a Circuit Breaker worksheet, built ON THIS DEVICE.
+   The optional name/address/phone boxes exist only in this page's memory: they are
+   not saved, not added to A, and not included in anything sent anywhere. */
+let PK = {fullName:"", street:"", zip:"", phone:""};
+function loadScriptOnce(src){
+  return new Promise((ok,bad)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok();
+    const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=()=>bad(new Error("could not load "+src)); document.head.appendChild(el); });
+}
+async function downloadForm(kind, btn){
+  const old=btn.innerHTML; btn.disabled=true; btn.innerHTML="Filling in…";
+  try{
+    await loadScriptOnce("vendor/pdf-lib.min.js"); await loadScriptOnce("forms.js");
+    const file = kind==="msp" ? "forms/medicare-savings-programs-application.pdf" : "forms/form-96-1-senior-exemption.pdf";
+    const r=await fetch(file); if(!r.ok) throw new Error("form download failed ("+r.status+")");
+    const bytes=new Uint8Array(await r.arrayBuffer());
+    const town=(townLookup(A.town)||{}).name||A.town;
+    const out = kind==="msp" ? await BFForms.fillMSP(PDFLib, bytes, A, PK, town) : await BFForms.fill961(PDFLib, bytes, A, PK, town);
+    const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
+    const a=document.createElement("a"); a.href=url; a.download = kind==="msp" ? "Medicare-Savings-application-prefilled.pdf" : "Form-96-1-senior-exemption-prefilled.pdf";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    btn.innerHTML="✓ Downloaded — tap again for a fresh copy";
+  }catch(e){ btn.innerHTML="Couldn't build the form — try again"; console.error(e); }
+  finally{ btn.disabled=false; setTimeout(()=>{ if(btn.innerHTML.startsWith("✓")||btn.innerHTML.startsWith("Couldn't")) btn.innerHTML=old; }, 8000); }
+}
+function cbWorksheet(ps){
+  const cb=(ps||[]).find(p=>p.id==="cb"); if(!cb || cb.status==="no") return "";
+  const inc=num(A.incomeSS)+num(A.incomeOther), ten=inc*0.10;
+  const owner=A.housing==="own";
+  const base = owner ? num(A.propTax) : num(A.rent)*12*0.25;
+  const est=Math.max(0, Math.min(CB_MAX, base-ten));
+  const known = inc>0 && base>0;
+  return `<details class="pk-ws"><summary>🧮 Circuit Breaker worksheet (with ${who(A)==="this person"?"their":who(A)+"'s"} numbers)</summary><div class="pk-body">
+    <table class="pk-tab">
+      <tr><td>1. Total income for the year (estimate)</td><td>${money(inc)}</td></tr>
+      <tr><td>2. 10% of line 1</td><td>${money(ten)}</td></tr>
+      <tr><td>3. ${owner?"Property tax paid for the year <i>(add half of water &amp; sewer bills if billed separately)</i>":"25% of rent paid for the year"}</td><td>${base?money(base):"—"}</td></tr>
+      <tr class="pk-tot"><td>4. Estimated credit: line 3 minus line 2 (max ${money(CB_MAX)})</td><td>${known?money(est):"—"}</td></tr>
+    </table>
+    <p>File <b>Schedule CB</b> with the Massachusetts Form 1 tax return — even if ${who(A)==="this person"?"they don't":who(A)+" doesn't"} normally file. Schedule CB has its own definition of "total income" (Social Security counts), so the form gives the exact number. <b>Missed years can be claimed up to 3 years back.</b> Free help: AARP Tax-Aide or a local Council on Aging.</p>
+    <p><a href="circuit-breaker-tax-credit.html" target="_blank" rel="noopener">Full Circuit Breaker guide →</a></p>
+  </div></details>`;
+}
+function packetCard(ps){
+  const open=id=>{ const p=(ps||[]).find(x=>x.id===id); return p && p.status!=="no" && p.status!=="have"; };
+  const town=(townLookup(A.town)||{}).name||A.town||"your town";
+  const forms=[];
+  if(open("msp")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="msp">⬇ Medicare Savings Program application — pre-filled</button>
+    <p class="pk-note">Still to add by hand: date of birth, SSN, Medicare number, citizenship questions, each person's income by type, and the signature on page 3 (both spouses sign if married and living together). Mail to MassHealth Enrollment Center, PO Box 4405, Taunton, MA 02780-0968, or fax (857) 323-8300. Free help: SHINE, (800) 243-4636.</p></div>`);
+  if(A.housing==="own" && (open("ex41c")||open("ex17d"))) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="961">⬇ Senior exemption application (Form 96-1) — pre-filled</button>
+    <p class="pk-note">Still to add by hand: date of birth, a breakdown of other income, bank and investment details, and the signature on page 3. Bring or mail it to the ${town} Board of Assessors by April 1, or within 3 months after the actual tax bills are mailed — whichever is later.</p></div>`);
+  const ws=cbWorksheet(ps);
+  // Keep the checklist short: every "apply now" match, then the most valuable "worth verifying" ones, max 8.
+  const likely=(ps||[]).filter(p=>p.status==="likely"), maybes=(ps||[]).filter(p=>p.status==="maybe").sort((a,b)=>(b.val||0)-(a.val||0));
+  const todo=likely.concat(maybes.filter(p=>(p.val||0)>0)).slice(0,8);
+  const moreN=likely.length+maybes.length-todo.length;
+  if(!forms.length && !ws && !todo.length) return "";
+  let h=`<div class="packet" id="packet"><h3>📄 Your claim packet</h3>
+    <p class="pk-lead">Forms and numbers filled in from your answers, <b>right here on this device — nothing is sent to us.</b></p>`;
+  if(forms.length){
+    h+=`<details class="pk-opt"><summary>Optional: add name and address so the forms come out more complete</summary><div class="pk-fields">
+      <label>Full name<input type="text" data-pk="fullName" autocomplete="off" value="${PK.fullName.replace(/"/g,"&quot;")}"></label>
+      <label>Street address<input type="text" data-pk="street" autocomplete="off" value="${PK.street.replace(/"/g,"&quot;")}"></label>
+      <label>ZIP<input type="text" inputmode="numeric" data-pk="zip" autocomplete="off" value="${PK.zip.replace(/"/g,"&quot;")}"></label>
+      <label>Phone<input type="tel" data-pk="phone" autocomplete="off" value="${PK.phone.replace(/"/g,"&quot;")}"></label>
+      <p class="pk-note">Only used to fill in the forms below. Not saved, not sent.</p></div></details>`;
+    h+=forms.join("");
+  }
+  h+=ws;
+  if(todo.length){
+    h+=`<div class="pk-check"><div class="pk-h">Checklist</div><ul>${todo.map(p=>`<li><span class="pk-box" aria-hidden="true"></span><span><b>${p.name}</b>${p.form?` — ${p.form}`:""}</span></li>`).join("")}</ul>${moreN>0?`<p class="pk-note">+ ${moreN} more worth a look in the full list below.</p>`:""}</div>`;
+  }
+  h+=`<button type="button" class="btn ghost pk-print">🖨 Print just this packet</button></div>`;
+  return h;
+}
+function wirePacket(){
+  document.querySelectorAll("[data-pk]").forEach(el=>el.addEventListener("input",()=>{ PK[el.dataset.pk]=el.value; }));
+  document.querySelectorAll(".pk-dl").forEach(b=>b.addEventListener("click",()=>downloadForm(b.dataset.form,b)));
+  const pr=document.querySelector(".pk-print");
+  if(pr) pr.addEventListener("click",()=>{ document.body.classList.add("print-packet"); document.querySelectorAll(".pk-ws").forEach(d=>d.open=true); window.print(); });
+}
+window.addEventListener("afterprint",()=>document.body.classList.remove("print-packet"));
+
 const STATS_URL = "https://benefighter-stats.pangserve.workers.dev/c";
 const STATS_OFF = (navigator.doNotTrack==="1" || window.doNotTrack==="1" || navigator.globalPrivacyControl===true || navigator.webdriver===true || !/benefighter\.com$/.test(location.hostname));   // webdriver: skip automated browsers (our own tests, bots)
 const SID = (()=>{ try{ const a=new Uint8Array(9); crypto.getRandomValues(a); return Array.from(a,b=>"abcdefghijklmnopqrstuvwxyz0123456789"[b%36]).join(""); }catch(e){ return "s"+Date.now().toString(36); } })();
@@ -994,6 +1077,7 @@ function results(){
       </ol>
     </div>`;
   h+=townCard(ps);
+  h+=packetCard(ps);
   // Review / change answers — tap "Change" to jump back to any question, then return here.
   const visQ=visible();
   h+=`<details class="answers"><summary>✏️ Review or change your answers (${visQ.length})</summary><ul>`;
@@ -1071,6 +1155,7 @@ function results(){
     </div>
     <div class="disc"><b>Important:</b> This tool gives general information based on public Massachusetts and federal program rules (2026 figures). It is <b>not</b> legal, tax, or financial advice. Dollar amounts and eligibility shown are estimates — income limits, exemption amounts, and town rules change and must be confirmed with each program or a licensed professional before you rely on them. Figures last checked September 2026. Property-tax exemptions usually can't be combined — take the one that saves the most. MassHealth/long-term-care planning should go to a licensed elder-law attorney.</div>`;
   document.getElementById("app").innerHTML=h;
+  wirePacket();
   document.querySelectorAll(".a-edit").forEach(b=>b.onclick=()=>{ editMode=true; i=parseInt(b.dataset.k,10); render(); window.scrollTo(0,0); });
   const dl=document.getElementById("dl");
   if(dl) dl.onclick=()=>{
