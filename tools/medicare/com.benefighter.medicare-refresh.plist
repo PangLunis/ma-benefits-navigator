@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Daily check for new CMS Medicare plan files; rebuilds + verifies only when something changed.
+     Install: copy to ~/Library/LaunchAgents/ and replace HOME_DIR with the real home directory, then
+     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.benefighter.medicare-refresh.plist -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.benefighter.medicare-refresh</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string><string>-lc</string>
+    <string>cd HOME_DIR/projects/ma-benefits-navigator-refresh &amp;&amp; /usr/bin/python3 tools/medicare/refresh.py</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>6</integer><key>Minute</key><integer>15</integer></dict>
+  <key>StandardOutPath</key><string>/tmp/benefighter-medicare-refresh.out</string>
+  <key>StandardErrorPath</key><string>/tmp/benefighter-medicare-refresh.err</string>
+</dict>
+</plist>

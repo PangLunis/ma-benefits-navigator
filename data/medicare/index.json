@@ -1,0 +1,21 @@
+{
+ "years": {
+  "2026": {
+   "year": 2026,
+   "built": "2026-09-26",
+   "state": "MA",
+   "sources": {
+    "landscape": "https://www.cms.gov/files/zip/cy2026-landscape-202609.zip",
+    "spuf": "https://data.cms.gov/sites/default/files/2026-07/64c8d9e1-f350-45e5-88d8-5a2acce2b2d4/SPUF_2026_20260701.zip",
+    "rxnorm": "RxNorm Current Prescribable Content (NLM)",
+    "counties": "US Census 2020 county subdivisions"
+   },
+   "counts": {
+    "plans": 114,
+    "drug_plans": 99,
+    "drugs": 4838,
+    "towns_mapped": 351
+   }
+  }
+ }
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compare Medicare Plans for Your Drugs (Massachusetts) — Benefighter</title>
+  <meta name="description" content="Free, private Medicare plan comparison for Massachusetts: enter your town and your drugs to see every plan ranked by yearly premium plus drug cost, and what changes in 2027." />
+  <!-- NOT YET PUBLIC: launch with 2027 plan data (~Oct 15, 2026). Remove noindex and add to sitemap.xml at launch. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://benefighter.com/medicare.html" />
+  <meta name="theme-color" content="#1E4E3C" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E4E3C'/%3E%3Ccircle cx='16' cy='20' r='6.5' fill='%23E4A126'/%3E%3Crect x='6' y='20' width='20' height='3' rx='1.5' fill='%23FBF6EC'/%3E%3C/svg%3E" />
+  <style>
+    .mx { max-width: 760px; margin: 0 auto; padding: 26px 18px 70px; font-size: 18px; line-height: 1.5; }
+    .mx h1 { font-size: clamp(1.8rem, 5vw, 2.5rem); margin: .1em 0 .3em; }
+    .mx .lead { color: var(--ink-soft); margin: 0 0 12px; }
+    .mx .neutral { background: var(--pine-tint); border: 1px solid #BFD6C7; border-radius: 12px; padding: 11px 14px; color: var(--pine-deep); font-size: 16px; margin: 0 0 18px; }
+    .mx .yearnote { background: #FBEECB; border: 1px solid #E9D39A; color: #6B4A0B; border-radius: 12px; padding: 11px 14px; font-size: 16px; margin: 0 0 18px; }
+    .mx .step { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px 18px 20px; margin: 0 0 16px; box-shadow: var(--shadow-soft); }
+    .mx .step h2 { font-size: 1.25rem; margin: 0 0 .5em; }
+    .mx .step h2 .n { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--pine); color: #fff; font-size: 16px; margin-right: 8px; font-family: var(--sans); }
+    .mx label.f { display: block; font-weight: 700; font-size: 16px; margin: 0 0 6px; }
+    .mx input[type=text], .mx select, .mx input[type=number] { font-size: 18px; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 11px; width: 100%; box-sizing: border-box; font-family: var(--sans); background: #fff; }
+    .mx .hint { color: var(--ink-soft); font-size: 15px; margin: 6px 0 0; }
+    .mx .sugg { list-style: none; margin: 6px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+    .mx .sugg:empty { display: none; }
+    .mx .sugg li button { appearance: none; background: #fff; border: 0; border-bottom: 1px solid var(--line); width: 100%; text-align: left; padding: 11px 12px; font-size: 16px; cursor: pointer; }
+    .mx .sugg li:last-child button { border-bottom: 0; }
+    .mx .sugg li button:hover, .mx .sugg li button:focus { background: var(--pine-tint); }
+    .mx .dlist { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+    .mx .dlist li { border: 1.5px solid var(--line); border-radius: 12px; padding: 11px 12px; display: grid; gap: 8px; }
+    .mx .dlist .dn { font-weight: 700; }
+    .mx .dlist .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 16px; }
+    .mx .dlist select { width: auto; font-size: 16px; padding: 7px 9px; }
+    .mx .dlist .rm { margin-left: auto; appearance: none; background: none; border: 0; color: var(--clay); font-weight: 800; cursor: pointer; font-size: 15px; }
+    .mx .seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 11px; overflow: hidden; }
+    .mx .seg button { appearance: none; border: 0; background: #fff; padding: 9px 12px; font-size: 15px; font-weight: 700; cursor: pointer; color: var(--ink); }
+    .mx .seg button[aria-pressed=true] { background: var(--pine); color: #fff; }
+    .mx .go { width: 100%; margin-top: 4px; font-size: 19px; padding: 15px; }
+    .mx .res h2 { font-size: 1.4rem; margin: 22px 0 8px; }
+    .mx .summary { background: #fff; border: 2px solid var(--pine); border-radius: 16px; padding: 16px 18px; }
+    .mx .summary .big { font-family: var(--serif); font-size: 1.5rem; color: var(--pine-deep); font-weight: 700; }
+    .mx .filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .mx .filters button { appearance: none; border: 1.5px solid var(--line); background: #fff; border-radius: 99px; padding: 8px 14px; font-size: 15px; font-weight: 800; cursor: pointer; color: var(--ink); }
+    .mx .filters button[aria-pressed=true] { background: var(--pine); border-color: var(--pine); color: #fff; }
+    .mx .plan { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; margin: 0 0 10px; }
+    .mx .plan.cur { border: 2px solid var(--honey); }
+    .mx .plan .top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .mx .plan .pn { font-weight: 800; }
+    .mx .plan .tot { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; color: var(--pine-deep); white-space: nowrap; }
+    .mx .plan .sub { color: var(--ink-soft); font-size: 15px; margin-top: 3px; }
+    .mx .plan .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .mx .tag { font-size: 13px; font-weight: 800; border-radius: 99px; padding: 3px 9px; background: #EFE9DD; color: #5a5245; }
+    .mx .tag.warn { background: #FBEECB; color: #7A4F08; }
+    .mx .tag.bad { background: #F6DEDA; color: #8A2C1B; }
+    .mx .tag.good { background: #E3F1E7; color: #1E6B3F; }
+    .mx .plan details summary { cursor: pointer; color: var(--pine-soft); font-weight: 800; font-size: 15px; margin-top: 8px; }
+    .mx table.dt { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
+    .mx table.dt th, .mx table.dt td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .mx table.dt td.r, .mx table.dt th.r { text-align: right; white-space: nowrap; }
+    .mx .watch { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin: 0 0 12px; }
+    .mx .watch h3 { font-size: 1.1rem; margin: 0 0 .4em; }
+    .mx .watch ul { margin: 0; padding-left: 1.2em; }
+    .mx .watch li { margin: 0 0 6px; }
+    .mx .fine { color: var(--ink-soft); font-size: 14px; }
+    .mx .more { appearance: none; background: none; border: 1.5px solid var(--line); border-radius: 11px; padding: 10px 14px; font-weight: 800; color: var(--pine); cursor: pointer; width: 100%; }
+    @media (max-width: 520px) { .mx { font-size: 17px; } .mx .plan .top { flex-direction: column; gap: 2px; } }
+  </style>
+</head>
+<body class="guide-page">
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html" aria-label="Benefighter — home">
+        <svg width="42" height="42" viewBox="0 0 42 42" role="img" aria-hidden="true">
+          <rect width="42" height="42" rx="10" fill="#1E4E3C"/><circle cx="21" cy="26" r="9" fill="#E4A126"/>
+          <rect x="7" y="26" width="28" height="3.6" rx="1.8" fill="#FBF6EC"/>
+          <g stroke="#E4A126" stroke-width="2.4" stroke-linecap="round"><line x1="21" y1="7" x2="21" y2="12"/><line x1="11" y1="10" x2="14" y2="14"/><line x1="31" y1="10" x2="28" y2="14"/></g>
+        </svg>
+        <span><span class="brand-name">Benefighter</span><span class="brand-sub brand-tag">We fight for your benefits</span></span>
+      </a>
+      <div class="header-cta"><a class="btn btn-primary" href="check.html">Start free check</a></div>
+    </div>
+  </header>
+
+  <main class="mx" id="main">
+    <p class="eyebrow">Massachusetts · Medicare</p>
+    <h1>Compare Medicare plans for your drugs</h1>
+    <p class="lead">Enter your town and the drugs you take. We rank every plan in your county by what you'd pay for the year — the premium plus your drugs — and show what to watch for in 2027.</p>
+    <p class="neutral"><b>We don't sell insurance, and no plan pays us.</b> This runs on your device using Medicare's own public plan files. Nothing you type is sent anywhere.</p>
+    <div class="yearnote" id="yearnote">Loading plan data…</div>
+
+    <section class="step" aria-labelledby="s1">
+      <h2 id="s1"><span class="n">1</span>Your town</h2>
+      <label class="f" for="town">City or town in Massachusetts</label>
+      <input type="text" id="town" list="towns" autocomplete="off" />
+      <datalist id="towns"></datalist>
+      <p class="hint" id="countyline"></p>
+    </section>
+
+    <section class="step" aria-labelledby="s2">
+      <h2 id="s2"><span class="n">2</span>Your current plan <span class="fine">(optional)</span></h2>
+      <label class="f" for="curplan">If you have a Medicare drug plan or Medicare Advantage plan now, pick it</label>
+      <select id="curplan"><option value="">Pick your town first</option></select>
+      <p class="hint">It's printed on your plan card. This lets us flag what to check in your plan for 2027.</p>
+    </section>
+
+    <section class="step" aria-labelledby="s3">
+      <h2 id="s3"><span class="n">3</span>Your prescription drugs</h2>
+      <label class="f" for="dq">Type a drug name (brand or generic)</label>
+      <input type="text" id="dq" autocomplete="off" placeholder="e.g. atorvastatin, Eliquis, Lantus" />
+      <ul class="sugg" id="sugg" role="listbox"></ul>
+      <ul class="dlist" id="dlist"></ul>
+      <p class="hint">Pick the exact strength on the bottle. Add every drug you take regularly.</p>
+      <div style="margin-top:12px">
+        <span class="f" style="display:block;font-weight:700;font-size:16px;margin-bottom:6px">Pharmacy prices</span>
+        <div class="seg" role="group" aria-label="Pharmacy prices">
+          <button type="button" id="ph-s" aria-pressed="true">Standard pharmacy</button>
+          <button type="button" id="ph-p" aria-pressed="false">Plan's preferred pharmacy</button>
+        </div>
+        <p class="hint">Many drug plans charge less at their "preferred" pharmacies. If you don't know, leave it on standard.</p>
+      </div>
+    </section>
+
+    <button type="button" class="btn btn-primary go" id="go">Compare plans</button>
+    <div class="res" id="res" aria-live="polite"></div>
+
+    <p class="fine" style="margin-top:28px">Estimates, not quotes. Built from Medicare's public plan, drug-list and price files for Massachusetts, and checked against Medicare's own Plan Finder. Actual costs depend on your pharmacy and can change during the year. Before you switch, confirm on <a href="https://www.medicare.gov/plan-compare" target="_blank" rel="noopener">Medicare's Plan Finder</a> or call SHINE for free, unbiased help: <a href="tel:8002434636">(800) 243-4636</a>.</p>
+  </main>
+
+  <footer class="check-footer">
+    <div class="wrap">
+      <p style="margin:0;"><a href="index.html">Benefighter home</a> · <a href="check.html">Free benefits check</a> · <a href="medicare-savings-program.html">Medicare Savings Program</a> · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a></p>
+    </div>
+  </footer>
+  <script src="medicare-engine.js"></script>
+  <script src="medicare.js"></script>
+</body>
+</html>
