@@ -230,6 +230,13 @@
     setText(form,"telephone number", extra.phone);
     setText(form,"Date of birth (MM)", mdy(extra.dob));
     setText(form,"Medicare claim number", extra.medicareNo);
+    // Known yes/no answers (checked by render: several fields are misnamed in the PDF). Page 1 of the application:
+    //   "Are you a US citizen or US national?"      -> field "your spouse: gender: male" (Yes/No)
+    //   "...do you have an eligible immigration status?" -> "Check Box2";  veteran / spouse-of-veteran -> "Check Box8"
+    if(A.citizen==="citizen") choose(PDFLib, form, "your spouse: gender: male", "Yes");
+    else if(A.citizen==="qualified"){ choose(PDFLib, form, "your spouse: gender: male", "No"); choose(PDFLib, form, "Check Box2", "Yes"); }
+    if(A.veteran==="vet"||A.veteran==="spouse") choose(PDFLib, form, "Check Box8", "Yes");
+    else if(A.veteran==="no") choose(PDFLib, form, "Check Box8", "No");
     if(A.marital==="married" && extra.spouseName){
       const sp=String(extra.spouseName).trim().split(/\s+/);
       if(sp.length>=2){ setText(form,"First name", sp[0]); setText(form,"Last name", sp[sp.length-1]); } else setText(form,"First name", sp[0]);
@@ -379,6 +386,28 @@
     return await doc.save();
   }
 
-  const api={ fy, mdy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillSNAP, fillMSP, fillCB, fillSACA2 };
+  // ---- "SIGN HERE" marks: a translucent yellow band over each signature line + a red label at its right end ----
+  // Positions measured with pdfplumber on the official PDFs (top = distance of the "Signature" label from the page top).
+  const SIGN={
+    msp:[{p:7,x:34,top:112,w:270},{p:7,x:34,top:153,w:270,spouse:1}],
+    "961":[{p:3,x:45,top:103,w:360}], "962":[{p:2,x:45,top:724,w:360}], "963":[{p:2,x:45,top:224,w:360}],
+    "964":[{p:2,x:45,top:737,w:360}], "97":[{p:2,x:45,top:500,w:360}], cp4:[{p:1,x:60,top:651,w:350}],
+    snap:[{p:1,x:100,y0:693,y1:733,w:268}], saca2:[{p:26,x:58,y0:208,y1:235,w:286}]
+  };
+  async function signMarks(PDFLib, bytes, kind, married){
+    const spots=(SIGN[kind]||[]).filter(s=>!s.spouse||married);
+    if(!spots.length) return bytes;
+    const doc=await PDFLib.PDFDocument.load(bytes), font=await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    for(const s of spots){
+      const pg=doc.getPage(s.p-1), H=pg.getHeight();
+      // line forms: band just above the "Signature" label; boxed forms: y0..y1 = the signature cell (from the top)
+      const bottom = s.y1!=null ? H-s.y1 : H-(s.top-2), h = s.y1!=null ? s.y1-s.y0 : 22;
+      pg.drawRectangle({x:s.x-3, y:bottom, width:s.w, height:h, color:PDFLib.rgb(1,0.86,0.2), opacity:0.35});
+      pg.drawText("SIGN HERE", {x:s.x+s.w-64, y:bottom+h-10, size:8.5, font, color:PDFLib.rgb(0.72,0.05,0.05)});
+    }
+    return await doc.save();
+  }
+
+  const api={ fy, mdy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillSNAP, fillMSP, fillCB, fillSACA2, signMarks, SIGN };
   if(typeof module!=="undefined" && module.exports) module.exports=api; else global.BFForms=api;
 })(typeof window!=="undefined"?window:globalThis);

@@ -315,7 +315,8 @@ async function downloadForm(kind, btn){
     const r=await fetch(F.file); if(!r.ok) throw new Error("form download failed ("+r.status+")");
     const bytes=new Uint8Array(await r.arrayBuffer());
     const town=(townLookup(A.town)||{}).name||A.town;
-    const out = await BFForms[F.fn](PDFLib, bytes, A, PK, town, F.year);
+    let out = await BFForms[F.fn](PDFLib, bytes, A, PK, town, F.year);
+    if(BFForms.signMarks) out = await BFForms.signMarks(PDFLib, out, kind, A.marital==="married");
     const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
     const a=document.createElement("a"); a.href=url; a.download = F.out;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 60000);
@@ -390,6 +391,41 @@ function heatSheet(t, ag, hh, homeInc){
     <p>The same application also covers free weatherization and heating-system repair. It's free — nobody legitimate charges an application fee. <a href="fuel-assistance.html" target="_blank" rel="noopener">Heating help guide →</a></p>
     <p><button type="button" class="btn ghost pk-heatprint">🖨 Print this sheet</button> <button type="button" class="btn ghost pk-heatcal">📅 Oct 1 reminder</button></p>
   </div></details>`;
+}
+// One printed page: where each form in the packet goes, what to put in the envelope, and deadlines.
+const SEND={
+  msp:{to:["MassHealth Enrollment Center","PO Box 4405","Taunton, MA 02780-0968"], alt:"Or fax to (857) 323-8300."},
+  saca2:{to:["MassHealth Enrollment Center","PO Box 290794","Charlestown, MA 02129-0214"], alt:"Or fax to (617) 887-8799."},
+  snap:{to:["DTA Document Processing Center","P.O. Box 4406","Taunton, MA 02780-0420"], alt:"Or fax to 617-887-8765, or upload in DTA Connect."}
+};
+async function downloadMailingSheet(){
+  await loadScriptOnce("vendor/pdf-lib.min.js");
+  const kinds=[...document.querySelectorAll(".pk-dl")].map(b=>b.dataset.form);
+  const town=(townLookup(A.town)||{}).name||A.town||"your town";
+  const doc=await PDFLib.PDFDocument.create(), font=await doc.embedFont(PDFLib.StandardFonts.Helvetica), bold=await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  let page=doc.addPage([612,792]), y=750;
+  const wrap=(t,f,size,maxW)=>{ const out=[]; let line=""; for(const w of String(t).split(/\s+/)){ const tr=line?line+" "+w:w; if(f.widthOfTextAtSize(tr,size)>maxW && line){ out.push(line); line=w; } else line=tr; } if(line) out.push(line); return out; };
+  const L=(t,o={})=>{ const f=o.bold?bold:font, size=o.size||11, x=o.x||54; for(const ln of wrap(t,f,size,504-(x-54))){ if(y<60){ page=doc.addPage([612,792]); y=750; } page.drawText(ln.replace(/[^\x20-\x7E]/g,"-"),{x,y,size,font:f}); y-=size+4; } };
+  L("Where each form goes",{bold:true,size:18}); y-=2;
+  L(`${PK.fullName||who(A)} - made ${new Date().toLocaleDateString("en-US")} at benefighter.com. Keep a copy of everything you send.`,{size:10}); y-=8;
+  const done=new Set();
+  for(const k of kinds){
+    if(done.has(k)) continue; done.add(k);
+    const F=FORM_INFO[k], cb=/^cb/.test(k), yr=cb?(FORMS[k]||{}).year:null;
+    const title = cb ? `Circuit Breaker tax credit - Schedule CB for ${yr}` : (F?F.title:k);
+    L("[ ]  "+title,{bold:true,size:13});
+    if(cb){ L(`File it WITH the Massachusetts Form 1 tax return for ${yr}${yr<2025?" (an amended return if one was already filed for that year)":""}. This schedule has no signature line - sign the Form 1. Free help: AARP Tax-Aide or the Council on Aging.`,{x:72}); L("Include: property tax bills (or rent receipts) and income statements for that year.",{x:72}); }
+    else if(F && F.to==="assessor"){ L(`Sign where it's marked in yellow. Bring or mail it to the ${town} Board of Assessors (town or city hall).`,{x:72}); L("Deadline: April 1, or within 3 months after the actual tax bills are mailed - whichever is later.",{x:72,bold:true}); if(F.docs) L("Include: "+F.docs.join("; ")+".",{x:72}); }
+    else if(SEND[k]){ L("Sign where it's marked in yellow. Mail to: "+SEND[k].to.join(", ")+". "+SEND[k].alt,{x:72}); if(F&&F.docs) L("Include (copies, not originals): "+F.docs.join("; ")+".",{x:72}); }
+    y-=6;
+  }
+  const liheap=(programs()||[]).find(p=>p.id==="liheap"&&p.status!=="no"&&p.status!=="have");
+  if(liheap){ const t=townLookup(A.town)||{}, a=t.fuel&&AGENCIES[Array.isArray(t.fuel)?t.fuel[0]:t.fuel];
+    L("[ ]  Heating help (no paper form)",{bold:true,size:13});
+    L(`Apply online from October 1 at toapply.org/MassHEAP, or call ${a?a.n+(a.p?" at "+a.p:""):"your local agency (Cold Relief Heatline (800) 632-8175)"}. Bring the heating help worksheet from your packet.`,{x:72}); y-=6; }
+  L("Questions? SHINE (free Medicare help): (800) 243-4636. MassHealth: (800) 841-2900.",{size:10});
+  const out=await doc.save(); const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
+  const a=document.createElement("a"); a.href=url; a.download="Where-each-form-goes.pdf"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 function heatICS(){
   const now=new Date(), y=(now.getMonth()>9||(now.getMonth()===9&&now.getDate()>1))?now.getFullYear()+1:now.getFullYear();
@@ -480,7 +516,7 @@ function packetCard(ps){
   const town=(townLookup(A.town)||{}).name||A.town||"your town";
   const forms=[];
   if(open("msp")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="msp">⬇ Medicare Savings Program application — pre-filled</button>
-    <p class="pk-note">Still to add by hand: date of birth, SSN, Medicare number, citizenship questions, each person's income by type, and the signature on page 3 (both spouses sign if married and living together). Mail to MassHealth Enrollment Center, PO Box 4405, Taunton, MA 02780-0968, or fax (857) 323-8300. Free help: SHINE, (800) 243-4636.</p></div>`);
+    <p class="pk-note">Still to add by hand: SSN, ${A.citizen==="citizen"||A.citizen==="qualified"?"":"citizenship questions, "}anything you skipped in Step 1 (birth date, Medicare number, spouse's share of income), and the signature on page 3 (both spouses sign if married and living together). Mail to MassHealth Enrollment Center, PO Box 4405, Taunton, MA 02780-0968, or fax (857) 323-8300. Free help: SHINE, (800) 243-4636.</p></div>`);
   if(A.housing==="own" && (open("ex41c")||open("ex17d"))) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="961">⬇ Senior exemption application (Form 96-1) — pre-filled</button>
     <p class="pk-note">Still to add by hand: date of birth, a breakdown of other income, bank and investment details, and the signature on page 3. Bring or mail it to the ${town} Board of Assessors by April 1, or within 3 months after the actual tax bills are mailed — whichever is later.</p></div>`);
   const age=Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0);
@@ -547,6 +583,7 @@ function packetCard(ps){
       ${fld("assetBank","Checking & savings (total)","text",' inputmode="decimal" placeholder="$"')}${fld("assetInvest","Stocks, bonds, mutual funds, IRAs (total)","text",' inputmode="decimal" placeholder="$"')}${A.housing==="own"?fld("mortgage","Mortgage still owed on the home","text",' inputmode="decimal" placeholder="$ (0 if none)"'):""}
       <p class="pk-note">Then tap a form below — it comes out with these filled in.</p></div></details>`;
     h+=forms.join("");
+    h+=`<p style="margin:10px 0 4px"><button type="button" class="btn ghost pk-mailsheet" style="white-space:normal;width:100%">📬 Print one page: where each form goes</button></p><p class="pk-note">Every form is marked in yellow where to sign.</p>`;
   }
   h+=ws;
   if(todo.length){
@@ -563,6 +600,8 @@ function wirePacket(){
   document.querySelectorAll("[data-pk]").forEach(el=>el.addEventListener("input",()=>{ PK[el.dataset.pk]=el.value; updSum(); saveProgress(); }));
   updSum();
   document.querySelectorAll(".pk-letter").forEach(b=>b.addEventListener("click",()=>downloadLetter(b.dataset.form)));
+  const ms=document.querySelector(".pk-mailsheet");
+  if(ms) ms.addEventListener("click",downloadMailingSheet);
   const hp=document.querySelector(".pk-heatprint");
   if(hp) hp.addEventListener("click",()=>{ document.body.classList.add("print-heat"); window.print(); });
   const hc=document.querySelector(".pk-heatcal");
