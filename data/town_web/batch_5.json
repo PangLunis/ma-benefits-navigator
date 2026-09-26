@@ -1,0 +1,675 @@
+{
+  "batch": 5,
+  "fetched": "2026-09-25",
+  "towns": {
+    "Amherst": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": 2000,
+        "max_hours": 134,
+        "hourly_rate": "$15/hour (minimum wage)",
+        "min_age": 60,
+        "income_limit": "Household annual income: Single $67,000; Married couple $76,550",
+        "signup_window": "Dec 1 - Jan 31",
+        "apply_where": "Amherst Senior Center (Senior Services), 70 Boltwood Walk, Amherst, MA 01002",
+        "contact_phone": "413-259-3060",
+        "slots_limited": true,
+        "source_url": "https://www.amherstma.gov/586/Tax-Work-Off-Plan",
+        "quote": "Residents 60 years of age and older are eligible to work off up to $2,000 in property taxes a year at the minimum wage rate provided they meet certain guidelines. ... Applications will be accepted December 1st through January 31st.",
+        "date_or_fy": "Page undated; states increase to $2,000 effective August 20, 2024",
+        "stale": false
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 1000,
+        "doubling_5c_half": "Yes - per Town Meeting vote the benefit may be increased up to 100% more, but cannot exceed last year's net tax increase",
+        "qualifying_age": "65 by July 1, 2026 (for FY2027)",
+        "income_limits": "Single $37,080 before deduction of $6,211 Social Security; Married $55,534 before deduction of $9,317 Social Security",
+        "asset_limits": "Single $61,660; Married $84,783 (excluding the residence)",
+        "fiscal_year": "FY2027",
+        "deadline": "File after July 1, 2026 or by April 1st after mailing of actual tax bills (cover letter: deadline April 1, 2027; prefers by Dec 15, 2026)",
+        "source_url": "https://www.amherstma.gov/DocumentCenter/View/87511/41C-Elderly-Exemption-Description",
+        "quote": "CLAUSE 41C - ELDERLY EXEMPTION - $1000 OFF TAX BILL ... One person (listed as deed holder) must be 65 years of age by July 1, 2026 in order to qualify for FY2027.",
+        "stale": false
+      },
+      "assessor": {
+        "phone": "413-259-3024",
+        "url": "https://www.amherstma.gov/106/Exemptions"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Clause 17D exemption (age 70+ / surviving spouse)",
+          "detail": "FY2027: age 70+, surviving spouse, or minor child of deceased parents; asset limit $40,000 excluding residence; no income limit; base $372, may be increased up to 100% more (Jan 2026 newsletter listed $362 for FY26)",
+          "source_url": "https://www.amherstma.gov/DocumentCenter/View/87510/17-Elderly-Exemption-Description",
+          "quote": "Applicant must be 70 years of age, a surviving spouse or a minor child with parents deceased prior to July 1, 2026 in order to qualify for FY2027.",
+          "stale": false
+        },
+        {
+          "name": "Clause 41A tax deferral",
+          "detail": "Age 65+, income cannot exceed $40,000 in prior year; lien recorded; 4% annual interest (2006 Town Meeting cut it from 8% to 4%). CONFLICT: Jan 2026 assessor newsletter table says 8% interest.",
+          "source_url": "https://www.amherstma.gov/DocumentCenter/View/75704/41A-Deferral-Exemption-Description",
+          "quote": "Income cannot exceed $40,000 in the year prior to filing. ... filing fees and 4 percent per annum is to become part of the total amount to be recovered.",
+          "stale": null
+        },
+        {
+          "name": "CPA surcharge exemption (income-limited owners)",
+          "detail": "Income-limited owners may apply for exemption from the Community Preservation Act surcharge; apply through the Assessors",
+          "source_url": "https://www.amherstma.gov/106/Exemptions",
+          "quote": "CPA (Community Preservation Act): Is a fund established for acquisition or preservation, rehabilitation and restoration of historic resources. Income limited owners may apply for exemption.",
+          "stale": false
+        }
+      ],
+      "not_found_notes": "Work-off page, Assessor Exemptions page, FY2027 41C/17D description PDFs, FY2027 cover letter, Jan 2026 assessor newsletter, 41A description, accepted-statutes list and 2006 Town Meeting results were all read from amherstma.gov. Stale conflicting source: work-off application PDF (DocumentCenter/View/56156) still says $1,500 max, income $36,531 single / $54,797 married, 35 slots, apply before June 30. Not found: any senior water/sewer/trash discount or local tax relief/aid fund on amherstma.gov; CPA exemption income thresholds not published on the town page.",
+      "confidence": "high"
+    },
+    "Braintree": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": 2000,
+        "max_hours": null,
+        "hourly_rate": "state minimum wage (dollar figure not stated)",
+        "min_age": 60,
+        "income_limit": null,
+        "signup_window": null,
+        "apply_where": "Department of Elder Affairs, 71 Cleveland Avenue, Braintree, MA 02184 (call to be mailed an eligibility criteria form)",
+        "contact_phone": "781-848-1963",
+        "slots_limited": true,
+        "source_url": "https://braintreema.gov/156/Volunteer-Information",
+        "quote": "Work hours are currently calculated at the state minimum wage per hour. Work hours are accrued to equal the maximum annual household abatement amount of $2,000. This credit is then applied to the household's real estate tax bill.",
+        "date_or_fy": "Page undated",
+        "stale": false
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 1500,
+        "doubling_5c_half": null,
+        "qualifying_age": "over 65 as of July 1, 2024 (FY2025 text)",
+        "income_limits": "Single under $27,664; Married under $41,499 (after subtracting an allowable exclusion)",
+        "asset_limits": "Single under $55,332; Married under $76,080 (whole estate excluding domicile)",
+        "fiscal_year": "FY2025 (text reprinted unchanged in the FY2026 Tax Classification Booklet, Dec 2025)",
+        "deadline": "Applications due on or before April 1 (booklet says April 1, 2025 for FY2025)",
+        "source_url": "https://braintreema.gov/DocumentCenter/View/16989/FY2026-Tax-Classification-Booklet",
+        "quote": "must have a whole estate (the value of personal property excluding domicile) of less than $55,332 if single, $76,080 if married and 4. must have an income less than $27,664 if single, $41,499 if married, after subtracting an allowable exclusion.",
+        "stale": true
+      },
+      "assessor": {
+        "phone": "781-794-8050",
+        "url": "https://braintreema.gov/169/Assessors"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Senior trash fee discount",
+          "detail": "$75 per year off the $300 curbside trash fee for qualifying residents (FY2026 booklet said $65; FY2024 flyer said $55). Billing questions: Water/Sewer office 781-843-8097",
+          "source_url": "https://braintreema.gov/314/Trash-Bills-Sticker-Permits",
+          "quote": "The senior discount is increased to $75 for the year and is available to qualifying residents",
+          "stale": false
+        },
+        {
+          "name": "Clause 17D exemption (elderly 70+ / surviving spouse / minor child)",
+          "detail": "Age 70+ (or surviving spouse/minor child), owned and occupied 5 years, whole estate under $55,332; $262.50 (FY2025 text)",
+          "source_url": "https://braintreema.gov/DocumentCenter/View/16989/FY2026-Tax-Classification-Booklet",
+          "quote": "must be over 70 years of age as of July 1, 2024 or must be a surviving spouse or surviving minor child ... Upon Approval, Taxpayer is Entitled To a $262.50 Exemption.",
+          "stale": true
+        },
+        {
+          "name": "Clause 18 age/infirmity/financial hardship exemption",
+          "detail": "For owners who cannot pay due to age AND infirmity AND poverty; amount varies by need (FY2025 text)",
+          "source_url": "https://braintreema.gov/DocumentCenter/View/16989/FY2026-Tax-Classification-Booklet",
+          "quote": "Any property owner who cannot meet his/her real estate tax obligation due to AGE and INFIRMITY and POVERTY may apply for this exemption.",
+          "stale": true
+        },
+        {
+          "name": "CPA surcharge exemption for low/moderate-income seniors",
+          "detail": "Assessors page links the state CP-4 application (low income persons / low or moderate income seniors, 60+); income thresholds not published by the town",
+          "source_url": "https://braintreema.gov/DocumentCenter/View/17402/Application-for-Community-Preservation-Act-Exemption",
+          "quote": "LOW INCOME PERSONS - LOW OR MODERATE INCOME SENIORS",
+          "stale": false
+        },
+        {
+          "name": "Tax deferral (Clause 41A)",
+          "detail": "Assessor FAQ says tax deferrals are available; no terms published",
+          "source_url": "https://braintreema.gov/Faq.aspx?QID=84",
+          "quote": "Yes, we have exemptions for seniors, veterans, widow, widower, blind as well as tax deferrals.",
+          "stale": null
+        }
+      ],
+      "not_found_notes": "Read braintreema.gov Elder Affairs Volunteer Information, Elder Affairs home and Forms pages, Assessors page and FAQ, FY2025 and FY2026 Tax Classification Booklets, Senior Tax Programs flyer (FY2024), 2024 override FAQ, trash and water/sewer pages, and 2026 Elder Affairs newsletters. No FY2026 or FY2027 Clause 41C income/asset figures found anywhere on the town site. Work-off income limit, sign-up window, hours cap and dollar hourly rate not published. CONFLICTS: work-off min age 60 (Volunteer page, FY2026 booklet) vs 65+ (Assessor FAQ, FY2024 flyer); work-off max $2,000 (Volunteer page) vs $1,500 (FY2026 booklet).",
+      "confidence": "medium"
+    },
+    "Chelmsford": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": 1500,
+        "max_hours": 100,
+        "hourly_rate": null,
+        "min_age": 60,
+        "income_limit": "No means test (\"There is no 'means' test\")",
+        "signup_window": "April 1 - June 30 (FY27 applications; per FY27 application form)",
+        "apply_where": "Chelmsford Senior Center / Council on Aging, 75 Groton Road, N. Chelmsford, MA 01863",
+        "contact_phone": "978-251-0533",
+        "slots_limited": null,
+        "source_url": "https://www.chelmsfordma.gov/497/Property-Tax-Reduction-Programs",
+        "quote": "Senior Tax Rebate/ Work Program This program enables seniors to work 100 hours of municipal service and receive a $1500 rebate on their tax bill. There is no 'means' test, but the senior must be a town resident, over 60 years of age and pay taxes on their home.",
+        "date_or_fy": "FY27 (application form dated February 2026: accepted Apr 1 - Jun 30, 2026)",
+        "stale": false
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 1000,
+        "doubling_5c_half": null,
+        "qualifying_age": "at least 65 on or before July 1, 2025",
+        "income_limits": "Single $35,163; Married $52,742 (annual gross income, incl. social security, pension, interest, annuities, IRA)",
+        "asset_limits": "Single $40,000; Married $55,000 (whole estate excluding value of home)",
+        "fiscal_year": "FY2026 (figures reference July 1, 2025)",
+        "deadline": "Applications accepted from July 1 through April 1 of the fiscal year, filed at the Assessor's Office",
+        "source_url": "https://www.chelmsfordma.gov/353/Are-You-Eligible-For-A-Tax-Exemption",
+        "quote": "Clause 41C ($1000 Per Year) Requirements Must be at least 65 years old on or before July 1, 2025 ... Annual gross income cannot exceed $35,163 if single or $52,742 if married. ... Whole Estate (not including the value of your home) cannot exceed $40,000 if single, or $55,000 if married.",
+        "stale": false
+      },
+      "assessor": {
+        "phone": "978-250-5220",
+        "url": "https://www.chelmsfordma.gov/353/Are-You-Eligible-For-A-Tax-Exemption"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Clause 41A tax deferral",
+          "detail": "Age 65 on or before July 1, 2025; owned/occupied; MA domicile 10 years; gross income from all sources cannot exceed $40,000",
+          "source_url": "https://www.chelmsfordma.gov/353/Are-You-Eligible-For-A-Tax-Exemption",
+          "quote": "Tax Deferral Requirements ... You must be 65 years old on or before July 1, 2025 ... Gross income from all sources in the preceding year cannot exceed $40,000.",
+          "stale": false
+        },
+        {
+          "name": "Clause 17D exemption ($175/yr; surviving spouse, age 70, or minor child)",
+          "detail": "Surviving spouse, person age 70+ owning/occupying 5 years, or minor child of deceased parent; whole estate (excl. home) cannot exceed $40,000",
+          "source_url": "https://www.chelmsfordma.gov/353/Are-You-Eligible-For-A-Tax-Exemption",
+          "quote": "Clause 17D ($175 Per Year) Requirements (Surviving spouse, aged 70, or minor child) ... A person age 70 years or over before July 1, 2025 ... Value of whole estate (not including the value of your home) cannot exceed $40,000.",
+          "stale": false
+        },
+        {
+          "name": "Clause 18 hardship exemption",
+          "detail": "Discretionary by the Board of Assessors; tax returns & asset statements required",
+          "source_url": "https://www.chelmsfordma.gov/353/Are-You-Eligible-For-A-Tax-Exemption",
+          "quote": "Clause 18: (Hardship Exemption) This is discretionary by the Board of Assessors. Tax returns & asset account statements will be required.",
+          "stale": false
+        }
+      ],
+      "not_found_notes": "Read chelmsfordma.gov Property Tax Reduction Programs (497), Are You Eligible For A Tax Exemption (353), Senior Tax Rebate Program (1040 -> FY27 application PDF), Council on Aging/Senior Center (223), Senior Center Resource Guide (docx), and Assessors staff directory. Work-off hourly_rate and slot cap not published (implied $15/hr from $1,500/100hrs but not stated). No senior water/sewer/trash discount or CPA senior exemption found on the town site.",
+      "confidence": "high"
+    },
+    "Watertown": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": 1500,
+        "max_hours": 100,
+        "hourly_rate": "$15/hour (state minimum wage)",
+        "min_age": 60,
+        "income_limit": "Income requirements apply; preference to lower-income applicants (per FY2025 Senior Center newsletter)",
+        "signup_window": "Work period July 1 - March 1 (FY2025 program; FY2025 application; current-year window not reposted)",
+        "apply_where": "Watertown Council on Aging Senior Center, 31 Marshall Street",
+        "contact_phone": "617-972-6490",
+        "slots_limited": true,
+        "source_url": "https://www.watertown-ma.gov/327/Programs-Services",
+        "quote": "Tax Work-Off Program The City of Watertown funds this program yearly for up to 10 seniors and/or veterans to work for a City Department in exchange for a $1,500 property tax deduction. The individuals must meet specific requirements. Call the Senior Center at 617-972-6490 for details.",
+        "date_or_fy": "Current Programs & Services page (links FY2025 application). Hours/rate/age/window from FY2025 Senior Center newsletter (stale): 'up to ten residents a $1,500 deduction ... in exchange for 100 hours of work ... $15 per hour'",
+        "stale": false
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 1000,
+        "doubling_5c_half": null,
+        "qualifying_age": "over 65 as of July 1, 2026 (FY2027)",
+        "income_limits": "Single under $20,000; Married under $30,000 (after Social Security exclusion up to $9,221: worker $6,147, spouse $3,073)",
+        "asset_limits": "Single under $40,000; Married under $55,000 (whole estate)",
+        "fiscal_year": "FY2027",
+        "deadline": "Completed FY2027 applications due by April 1, 2027; applications available July 1, 2026 at Assessors' Office",
+        "source_url": "https://www.watertown-ma.gov/634/Tax-Assistance-and-Deferral-Programs",
+        "quote": "Tax Exemption for Older Citizens (Clause 41C) ... Must be over 65 years of age as of July 1, 2026. ... Must have an income less than $20,000 if single, $30,000 if married, after subtracting an allowable Social Security exclusion of up to $9,221 ... Upon Approval, the exemption amount is $1,000.",
+        "stale": false
+      },
+      "assessor": {
+        "phone": "617-972-6410",
+        "url": "https://www.watertown-ma.gov/634/Tax-Assistance-and-Deferral-Programs"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Clause 41A tax deferral",
+          "detail": "Over 65 as of July 1, 2026; MA residence 10 yrs, owned 5 yrs; total gross income less than $72,000; tax lien recorded at Registry of Deeds",
+          "source_url": "https://www.watertown-ma.gov/634/Tax-Assistance-and-Deferral-Programs",
+          "quote": "Tax Deferral For Older Citizens (Clause 41A) ... Must be over 65 years of age as of July 1, 2026. ... Must have a total gross income of less than $72,000 per year.",
+          "stale": false
+        },
+        {
+          "name": "Community Preservation Act (CPA) exemption",
+          "detail": "Own/occupy as domicile as of Jan 1, 2026; income under limit by household size (senior 60+ table, e.g. 1-person $115,220, 2-person $131,680); full CPA amount exempted",
+          "source_url": "https://www.watertown-ma.gov/634/Tax-Assistance-and-Deferral-Programs",
+          "quote": "Household Size ... Low to Moderate Income Senior (Age 60+) One $115,220 Two $131,680 ... Upon approval, your full CPA tax amount will be exempted.",
+          "stale": false
+        },
+        {
+          "name": "Clause 17D exemption (surviving spouse / minor child / age 70+)",
+          "detail": "Surviving spouse or minor child, or over 70 as of July 1, 2026; owned/occupied 5 years; whole estate limit applies",
+          "source_url": "https://www.watertown-ma.gov/634/Tax-Assistance-and-Deferral-Programs",
+          "quote": "Surviving Spouse, Minor Child, Elderly (Clause 17D) ... Must be a surviving spouse or surviving minor child or must be over 70 years of age as of July 1, 2026. Must have owned and occupied the property for five years.",
+          "stale": false
+        }
+      ],
+      "not_found_notes": "Read watertown-ma.gov Tax Assistance and Deferral Programs (634), Programs & Services (327), and the Council on Aging Senior Center newsletter PDF. 41C/41A/CPA/17D all current FY2027. Work-off: current page confirms it is offered ($1,500, up to 10 seniors/veterans) but does not state hours, age, income, or the current sign-up window; those detail fields (100 hrs, $15/hr, age 60, Jul 1-Mar 1 window, income preference) come from the FY2025 Senior Center newsletter and may be outdated. 17D exact dollar amount not shown on the page.",
+      "confidence": "high"
+    },
+    "Randolph": {
+      "workoff": {
+        "status": "not_found",
+        "max_dollars": null,
+        "max_hours": null,
+        "hourly_rate": null,
+        "min_age": null,
+        "income_limit": null,
+        "signup_window": null,
+        "apply_where": null,
+        "contact_phone": "781-961-0930 ext. 116 (Elder Affairs)",
+        "slots_limited": null,
+        "source_url": "https://www.randolph-ma.gov/DocumentCenter/View/3899/HANDBOOK-UPDATED-1",
+        "quote": "the senior tax abatement program authorized under M.G.L. ch. 59, sec. 5K",
+        "date_or_fy": "Employee Handbook (May 18, 2022) references the 5K program; no public program page with details located",
+        "stale": true
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": null,
+        "doubling_5c_half": null,
+        "qualifying_age": "at least 70 (Randolph did not adopt lower 65 age)",
+        "income_limits": "Single $17,911; Married $22,367 (gross receipts incl. social security) -- FY2022 figures",
+        "asset_limits": "Single $28,000; Married $30,000 (excl. value of residence) -- FY2022 figures",
+        "fiscal_year": "FY2022 (only posted requirements sheet; based on 7/1/21)",
+        "deadline": "On or before April 1 (State Tax Form 96-1: 'Must be filed with assessors on or before April 1')",
+        "source_url": "https://www.randolph-ma.gov/DocumentCenter/View/118/Requirements-for-Qualified-Seniors-over-70-years-old-Exemption",
+        "quote": "CLAUSE 41C Requirements for Fiscal Year 2022 Exemption The applicant must be at least 70 years of age by 7/1/21. ... $17,911 - individual ... $22,367 - married couple ... $28,000 - individual ... $30,000 - married couple",
+        "stale": true
+      },
+      "assessor": {
+        "phone": "781-961-0906",
+        "url": "https://www.randolph-ma.gov/160/Commonly-Used-Forms"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Clause 41A tax deferral (financially qualified senior citizen)",
+          "detail": "Deferral application and requirements posted on Assessors' Commonly Used Forms page; specific terms not published on the site",
+          "source_url": "https://www.randolph-ma.gov/160/Commonly-Used-Forms",
+          "quote": "Clause 41A Deferral Financially Qualified Senior Citizen (PDF)",
+          "stale": null
+        },
+        {
+          "name": "Community Preservation Act (CPA) exemption",
+          "detail": "CPA exemption application posted on Assessors' Commonly Used Forms page",
+          "source_url": "https://www.randolph-ma.gov/160/Commonly-Used-Forms",
+          "quote": "Community Preservation Act Exemption (PDF)",
+          "stale": null
+        }
+      ],
+      "not_found_notes": "Read randolph-ma.gov Assessors' Office (159), General Qualifications page (161, empty of figures), Commonly Used Forms (160), Taxes & Financial (519), What We Do (164), Seniors & Veterans (884), and the 41C requirements/application PDFs. The only posted 41C requirements sheet is FY2022 (stale) and does NOT state the exemption dollar amount; current-year figures and the 41C dollar amount are not published. Work-off: employee handbook references a M.G.L. c.59 s.5K senior tax abatement program, but no public program page with amount/hours/window was found -- status recorded not_found; contact Elder Affairs (781-961-0930 x116).",
+      "confidence": "low"
+    },
+    "Lexington": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": 1755,
+        "max_hours": null,
+        "hourly_rate": null,
+        "min_age": 60,
+        "income_limit": "Income up to $90,000 per household (regardless of single or married status)",
+        "signup_window": null,
+        "apply_where": "Lexington Human Services, Lexington Community Center, 39 Marrett Rd, Lexington",
+        "contact_phone": "781-698-4840",
+        "slots_limited": true,
+        "source_url": "https://lexingtonma.gov/DocumentCenter/View/4711/FY2027-Property-Tax-Relief-Brochure-",
+        "quote": "Senior Service Program A limited number of low-to-moderate income seniors with the skills needed can provide service to the town in exchange for a reduction to their property tax. Age 60 and older. Income up to $90,000 per household ... Maximum credit a household may earn is $1,755",
+        "date_or_fy": "FY2027 (brochure dated July 2026)",
+        "stale": false
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 2000,
+        "doubling_5c_half": "Amount is $2,000 (above the $1,000 statutory 41C base); brochure does not label the increase as a 5C-1/2 doubling",
+        "qualifying_age": "65 or older on July 1, 2026 (you or spouse), for FY2027",
+        "income_limits": "Single under $35,948; Married under $53,924 (total gross income after Social Security Deduction: worker $6,147, spouse $3,073)",
+        "asset_limits": "Single under $71,901; Married under $98,861 (whole estate excl. primary residence)",
+        "fiscal_year": "FY2027",
+        "deadline": "April 1, 2027",
+        "source_url": "https://lexingtonma.gov/DocumentCenter/View/4711/FY2027-Property-Tax-Relief-Brochure-",
+        "quote": "you may qualify for a $2,000 exemption from your Property Tax ... You or your spouse must be 65 or older on July 1, 2026 for Fiscal Year 2027 ... under $35,948* for single, and $53,924* for married ... Whole Estate must be under $71,901 for single ... and $98,861 for married homeowners.",
+        "stale": false
+      },
+      "assessor": {
+        "phone": "781-698-4578",
+        "url": "https://www.lexingtonma.gov/168/Elderly-Other-Tax-Relief"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Clause 41A tax deferral",
+          "detail": "Age 65, owned/occupied primary residence 10 years; defers up to full property tax amount until home is sold or conveyed",
+          "source_url": "https://lexingtonma.gov/DocumentCenter/View/4711/FY2027-Property-Tax-Relief-Brochure-",
+          "quote": "Tax Deferral (Clause 41 A) 65 Owned and Occupied as Primary Residence for Past 10 Years ... Up to Full Amount",
+          "stale": false
+        },
+        {
+          "name": "Clause 17D exemption ($350; age 70+/surviving spouse/minor child)",
+          "detail": "Age 70, surviving spouse, or minor child of deceased parents; assets (excl. primary residence) must not exceed $40,000; $350 exemption",
+          "source_url": "https://lexingtonma.gov/DocumentCenter/View/4711/FY2027-Property-Tax-Relief-Brochure-",
+          "quote": "Elderly Person 70 or Older, Surviving Spouse who has not remarried, or Minor Child of Deceased Parents (Clause 17D) 70 ... Assets only, not including Primary Residence must not exceed $40,000 ... $350",
+          "stale": false
+        },
+        {
+          "name": "CPA surcharge exemption (Clause 44B)",
+          "detail": "Own/occupy primary residence as of Jan 1, 2026; income-qualified; full CPA surcharge amount exempted",
+          "source_url": "https://lexingtonma.gov/DocumentCenter/View/4711/FY2027-Property-Tax-Relief-Brochure-",
+          "quote": "Community Preservation Act Surcharge Exemption Clause 44B) ... Owned and Occupy as Primary Residence as of January 1, 2026 ... Full Amount",
+          "stale": false
+        }
+      ],
+      "not_found_notes": "Primary source is the Town of Lexington Property Tax Relief Programs FY2027 brochure (July 2026, DocumentCenter/View/4711), which covers 41C, 17D, veterans, 41A deferral, CPA (44B), Circuit Breaker and the Senior Service Program (work-off). Work-off max hours and hourly rate and sign-up window not published (contact Human Services 781-698-4840). Assessor's Office 781-698-4578, email TAO@lexingtonma.gov; exemptions web page also at /168/Elderly-Other-Tax-Relief.",
+      "confidence": "high"
+    },
+    "Shrewsbury": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": 2000,
+        "max_hours": 133.33,
+        "hourly_rate": 15.0,
+        "min_age": 60,
+        "income_limit": "$57,000 single; $72,000 head of household; $86,000 married filing jointly",
+        "signup_window": "2026 cycle: applications opened Jan 5, 2026, deadline extended to Feb 12, 2026 at noon; extra openings re-posted Mar 17, 2026. Program year runs Mar 1 - Oct 31.",
+        "apply_where": "Shrewsbury Senior Center (Council on Aging), 98 Maple Ave, Shrewsbury",
+        "contact_phone": "(508) 841-8640",
+        "slots_limited": true,
+        "source_url": "https://shrewsburyma.gov/DocumentCenter/View/19863/2026-STWO-Application-with-Conditions-and-Requirements",
+        "quote": "Participants earn credit at a rate of $15.00 per hour * The maximum annual abatement is $2,000 per homeowner * The maximum abatement requires completion of 133.33 volunteer hours",
+        "date_or_fy": "2026 program year (credit applied to the following year's bill)",
+        "stale": false
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 1000,
+        "doubling_5c_half": "Yes - credited up to double (up to $2,000) provided net tax paid for the current FY is not less than the prior FY",
+        "qualifying_age": 65,
+        "income_limits": {
+          "single": 32074,
+          "married": 48097
+        },
+        "asset_limits": {
+          "single": 49808,
+          "married": 68486
+        },
+        "fiscal_year": "FY2027",
+        "deadline": "April 1, 2027 (applications received by Nov 15, 2026 are credited on the 3rd and 4th quarter bills)",
+        "source_url": "https://shrewsburyma.gov/1129/Exemptions",
+        "quote": "[FY2027 table, Senior Citizen (Clause 41C) column] Eligible age: 65 | Income limit: $32,074 (single) $48,097 (married) | Asset limit: $49,808 (single) $68,486 (married) | Amount: $1,000*",
+        "stale": false
+      },
+      "assessor": {
+        "phone": "(508) 841-8501",
+        "url": "https://shrewsburyma.gov/1129/Exemptions"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Standing with Shrewsbury Tax Relief Fund",
+          "detail": "Town tax-relief grant for owner-occupants 65+ (or disabled at any age) who have lived in Shrewsbury 10 years. FY2027 limits: income $40,093 single / $60,122 married; assets $62,260 single / $85,608 married (125% of elderly exemption limits). File by Feb 1, 2027. Grant amount not published.",
+          "source_url": "https://shrewsburyma.gov/DocumentCenter/View/21476/Standing-with-Shrewsbury-Application",
+          "quote": "the maximum annual income and value of assets allowable for approval shall be 125% of those permitted for approval of the Elderly Exemption under MGL Ch. 59, Sec. 5, Clause 41D",
+          "stale": false
+        },
+        {
+          "name": "CPA surcharge exemption (low/moderate-income seniors)",
+          "detail": "FY2027 exemption from the Community Preservation Act surcharge for seniors 60+. Income limits: 1-person $91,280, 2-person $104,320. Deadline April 1, 2027.",
+          "source_url": "https://shrewsburyma.gov/DocumentCenter/View/21475/FY27-CPA-Application-and-Guidelines",
+          "quote": "Household Size Senior (60 or Older) Annual Income Limit Non-Senior (Under 60) Annual Income Limit 1 $91,280 $73,024 2 $104,320 $83,456",
+          "stale": false
+        },
+        {
+          "name": "Clause 41A senior tax deferral",
+          "detail": "Age 65+, income limit $30,000, may defer up to 100% of the tax. Apply at the Assessors' Office.",
+          "source_url": "https://shrewsburyma.gov/1129/Exemptions",
+          "quote": "[FY2027 table, Tax Deferral (Clause 41A) column] Eligible age: 65 | Income limit: $30,000 | Amount: Up to 100% of tax",
+          "stale": false
+        },
+        {
+          "name": "Clause 17D exemption (age 70+)",
+          "detail": "$175 exemption (doubling may apply), age 70, asset limit $49,808 single / $66,486 married, no income test listed.",
+          "source_url": "https://shrewsburyma.gov/1129/Exemptions",
+          "quote": "[FY2027 table, Clause 17D column] Eligible age: 70 (Seniors) | Income limit: N/A | Asset limit: $49,808 (single) $66,486 (married) | Amount: $175*",
+          "stale": false
+        },
+        {
+          "name": "Discounted PAYT trash bags",
+          "detail": "Households that get a personal exemption from the Assessors automatically qualify to buy PAYT bags at the previous year's rate (one small and one large roll per month) at DPW, 100 Maple Ave.",
+          "source_url": "https://shrewsburyma.gov/1129/Exemptions",
+          "quote": "Households that qualify for Personal Exemptions through the Assessor's Office will automatically become eligible for discounted PAYT (Pay-As-You-Throw) bags sold through DPW.",
+          "stale": false
+        }
+      ],
+      "not_found_notes": "Read the Senior Tax Work-Off page (/973), the 2026 STWO application PDF, Jan and Mar 2026 news items, the Assessors Exemptions page (/1129, FY2027), Assessors Dept page (/165), Standing with Shrewsbury and FY27 CPA PDFs. CONFLICT: the FY2027 Exemptions table says the work-off is 'Up to 125 hours at MA minimum wage', while the 2026 application says $15.00/hr, 133.33 hours, $2,000 max (application is the program's current document). CONFLICT (same page): an older line says exemptions are due 'no later than December 15 ... or 3 months after the mailing of the first actual tax bill', contradicting the April 1, 2027 deadline shown for FY2027. Work-off age: application says 60+ 'or a Veteran'. No senior water/sewer discount found.",
+      "confidence": "high"
+    },
+    "Holyoke": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": 1000,
+        "max_hours": 66,
+        "hourly_rate": null,
+        "min_age": 60,
+        "income_limit": null,
+        "signup_window": "2026 cycle CLOSED; the 2026 application was due Thursday, April 30. Hours must be worked June - November. Chosen by lottery.",
+        "apply_where": "Holyoke Senior Center (Council on Aging), 291 Pine Street, Holyoke",
+        "contact_phone": "(413) 322-5625",
+        "slots_limited": true,
+        "source_url": "https://www.holyoke.org/coa-senior-tax-work-off-program/",
+        "quote": "This year, the program has expanded to offer a $1,000 abatement per household to 70 residents (increased from $750 for 30 residents), chosen by lottery, who are willing to volunteer at one of a variety of city departments.",
+        "date_or_fy": "2026 program (page last modified 2026-05-14)",
+        "stale": false
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 1000,
+        "doubling_5c_half": null,
+        "qualifying_age": 65,
+        "income_limits": {
+          "single": "$20,000 net ($25,201 before the $5,201 Social Security deduction)",
+          "married": "$30,000 net ($37,802 combined before the $7,802 deduction)"
+        },
+        "asset_limits": {
+          "single": 40000,
+          "married": 55000
+        },
+        "fiscal_year": "FY2023 (criteria as of July 1, 2022)",
+        "deadline": "Return to the Assessor's office by December 15 for the actual (3rd quarter) bill; later applications are posted to the 4th quarter bill in April",
+        "source_url": "https://www.holyoke.org/documents/41c-tax-exemption-eligibility-criteria-2022/",
+        "quote": "As senior homeowners you may qualify for a tax exemption of up to $1000 if you meet the following criteria: ... Age 65 by July 1, 2022 or older",
+        "stale": true
+      },
+      "assessor": {
+        "phone": "(413) 322-5550",
+        "url": "https://www.holyoke.org/assessor-abatements/"
+      },
+      "other_senior_relief": [
+        {
+          "name": "CPA surcharge exemption (low/moderate-income seniors)",
+          "detail": "Seniors 60+ who own and occupy their home and meet the CPA affordable-housing income limits are fully exempt from Holyoke's 1.5% CPA surcharge. Apply from July 1 until 3 months after the actual tax bill is mailed. Income figures not published on the page; call Assessors 322-5550.",
+          "source_url": "https://www.holyoke.org/cpa-frequently-asked-questions/",
+          "quote": "Low income families and seniors who are low to moderate income would be fully exempt from the CPA surcharge.",
+          "stale": false
+        }
+      ],
+      "not_found_notes": "Read the COA Senior Tax Work-Off page, COA Services page, the 2026 work-off application PDF, the Assessor dept and Abatements pages, the 41C eligibility document, the CPA About/FAQ/exemption-checklist pages, and DPW waste/sewer/refuse-card pages; searched the site index for 41C, exemption, elderly, senior discount and tax relief. The only 41C criteria the city publishes are an FY2023 flyer (July 1, 2022 dates), so the 41C amount and limits are STALE and need confirming with the Assessors. No hourly rate or income limit is published for the work-off (only in the city ordinance on a third-party code site, not used). No 41A deferral, 5C-1/2 doubling, or senior water/sewer/trash discount found on holyoke.org. The work-off 66-hour figure and April 30 due date come from the 2026 application PDF that holyoke.org links from its own file storage.",
+      "confidence": "medium"
+    },
+    "Natick": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": 1875,
+        "max_hours": 125,
+        "hourly_rate": "State minimum wage (the flyer gives no dollar rate)",
+        "min_age": 60,
+        "income_limit": "Gross income in 2024 cannot exceed: 1-person household $65,595; 2-person $85,777; 3-person $105,960. For larger households call 508-647-6540 ext 1917. Veterans of any age also qualify.",
+        "signup_window": "FY2026 cycle: applications available from May 1, 2025, deadline September 12, 2025. Hours must be completed June 1 to March 1 of the fiscal year. No FY2027 flyer found.",
+        "apply_where": "Volunteer Services Manager, Natick Community Senior Center, 117 East Central Street, Natick MA 01760",
+        "contact_phone": "508-647-6540 ext 1917",
+        "slots_limited": null,
+        "source_url": "https://www.natickma.gov/DocumentCenter/View/19748/FY26-Pamphlet-for-Seniors-and-Vets",
+        "quote": "State Minimum Wage Maximum credit of $1,875.00 per household per fiscal year Maximum number of hours is 125 Credit is prorated for fewer hours ... Deadline to apply is September 12, 2025.",
+        "date_or_fy": "FY2026",
+        "stale": false
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 2000,
+        "doubling_5c_half": null,
+        "qualifying_age": "over 65 as of July 1 of the fiscal year (the 2026 flyer says 'Age 65+')",
+        "income_limits": {
+          "webpage": {
+            "single": 22663,
+            "married": 33994,
+            "note": "after subtracting an allowable exclusion"
+          },
+          "flyer_2026": {
+            "single": 23275,
+            "married": 34912,
+            "source_url": "https://www.natickma.gov/DocumentCenter/View/19304/Tax-Deferral--Exemption-Programs_flyer_2025"
+          },
+          "conflict": "Two town sources disagree. The flyer file is dated June 2026 and is probably the newer figure set, but neither source states a fiscal year."
+        },
+        "asset_limits": {
+          "webpage": {
+            "single": 44048,
+            "married": 60567
+          },
+          "flyer_2026": {
+            "single": 46550,
+            "married": 64006
+          },
+          "conflict": "Same conflict as income limits. The webpage says limits are CPI-adjusted each year from FY2024 on (Spring 2023 Town Meeting vote)."
+        },
+        "fiscal_year": null,
+        "deadline": "Applications must be filed every year by April 1st. (The old 41C application form linked on the same page still says December 15 or 3 months after bills are mailed; that form dates from 2009 and conflicts with the page.)",
+        "source_url": "https://www.natickma.gov/1649/Tax-Deferral-Exemption-Programs",
+        "quote": "must have an income less than $22,663* if single, $33,994* if married, after subtracting an allowable exclusion. Exemption grant value: $2,000",
+        "stale": null
+      },
+      "assessor": {
+        "phone": "508-647-6420",
+        "url": "https://www.natickma.gov/1649/Tax-Deferral-Exemption-Programs"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Water/sewer discount + free quarterly trash bags",
+          "detail": "People who get the 17D or 41C exemption automatically qualify for reduced water/sewer rates and a free quarterly sleeve of blue trash bags.",
+          "source_url": "https://www.natickma.gov/1649/Tax-Deferral-Exemption-Programs",
+          "quote": "Note: recipients are automatically qualified for the water/sewer discount program and free quarterly trash bag program.",
+          "stale": null
+        },
+        {
+          "name": "Clause 41A tax deferral",
+          "detail": "Age 65+. Defer any part of the tax bill at 2.0% interest, repaid when the property is sold or transferred. Income limit conflict: webpage says under $72,000, the 2026 flyer says $75,000. A mortgage holder must sign off.",
+          "source_url": "https://www.natickma.gov/1649/Tax-Deferral-Exemption-Programs",
+          "quote": "must have an income of less than $72,000* per year. *indexed to qualifying single person amount for State Circuit Breaker tax program. Upon approval, taxpayer is entitled to defer (delay) payment of any portion of the property tax bill at 2.0% interest.",
+          "stale": null
+        },
+        {
+          "name": "Clause 17D exemption (age 70+ / surviving spouse / minor child)",
+          "detail": "$350. Must be over 70, have owned and occupied the home 5 years, and have a whole estate under $45,326 (webpage). The 2026 flyer says $46,550, which conflicts.",
+          "source_url": "https://www.natickma.gov/1649/Tax-Deferral-Exemption-Programs",
+          "quote": "must be over 70 years of age as of July 1 of the fiscal year ... must have a whole estate (the value of personal property less domicile) of less than $45,326 Exemption grant value: $350",
+          "stale": null
+        },
+        {
+          "name": "Elderly & Disabled Taxation Fund",
+          "detail": "Funded by donations. Gives property-tax help to elderly, low-income and disabled residents. To apply, call the Assessor's Office.",
+          "source_url": "https://www.natickma.gov/1914/Overview-Elderly-Disabled-Taxation-Fund",
+          "quote": "APPLY: If you are a resident who is currently struggling, we are here to help. Give us a call at the Assessor's Office at 508-647-6420 for assistance.",
+          "stale": null
+        },
+        {
+          "name": "CPA surcharge exemption (low/moderate-income seniors)",
+          "detail": "Exempts 100% of the CPA surcharge for low/moderate-income seniors or low-income non-seniors. Income limits are HUD-based and the flyer says 'see webpage'. Apply annually with the Assessor.",
+          "source_url": "https://www.natickma.gov/DocumentCenter/View/19304/Tax-Deferral--Exemption-Programs_flyer_2025",
+          "quote": "CPA Low/moderate income senior -or- Low income non-senior See webpage for details None 100% of CPA tax",
+          "stale": false
+        }
+      ],
+      "not_found_notes": "Work-off: no FY2027 flyer found. Newest is FY2026, linked from Volunteer Opportunities (/658). Older FY2025 flyer still hosted (View/17408): $1,500 max, 100 hours, apply May 7-Sept 13, 2024. Exemptions: the /1649 page has no fiscal year on its figures and conflicts with the June-2026 flyer on every indexed limit. Page does not mention 5C-1/2, so doubling_5c_half is null; the flat $2,000 is not explained. No means-tested local senior exemption is listed. The Council on Aging page has no work-off content.",
+      "confidence": "medium"
+    },
+    "Andover": {
+      "workoff": {
+        "status": "offered",
+        "max_dollars": null,
+        "max_hours": 100,
+        "hourly_rate": null,
+        "min_age": 60,
+        "income_limit": "No income guidelines for the first qualified owner. A second qualifying owner may earn the exemption if they meet the need requirements.",
+        "signup_window": "Open enrollment in October. The program year runs November 16 to the following November 15.",
+        "apply_where": "SCRPT Program Coordinator, Elder Services / The Robb Center (Senior Center)",
+        "contact_phone": "978-623-8320",
+        "slots_limited": null,
+        "source_url": "https://andoverma.gov/1034/SCRPT-Program",
+        "quote": "The program runs from November 16 to the following November 15. Please check back in October for open enrollment. Contact Ashley for more information (978) 623-8320",
+        "date_or_fy": null,
+        "stale": null
+      },
+      "exemption_41c": {
+        "clause": "41C",
+        "amount_dollars": 1000,
+        "doubling_5c_half": "The town says 'Initial amount is $1,000 per year; Maximum amount is $2,000 per year' but does not name 5C-1/2",
+        "qualifying_age": 70,
+        "income_limits": {
+          "single": 20000,
+          "married": 30000
+        },
+        "asset_limits": {
+          "single": 40000,
+          "married": 55000,
+          "note": "whole estate, not counting the home unless it has 4+ apartments"
+        },
+        "fiscal_year": "FY2018 is the only dated town source. The current /693 page and the Assessor's statutory-exemptions PDF are undated but show identical figures.",
+        "deadline": "Applications should be filed with the Board of Assessors every year. No date is stated.",
+        "source_url": "https://andoverma.gov/DocumentCenter/View/270/Statutory-Exemptions-offered-by-the-Town-of-Andover-PDF-",
+        "quote": "Must be at least 70 years old on or before July 1st. ... Annual gross receipts (income) cannot exceed: $20,000 if you are single $30,000 if you are married ... Initial amount is $1,000.00 per year. Maximum amount is $2,000.00 per year",
+        "stale": true
+      },
+      "assessor": {
+        "phone": "978-623-8930",
+        "url": "https://andoverma.gov/693/Senior-Tax-Exemptions"
+      },
+      "other_senior_relief": [
+        {
+          "name": "Andover Means Tested Senior Tax Exemption (FY2027)",
+          "detail": "Local exemption equal to 50-100% of the state Senior Circuit Breaker credit received on the 2025 MA return. Select Board sets the percentage each year. Eligibility: 65 by Dec 31, 2025 (a joint applicant can be 60+); owned and occupied the Andover home 10 years; assessed value no more than $1,172,000. APPLICATIONS DUE SEPTEMBER 30, 2026. Credited on the Feb 1 and May 1, 2027 bills.",
+          "source_url": "https://andoverma.gov/DocumentCenter/View/20166/FY2027-CIRCUIT-BREAKER-APPLICATION",
+          "quote": "Completed applications are due to the Assessors' office no later than September 30, 2026. ... up to a 100 percent match and not less than a 50 percent match of the amount of the circuit breaker income tax credit",
+          "stale": false
+        },
+        {
+          "name": "Clause 41A tax deferral",
+          "detail": "Age 65+. Can defer the entire bill, up to 50% of the property's value, at 5% interest, with a lien repaid when released. Gross receipts must not exceed $40,000. Source undated; figures match the FY2018 chart.",
+          "source_url": "https://andoverma.gov/DocumentCenter/View/270/Statutory-Exemptions-offered-by-the-Town-of-Andover-PDF-",
+          "quote": "D. Must have gross receipts from all sources in preceding year not exceeding $40,000. ... This deferred amount incurs interest at 5%, payable with the deferred amount on release of a lien filed against your property.",
+          "stale": true
+        },
+        {
+          "name": "Clause 17D exemption (age 70+ / surviving spouse / minor child)",
+          "detail": "$175 initial, up to $350 per year. Whole estate must not exceed $40,000. Undated; figures match the FY2018 chart.",
+          "source_url": "https://andoverma.gov/DocumentCenter/View/270/Statutory-Exemptions-offered-by-the-Town-of-Andover-PDF-",
+          "quote": "Initial amount is $175.00 per year. Maximum amount is $350.00 per year.",
+          "stale": true
+        },
+        {
+          "name": "Elderly and Disabled Tax Fund",
+          "detail": "The town has a committee page for this fund, but the rendered page body shows no program details, eligibility or contact. Only the page's own summary line could be verified.",
+          "source_url": "https://andoverma.gov/328/Elderly-and-Disabled-Tax-Fund-Committee",
+          "quote": "The Elderly Tax Aid helps seniors who can't pay their taxes.",
+          "stale": null
+        }
+      ],
+      "not_found_notes": "SCRPT: the dollar cap and hourly rate were not found on any town page. '100 hours' appears only in the SCRPT page's meta description, not its visible text. The FAQ (faq.aspx?TID=27) gives age 60+, the income rules and the ineligibility of town employees. Exemptions: the /693 page, the Assessor's PDF (View/270) and the FY2018 chart (View/2582) all carry the same 41C/41A/17D figures. None of the undated ones states a fiscal year, and there is no application deadline date. No CPA senior exemption and no senior water/sewer discount were found on andoverma.gov.",
+      "confidence": "medium"
+    }
+  }
+}

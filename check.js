@@ -233,7 +233,11 @@ function townTaxRows(t, ps){
   const age=Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0);
   const rows=[];
   if(A.housing!=="own" || !t) return rows;
-  if(open("ex41c")){
+  const W=t.w||{}, src=u=>u?` <a class="tc-srcl" href="${u}" target="_blank" rel="noopener">(town source)</a>`:"";
+  if(open("ex41c") && W.ex && (W.ex.amt||W.ex.age)){
+    if(W.ex.age && age && age<W.ex.age) rows.push(`<b>Senior exemption</b> — in ${t.name} it starts at age <b>${W.ex.age}</b>, so it doesn't apply yet.${src(W.ex.src)}`);
+    else rows.push(`<b>Senior exemption</b> — ${W.ex.amt?`<b>${typeof W.ex.amt==="number"?"$"+W.ex.amt.toLocaleString():W.ex.amt} a year</b> off the bill`:"money off the bill"}${W.ex.age?`, from age ${W.ex.age}`:""}${W.ex.fy?` (FY${W.ex.fy}, from ${t.name}'s own website)`:""}. Income and savings limits apply — the assessor has this year's numbers.${src(W.ex.src)}`);
+  } else if(open("ex41c")){
     let ex="";
     if(t.c==="41C½") ex=`<b>Senior exemption (Clause 41C½)</b> — a larger version tied to home values in town, with <b>no savings limit</b> and an income limit that follows the state Circuit Breaker limit.`;
     else if(t.c==="41C"||t.c==="41B") ex=`<b>Senior exemption (Clause ${t.c})</b> — usually $500–$1,000 a year off the bill, with income and savings limits the town sets.`;
@@ -245,7 +249,12 @@ function townTaxRows(t, ps){
   if(open("blind37a")) rows.push(t.b37?`<b>Blind exemption (Clause 37A)</b> — $500 a year.`:`<b>Blind exemption</b> — $437.50 a year (or $500 if the town adopted Clause 37A).`);
   if(t.cpa && t.cpas && age>=60 && (open("ex41c")||open("cb"))) rows.push(`<b>Community Preservation Act surcharge exemption</b> — ${t.name} has the CPA surcharge on tax bills and exempts qualifying low- and moderate-income seniors from it.`);
   if(t.res) rows.push(`<b>Residential exemption (${t.res}%)</b> — ${t.name} lowers the taxable value of homes that are the owner's main residence. If it isn't on the bill, apply.`);
-  if(open("workoff")) rows.push(`<b>Senior tax work-off</b> — many towns let people 60+ volunteer for up to <b>$2,000 a year</b> off the bill. State records don't list which towns run it, so ask.`);
+  if(open("workoff")){
+    const o=W.wo;
+    if(o && o.s==="offered") rows.push(`<b>${t.name} runs a senior tax work-off</b> — ${o.max?`volunteer for the town for up to <b>$${o.max.toLocaleString()} a year</b> off the bill`:"volunteer for the town in exchange for money off the bill"}.${o.win?` Sign-up: ${o.win}.`:""}${o.where?` Apply: ${o.where}${o.ph?`, ${o.ph}`:""}.`:(o.ph?` Call ${o.ph}.`:"")}${o.old?" <i>(From an older town notice — confirm this year's details.)</i>":""} Spots are often limited, so ask early.${src(o.src)}`);
+    else if(o && o.s==="not_offered") {}
+    else rows.push(`<b>Senior tax work-off</b> — many towns let people 60+ volunteer for up to <b>$2,000 a year</b> off the bill. We couldn't confirm whether ${t.name} runs one, so ask.`);
+  }
   if(open("defer41a")) rows.push(`<b>Tax deferral (Clause 41A)</b> — postpone the tax until the home is sold (with interest).${t.d41?` ${t.d41} ${t.d41===1?"homeowner":"homeowners"} in ${t.name} used it last year.`:""}`);
   return rows;
 }
@@ -264,7 +273,7 @@ function townCard(ps){
   if(!rows.length && !svc.length) return "";
   let h=`<div class="towncard"><h3>📍 Your town: ${t.name}</h3>`;
   if(rows.length){
-    h+=`<p class="tc-lead"><b>Call the ${t.name} assessor's office</b> (usually in town or city hall) and ask about these. Nobody signs you up automatically, and the deadline is <b>April 1 or 3 months after the tax bill is mailed</b>, whichever is later — late applications can't be accepted.</p><ul class="tc-list">${rows.map(r=>`<li>${r}</li>`).join("")}</ul>`;
+    h+=`<p class="tc-lead"><b>Call the ${t.name} assessor's office</b>${(t.w&&t.w.ap)?` at <a href="tel:${t.w.ap.replace(/[^0-9+]/g,"")}">${t.w.ap}</a>`:""} (usually in town or city hall) and ask about these. Nobody signs you up automatically, and the deadline is <b>April 1 or 3 months after the tax bill is mailed</b>, whichever is later — late applications can't be accepted.</p><ul class="tc-list">${rows.map(r=>`<li>${r}</li>`).join("")}</ul>`;
     h+=`<p class="tc-more"><a href="property-tax-exemptions.html" target="_blank" rel="noopener">What each of these means, and what to ask →</a></p>`;
   }
   if(svc.length) h+=`<div class="tc-svc"><div class="tc-svch">Where to apply in ${t.name}</div>${svc.map(x=>`<p>${x}</p>`).join("")}</div>`;
