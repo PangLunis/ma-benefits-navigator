@@ -285,7 +285,7 @@ function townCard(ps){
    Pre-filled official forms + a Circuit Breaker worksheet, built ON THIS DEVICE.
    The optional name/address/phone boxes exist only in this page's memory: they are
    not saved, not added to A, and not included in anything sent anywhere. */
-let PK = {fullName:"", dob:"", street:"", zip:"", phone:"", medicareNo:"", spouseName:"", spouseDob:"",
+let PK = {fullName:"", dob:"", street:"", zip:"", phone:"", medicareNo:"", spouseName:"", spouseDob:"", spouseSS:"", spouseOther:"",
           incPension:"", incWages:"", incInterest:"", incRental:"", incOther:"", assetBank:"", assetInvest:"", mortgage:"",
           rxList:"", pharmacy:"", doctors:"", currentPlan:""};
 function loadScriptOnce(src){
@@ -464,7 +464,7 @@ function packetCard(ps){
   // MassHealth senior application: for 65+ who need MassHealth in-home care, or Health Safety Net above the
   // Medicare Savings income limit (the MSP application covers HSN below it).
   if(num(A.age)>=65 && (open("mhcommunity") || (open("hsn") && !open("msp")))) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="saca2">⬇ MassHealth senior application (SACA-2) — pre-filled</button>
-    <p class="pk-note">Covers MassHealth and the Health Safety Net. Printed in: name, birth date, address, phone, marriage and spouse, citizenship, own or rent, ${A.marital==="married"?"":"income by type, "}savings, and Medicare. Still to add: Social Security number, the optional background questions, ${A.marital==="married"?"each spouse's income separately (our answers were combined), ":""}the details of each bank account, and signatures on page 24. It's a long form — a free SHINE counselor or the local Council on Aging can help. Mail to MassHealth Enrollment Center, PO Box 290794, Charlestown, MA 02129-0214, or fax (617) 887-8799.</p></div>`);
+    <p class="pk-note">Covers MassHealth and the Health Safety Net. Printed in: name, birth date, address, phone, marriage and spouse, citizenship, own or rent, ${A.marital==="married"?"":"income by type, "}savings, and Medicare. Still to add: Social Security number, the optional background questions, ${A.marital==="married"?"each spouse's income (fill in the spouse's share in Step 1 above and it's split between you automatically), ":""}the details of each bank account, and signatures on page 24. It's a long form — a free SHINE counselor or the local Council on Aging can help. Mail to MassHealth Enrollment Center, PO Box 290794, Charlestown, MA 02129-0214, or fax (617) 887-8799.</p></div>`);
   // Missed years: Schedule CB can be claimed up to 3 years after that year's filing deadline, so in 2026 the
   // 2024 and 2023 credits are still open. Offer only years in which someone (either spouse, if married) was 65+.
   if(open("cb") && (A.housing==="own"||A.housing==="rent")){
@@ -497,7 +497,10 @@ function packetCard(ps){
       ${fld("fullName","Full legal name")}${fld("dob","Date of birth","date")}
       ${fld("street","Street address")}${fld("zip","ZIP code","text",' inputmode="numeric"')}${fld("phone","Phone","tel")}
       ${fld("medicareNo","Medicare number (optional — on the red, white & blue card)")}
-      ${A.marital==="married"?`<div class="pk-h2">Spouse</div>${fld("spouseName","Spouse's full name")}${fld("spouseDob","Spouse's date of birth","date")}`:""}
+      ${A.marital==="married"?`<div class="pk-h2">Spouse</div>${fld("spouseName","Spouse's full name")}${fld("spouseDob","Spouse's date of birth","date")}
+      <div class="pk-h2">Spouse's share of the income <span class="pk-sub">(for the applications that ask per person)</span></div>
+      ${cash("spouseSS","Spouse's Social Security (per year)")}${cash("spouseOther","Spouse's other income (per year)")}
+      <p class="pk-note">These are the spouse's part of the combined amounts from the check (about ${money(num(A.incomeSS))} Social Security and ${money(num(A.incomeOther))} other a year). The rest is counted as ${who(A)==="this person"?"the applicant's":who(A)+"'s"}. Leave blank if you're not sure.</p>`:""}
       <div class="pk-h2">Other income last year, by type <span class="pk-sub">(not Social Security)</span></div>
       ${cash("incPension","Pensions & retirement")}${cash("incWages","Wages from a job")}${cash("incInterest","Interest & dividends")}${cash("incRental","Rental income (after expenses)")}${cash("incOther","Anything else")}
       <p class="pk-note" id="pk-inc-sum"></p>

@@ -35,6 +35,17 @@
              bank:g("assetBank"), invest:g("assetInvest"), mortgage:g("mortgage") };
   }
   function hasSplit(S){ return [S.pension,S.wages,S.interest,S.rental,S.other].some(v=>v!=null); }
+  // Married couples answer income COMBINED. If the packet's "spouse's share" boxes are filled, split it per person:
+  // the applicant gets the rest. Returns null when not married, not given, or inconsistent (share > combined).
+  function perPerson(A, extra){
+    if(A.marital!=="married" || !known(A.incomeSS) || !known(A.incomeOther)) return null;
+    const g=k=>{ const v=extra&&extra[k]; return (v==null||v==="")?null:n(v); };
+    const sss=g("spouseSS"), sso=g("spouseOther");
+    if(sss==null && sso==null) return null;
+    const ss=n(A.incomeSS), ot=n(A.incomeOther), s1=sss||0, o1=sso||0;
+    if(s1>ss+0.5 || o1>ot+0.5) return null;
+    return { you:{ss:ss-s1, other:ot-o1}, sp:{ss:s1, other:o1} };
+  }
 
   // ---- Shared header of the DOR assessor forms (96-1, 96-2, 96-3, 96-4, 97) ----
   // own: checkbox names for [owned-on-July-1 Yes, sole owner, co-owner with others] on THIS form (verified by render).
@@ -224,7 +235,13 @@
       if(sp.length>=2){ setText(form,"First name", sp[0]); setText(form,"Last name", sp[sp.length-1]); } else setText(form,"First name", sp[0]);
       setText(form,"Date of birth_2", mdy(extra.spouseDob));
     }
-    // Income (gross MONTHLY). Only split per person when single; a couple's combined totals can't be divided honestly.
+    // Income (gross MONTHLY). Per person: single = all theirs; married = only when the spouse's share was given.
+    const PP=perPerson(A, extra);
+    if(PP){
+      const mo=v=>v>0?"$"+usd(v/12):"";
+      setText(form,"Your", mo(PP.you.ss)); setText(form,"Your spouses", mo(PP.sp.ss));
+      if(PP.you.other>0||PP.sp.other>0){ setText(form,"Other please specify","Pensions, interest & other income"); setText(form,"Your_8", mo(PP.you.other)); setText(form,"Your spouses_8", mo(PP.sp.other)); }
+    }
     if(A.marital!=="married"){
       if(known(A.incomeSS) && n(A.incomeSS)>0) setText(form,"Your", "$"+usd(n(A.incomeSS)/12));
       const S=split(extra), mo=v=>v!=null&&v>0?"$"+usd(v/12):"";
@@ -315,8 +332,20 @@
     if(A.housing==="rent") yesNo(PDFLib, form,"18. Do you rent or own your property?", true);        // "1" = Rent (left)
     else if(A.housing==="own") yesNo(PDFLib, form,"18. Do you rent or own your property?", false);   // "2" = Own
     if(A.disability==="yes"||A.disability==="no") yesNo(PDFLib, form,"19. Do you have a disability?", A.disability==="yes");
-    const ss=n(A.incomeSS), other=n(A.incomeOther), S=split(extra);
-    if(known(A.incomeSS) && known(A.incomeOther)) yesNo(PDFLib, form,"22. Do you have any income?", ss+other>0);
+    const ss=n(A.incomeSS), other=n(A.incomeOther), S=split(extra), PP=perPerson(A, extra);
+    if(!married && known(A.incomeSS) && known(A.incomeOther)) yesNo(PDFLib, form,"22. Do you have any income?", ss+other>0);
+    if(PP){
+      // Person 1 = the applicant's share; Person 2 = the spouse's share (types unknown -> "other taxable income", yearly)
+      const P1=PP.you, P2=PP.sp;
+      yesNo(PDFLib, form,"22. Do you have any income?", P1.ss+P1.other>0);
+      if(P1.ss>0){ check(form,"28. Social Security benefits"); setText(form,"Social Security benefits  $", usd(P1.ss/12)); setText(form,"How often Social Security benefits","Monthly"); }
+      if(P1.other>0){ check(form,"Other taxable income include type"); setText(form,"Other taxable income   $", usd(P1.other)); setText(form,"How often Other taxable income","Yearly"); setText(form,"Other taxable income Type","Pensions, interest & other (total)"); }
+      if(P1.ss+P1.other>0) setText(form,"33. What is your total expected income for the current calendar year?", "$"+usd(P1.ss+P1.other));
+      yesNo(PDFLib, form,"32. Does this person have any income?", P2.ss+P2.other>0);
+      if(P2.ss>0){ check(form,"38. Social Security benefits_P2"); setText(form,"38.  Social Security benefits_2_P2", usd(P2.ss/12)); setText(form,"38. Social Security benefits How often_P2","Monthly"); }
+      if(P2.other>0){ check(form,"38. Other taxable income include type_2_P2"); setText(form,"38. Other taxable income $_P2", usd(P2.other)); setText(form,"38. Other taxable income How often_2_P2","Yearly"); setText(form,"38. Other taxable income Type_2_P2","Pensions, interest & other (total)"); }
+      if(P2.ss+P2.other>0) setText(form,"43. What is your total expected income for the current calendar year?_P2", "$"+usd(P2.ss+P2.other));
+    }
     if(!married){
       if(known(A.incomeSS) && ss>0){ check(form,"28. Social Security benefits"); setText(form,"Social Security benefits  $", usd(ss/12)); setText(form,"How often Social Security benefits","Monthly"); }
       if(S.pension){ check(form,"28. Retirement or Pension"); setText(form,"Retirement or Pension   $", usd(S.pension)); setText(form,"How often Retirement or Pension","Yearly"); }
