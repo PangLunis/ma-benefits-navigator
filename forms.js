@@ -237,6 +237,34 @@
     return await doc.save();
   }
 
-  const api={ fy, mdy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillSNAP, fillMSP };
+  // ---- Schedule CB (2025): Senior Circuit Breaker credit, filed WITH the Massachusetts Form 1 ----
+  // Only numbers the person gave us directly are printed: name/address, homeowner or renter, assessed value (line 2),
+  // Social Security (line 4), real estate tax (line 10) or yearly rent (line 18a/18). Lines 3, 5, 6 and 8 come from the
+  // tax return itself, so they - and every line computed from them - are left for the person or their preparer.
+  // Every money box is a comb field of whole dollars with a fixed number of digits: never truncate, skip instead.
+  async function fillCB(PDFLib, bytes, A, extra, townName){
+    const doc=await PDFLib.PDFDocument.load(bytes), form=doc.getForm();
+    const parts=String(extra.fullName||"").trim().split(/\s+/).filter(Boolean);
+    if(parts.length){
+      setText(form,"First Name", parts[0]);
+      if(parts.length>1) setText(form,"Last Name", parts[parts.length-1]);
+      if(parts.length>2) setText(form,"Middle Initial", parts[1].replace(/[^A-Za-z]/g,"").charAt(0).toUpperCase());
+    }
+    setText(form,"Address of Principal Residence in Massachusetts (DO NOT ENTER PO BOX)", extra.street);
+    setText(form,"City/Town", townName||A.town);
+    setText(form,"State", "MA");
+    if(/^\d{5}$/.test(String(extra.zip||"").trim())) setText(form,"Zip Code", String(extra.zip).trim());
+    const digits=(field, v, max)=>{ if(!known(v)) return; const d=String(Math.round(n(v))); if(d.length<=max && n(v)>0) setText(form, field, d); };
+    const own=A.housing==="own", rent=A.housing==="rent";
+    if(own||rent) choose(PDFLib, form, "Living quarters status during  2025:", own?"homeowner":"renter");
+    if(own) digits("line2", A.assessed, 8);
+    digits("line4", A.incomeSS, 6);
+    if(own) digits("line10", A.propTax, 5);
+    if(rent && known(A.rent) && n(A.rent)>0){ const yr=Math.round(n(A.rent)*12); digits("line18a", yr, 5); digits("line18", Math.round(yr/4), 5); }
+    form.updateFieldAppearances();
+    return await doc.save();
+  }
+
+  const api={ fy, mdy, fill961, fill962, fill963, fill964, fill97, fillCP4, fillSNAP, fillMSP, fillCB };
   if(typeof module!=="undefined" && module.exports) module.exports=api; else global.BFForms=api;
 })(typeof window!=="undefined"?window:globalThis);

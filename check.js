@@ -300,7 +300,8 @@ const FORMS={
   "964":{file:"forms/form-96-4-veterans.pdf", fn:"fill964", out:"Form-96-4-veterans-exemption-prefilled.pdf"},
   "97":{file:"forms/form-97-senior-tax-deferral.pdf", fn:"fill97", out:"Form-97-senior-tax-deferral-prefilled.pdf"},
   cp4:{file:"forms/form-cp-4-cpa-exemption.pdf", fn:"fillCP4", out:"Form-CP-4-CPA-surcharge-exemption-prefilled.pdf"},
-  snap:{file:"forms/snap-application-for-seniors.pdf", fn:"fillSNAP", out:"SNAP-application-for-seniors-prefilled.pdf"}
+  snap:{file:"forms/snap-application-for-seniors.pdf", fn:"fillSNAP", out:"SNAP-application-for-seniors-prefilled.pdf"},
+  cb:{file:"forms/schedule-cb-2025-circuit-breaker.pdf", fn:"fillCB", out:"Schedule-CB-2025-Circuit-Breaker-prefilled.pdf"}
 };
 async function downloadForm(kind, btn){
   const old=btn.innerHTML; btn.disabled=true; btn.innerHTML="Filling in…";
@@ -453,9 +454,11 @@ function packetCard(ps){
     <p class="pk-note">For low- and moderate-income seniors 60+ in ${tw.name}. Still to add by hand: household members and their income (Schedules C–E), and your signature. ${assessorLine}</p></div>`);
   if(open("snap") && Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0)>=60) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="snap">⬇ Food help (SNAP) application for seniors — pre-filled</button>
     <p class="pk-note">Name, address, phone and date of birth are printed in. Still to add by hand: the rest of the questions and your signature on page 1. Send page 1 even if you don't finish the rest — DTA accepts it with a name, address and signature, and your benefits can count from that date. Upload at DTAConnect.com, fax (617) 887-8765, or mail to DTA Document Processing Center, P.O. Box 4406, Taunton, MA 02780-0420. Help: Senior Assistance Office, (833) 712-8027.</p></div>`);
+  if(open("cb") && (A.housing==="own"||A.housing==="rent")) forms.push(`<div class="pk-form"><button type="button" class="btn prim pk-dl" data-form="cb">⬇ Circuit Breaker tax credit (Schedule CB, 2025) — pre-filled</button>
+    <p class="pk-note">Printed in: name, address, ${A.housing==="own"?"homeowner, assessed value, Social Security and property tax":"renter, Social Security and rent"}. Still to add: Social Security number, lines 3, 5, 6 and 8 (they come from the tax return)${A.housing==="own"?", half of water and sewer bills (line 13)":", the landlord's name and address"}, and the math on the lines after that. File it <b>with the Massachusetts Form 1 tax return for 2025</b> — even if ${who(A)==="this person"?"they don't":who(A)+" doesn't"} normally file. Free help: AARP Tax-Aide or the Council on Aging. Missed years can be claimed up to 3 years back, each with that year's Schedule CB (<a href="https://www.mass.gov/doc/2024-schedule-cb-circuit-breaker-credit/download" target="_blank" rel="noopener">2024 form</a>).</p></div>`);
   // cover letter + calendar under each form (assessor forms + MSP + SNAP)
   for(let k=0;k<forms.length;k++){
-    const m=/data-form="([^"]+)"/.exec(forms[k]); if(!m) continue;
+    const m=/data-form="([^"]+)"/.exec(forms[k]); if(!m || m[1]==="cb") continue;   // CB goes with the tax return: no cover letter
     forms[k]=forms[k].replace("</div>",`<div class="pk-mini"><button type="button" class="pk-link pk-letter" data-form="${m[1]}">📄 Cover letter</button>${["msp","snap"].includes(m[1])?"":`<button type="button" class="pk-link pk-cal" data-form="${m[1]}">📅 Add the deadline to my calendar</button>`}</div></div>`);
   }
   const ws=cbWorksheet(ps)+readySheets(ps)+quickLinks(ps);
