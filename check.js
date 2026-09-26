@@ -287,7 +287,8 @@ function townCard(ps){
    not saved, not added to A, and not included in anything sent anywhere. */
 let PK = {fullName:"", dob:"", street:"", zip:"", phone:"", medicareNo:"", spouseName:"", spouseDob:"", spouseSS:"", spouseOther:"",
           incPension:"", incWages:"", incInterest:"", incRental:"", incOther:"", assetBank:"", assetInvest:"", mortgage:"",
-          rxList:"", pharmacy:"", doctors:"", currentPlan:""};
+          rxList:"", pharmacy:"", doctors:"", currentPlan:"",
+          heatFuel:"", heatVendor:"", heatAcct:"", elecVendor:"", elecAcct:"", heatHousehold:""};
 function loadScriptOnce(src){
   return new Promise((ok,bad)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok();
     const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=()=>bad(new Error("could not load "+src)); document.head.appendChild(el); });
@@ -346,21 +347,59 @@ function readySheets(ps){
   const ag=id=>{ const a=AGENCIES[Array.isArray(id)?id[0]:id]; return a?`<b>${a.n}</b>${a.p?` — <a href="tel:${a.p.replace(/[^0-9+]/g,"")}">${a.p}</a>`:""}`:""; };
   const hh=homeSize(), homeInc=num(A.incomeSS)+num(A.incomeOther)+num(A.hhOtherInc);
   let h="";
-  if(open("liheap")) h+=`<details class="pk-ws"><summary>🔥 Heating help: have these ready</summary><div class="pk-body">
-    <p>Applications open October 1. Apply online at <a href="https://www.toapply.org/MassHEAP" target="_blank" rel="noopener">toapply.org/MassHEAP</a>, or by phone or in person with ${t.fuel?`your local agency: ${ag(t.fuel)}`:"your local agency (call the Cold Relief Heatline, (800) 632-8175, to find it)"}.</p>
-    <table class="pk-tab">
-      <tr><td>People in the household</td><td>${hh}</td></tr>
-      <tr><td>Household income for the year (estimate)</td><td>${homeInc?money(homeInc):"—"}</td></tr>
-    </table>
-    <p><b>Bring:</b> photo ID · a list of everyone in the home · your heating company name and account number · your lease or mortgage statement · proof of the last 30 days of income (Social Security or pension letter, pay stubs).</p>
-    <p>It's free — nobody legitimate charges an application fee. <a href="fuel-assistance.html" target="_blank" rel="noopener">Heating help guide →</a></p>
-  </div></details>`;
+  if(open("liheap")) h+=heatSheet(t, ag, hh, homeInc);
   if(open("snap")) h+=`<details class="pk-ws"><summary>🛒 Food help (SNAP): have these ready</summary><div class="pk-body">
     <p>${num(A.age)>=60?`At 60 and up, call the DTA <b>Senior Assistance Office</b> at <a href="tel:8337128027">(833) 712-8027</a> for help applying, or use the shorter <a href="https://www.mass.gov/lists/snap-application-for-seniors" target="_blank" rel="noopener">SNAP Application for Seniors</a>.`:"Apply online at DTAConnect.com, by phone, or at a local DTA office."}</p>
     <p><b>Have ready:</b> photo ID · Social Security and other income letters · rent or mortgage statement and utility bills · out-of-pocket medical costs (these can raise the benefit for people 60+).</p>
   </div></details>`;
   if(A.medicare==="yes" || open("medicareoe")) h+=medicareSheet();
   return h;
+}
+// Heating help (HEAP): Massachusetts has no statewide paper form - applications go through the online portal
+// (opens October 1) or the local agency, with an intake appointment the first year. So instead of a PDF, a worksheet
+// with every answer in one place, printable, kept only on this device.
+function heatSheet(t, ag, hh, homeInc){
+  const v=k=>String(PK[k]||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+  const d=x=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(x||"")); return m?`${m[2]}/${m[3]}/${m[1]}`:""; };
+  let hhText=PK.heatHousehold;          // only saved once they edit it; until then show a fresh default
+  if(!hhText){
+    const lines=[];
+    const mine=(num(A.incomeSS)+num(A.incomeOther))/12;
+    if(A.marital==="married"){
+      const sp=num(PK.spouseSS)+num(PK.spouseOther), you=Math.max(0,num(A.incomeSS)+num(A.incomeOther)-sp);
+      lines.push(`${PK.fullName||A.name||"Applicant"}${PK.dob?", born "+d(PK.dob):""} — about ${money((sp?you:num(A.incomeSS)+num(A.incomeOther))/12)}/month${sp?"":" (couple, combined)"}`);
+      lines.push(`${PK.spouseName||"Spouse"}${PK.spouseDob?", born "+d(PK.spouseDob):""}${sp?` — about ${money(sp/12)}/month`:""}`);
+    } else lines.push(`${PK.fullName||A.name||"Applicant"}${PK.dob?", born "+d(PK.dob):""} — about ${money(mine)}/month`);
+    if(num(A.hhOtherInc)>0) lines.push(`Others in the home — about ${money(num(A.hhOtherInc)/12)}/month combined (list each person)`);
+    hhText=lines.join("\n");
+  }
+  const fuel=["","Oil","Natural gas","Electricity","Propane","Kerosene","Wood or coal","Heat is included in my rent"];
+  return `<details class="pk-ws pk-heat"><summary>🔥 Heating help application worksheet</summary><div class="pk-body">
+    <p>Massachusetts takes heating help applications <b>online from October 1</b> at <a href="https://www.toapply.org/MassHEAP" target="_blank" rel="noopener">toapply.org/MassHEAP</a>, or by phone or in person with ${t.fuel?`your local agency: ${ag(t.fuel)}`:"your local agency (call the Cold Relief Heatline, (800) 632-8175, to find it)"}. The first year there's an intake appointment. Fill this in once and keep it next to you — it stays on this device.</p>
+    <label class="pk-ta">How the home is heated<select data-pk="heatFuel">${fuel.map(f=>`<option${PK.heatFuel===f?" selected":""}>${f}</option>`).join("")}</select></label>
+    <label class="pk-ta">Heating company (the oil/gas/propane company, or landlord if heat is in the rent)<input type="text" data-pk="heatVendor" value="${v("heatVendor")}"></label>
+    <label class="pk-ta">Heating account number (on the bill)<input type="text" data-pk="heatAcct" value="${v("heatAcct")}"></label>
+    <label class="pk-ta">Electric company<input type="text" data-pk="elecVendor" value="${v("elecVendor")}" placeholder="e.g. National Grid, Eversource"></label>
+    <label class="pk-ta">Electric account number — if approved, a discount rate may apply to this bill (investor-owned utilities)<input type="text" data-pk="elecAcct" value="${v("elecAcct")}"></label>
+    <label class="pk-ta">Everyone who lives in the home: name, birth date, monthly income<textarea data-pk="heatHousehold" rows="4">${String(hhText).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</textarea></label>
+    <table class="pk-tab">
+      <tr><td>People in the household</td><td>${hh}</td></tr>
+      <tr><td>Household income for the year (estimate)</td><td>${homeInc?money(homeInc):"—"}</td></tr>
+    </table>
+    <p><b>Bring:</b> photo ID · this list of everyone in the home · the heating and electric bills · your lease or mortgage statement · proof of the last 30 days of income (Social Security or pension letter, pay stubs).</p>
+    <p>The same application also covers free weatherization and heating-system repair. It's free — nobody legitimate charges an application fee. <a href="fuel-assistance.html" target="_blank" rel="noopener">Heating help guide →</a></p>
+    <p><button type="button" class="btn ghost pk-heatprint">🖨 Print this sheet</button> <button type="button" class="btn ghost pk-heatcal">📅 Oct 1 reminder</button></p>
+  </div></details>`;
+}
+function heatICS(){
+  const now=new Date(), y=(now.getMonth()>9||(now.getMonth()===9&&now.getDate()>1))?now.getFullYear()+1:now.getFullYear();
+  const stamp=now.toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z");
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Benefighter//Heat//EN","BEGIN:VEVENT",`UID:heap-${y}@benefighter.com`,`DTSTAMP:${stamp}`,
+    `DTSTART;VALUE=DATE:${y}1001`,"SUMMARY:Apply for heating help (HEAP) - applications open today",
+    "DESCRIPTION:Apply online at toapply.org/MassHEAP or call your local agency. Households must apply every year.",
+    "BEGIN:VALARM","TRIGGER:-PT0M","ACTION:DISPLAY","DESCRIPTION:Heating help applications open","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const url=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
+  const a=document.createElement("a"); a.href=url; a.download="Heating-help-Oct-1.ics"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 function medicareSheet(){
   const v=k=>String(PK[k]||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
@@ -524,6 +563,10 @@ function wirePacket(){
   document.querySelectorAll("[data-pk]").forEach(el=>el.addEventListener("input",()=>{ PK[el.dataset.pk]=el.value; updSum(); saveProgress(); }));
   updSum();
   document.querySelectorAll(".pk-letter").forEach(b=>b.addEventListener("click",()=>downloadLetter(b.dataset.form)));
+  const hp=document.querySelector(".pk-heatprint");
+  if(hp) hp.addEventListener("click",()=>{ document.body.classList.add("print-heat"); window.print(); });
+  const hc=document.querySelector(".pk-heatcal");
+  if(hc) hc.addEventListener("click",heatICS);
   const mp=document.querySelector(".pk-medprint");
   if(mp) mp.addEventListener("click",()=>{ document.body.classList.add("print-med"); window.print(); });
   document.querySelectorAll(".pk-cal").forEach(b=>b.addEventListener("click",()=>downloadICS(b.dataset.form)));
@@ -531,7 +574,7 @@ function wirePacket(){
   const pr=document.querySelector(".pk-print");
   if(pr) pr.addEventListener("click",()=>{ document.body.classList.add("print-packet"); document.querySelectorAll(".pk-ws").forEach(d=>d.open=true); window.print(); });
 }
-window.addEventListener("afterprint",()=>{ document.body.classList.remove("print-packet"); document.body.classList.remove("print-med"); });
+window.addEventListener("afterprint",()=>{ document.body.classList.remove("print-packet"); document.body.classList.remove("print-med"); document.body.classList.remove("print-heat"); });
 
 const STATS_URL = "https://benefighter-stats.pangserve.workers.dev/c";
 const STATS_OFF = (navigator.doNotTrack==="1" || window.doNotTrack==="1" || navigator.globalPrivacyControl===true || navigator.webdriver===true || !/benefighter\.com$/.test(location.hostname));   // webdriver: skip automated browsers (our own tests, bots)
