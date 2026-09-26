@@ -392,6 +392,60 @@ function heatSheet(t, ag, hh, homeInc){
     <p><button type="button" class="btn ghost pk-heatprint">🖨 Print this sheet</button> <button type="button" class="btn ghost pk-heatcal">📅 Oct 1 reminder</button></p>
   </div></details>`;
 }
+// ---- Guided "fill in my forms": one big question at a time (for people who won't open a collapsed box) ----
+function guideSteps(formsHtml){
+  const married=A.marital==="married", nm=(A.name||"").trim(), pos=nm?nm+"'s":"your";
+  const has=k=>formsHtml.includes(`data-form="${k}"`);
+  const steps=[
+    {k:"fullName", q:`What's ${pos} full legal name?`, h:"As it's written on the Medicare card or a photo ID.", t:"text", ac:"name"},
+    {k:"dob", q:`What's ${pos} date of birth?`, t:"date", ac:"bday"},
+    {k:"street", q:`What's ${pos} street address?`, h:"The home in Massachusetts — street and number.", t:"text", ac:"street-address"},
+    {k:"zip", q:"What's the ZIP code?", t:"text", im:"numeric", ac:"postal-code"},
+    {k:"phone", q:"What's the best phone number?", h:"The agencies call this number if they have a question.", t:"tel", ac:"tel"}
+  ];
+  if(A.medicare==="yes") steps.push({k:"medicareNo", q:"What's the Medicare number?", h:"On the red, white and blue Medicare card — 11 letters and numbers. Skip it if the card isn't handy.", t:"text"});
+  if(married){
+    steps.push({k:"spouseName", q:"What's the spouse's full legal name?", t:"text"});
+    steps.push({k:"spouseDob", q:"What's the spouse's date of birth?", t:"date"});
+    if(has("msp")||has("saca2")) steps.push({k:"spouseSS", q:"How much of the Social Security is the spouse's, per year?", h:`The check has ${money(num(A.incomeSS))} a year for both. Skip if you're not sure.`, t:"money"});
+  }
+  if(has("961")||has("saca2")||has("97")) steps.push({k:"assetBank", q:"About how much is in checking and savings, all together?", h:"Some forms ask for this. Skip if you'd rather not say.", t:"money"});
+  return steps;
+}
+function openGuide(){
+  const forms=document.querySelector(".packet")?document.querySelector(".packet").innerHTML:"";
+  const steps=guideSteps(forms); let k=Math.max(0, steps.findIndex(s=>!PK[s.k])); if(k<0) k=0;
+  let ov=document.getElementById("pkGuide"); if(ov) ov.remove();
+  ov=document.createElement("div"); ov.id="pkGuide"; ov.className="pk-guide-ov"; ov.setAttribute("role","dialog"); ov.setAttribute("aria-modal","true");
+  document.body.appendChild(ov);
+  const esc=x=>String(x||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+  const draw=()=>{
+    if(k>=steps.length){
+      ov.innerHTML=`<div class="pk-guide-card"><div class="pg-step">All set ✓</div><div class="pg-q">Your forms will come out filled in.</div>
+        <p class="pg-h">Tap a form in the list to download it. Sign where it's marked in yellow.</p>
+        <button type="button" class="btn prim pg-next" id="pgDone">Show my forms</button></div>`;
+      ov.querySelector("#pgDone").onclick=()=>{ ov.remove(); results(); const pk=document.getElementById("packet"); if(pk) pk.scrollIntoView({block:"start"}); };
+      return;
+    }
+    const s=steps[k], val=PK[s.k]||"";
+    const input = s.t==="money"
+      ? `<input id="pgIn" type="text" inputmode="decimal" placeholder="$" value="${esc(val)}">`
+      : `<input id="pgIn" type="${s.t==="date"?"date":s.t==="tel"?"tel":"text"}"${s.im?` inputmode="${s.im}"`:""}${s.ac?` autocomplete="${s.ac}"`:""} value="${esc(val)}">`;
+    ov.innerHTML=`<div class="pk-guide-card"><button type="button" class="pg-x" aria-label="Close">✕</button>
+      <div class="pg-step">Question ${k+1} of ${steps.length}</div>
+      <label class="pg-q" for="pgIn">${s.q}</label>${s.h?`<p class="pg-h">${s.h}</p>`:""}${input}
+      <div class="pg-btns">${k>0?`<button type="button" class="btn ghost pg-back">‹ Back</button>`:""}<button type="button" class="btn prim pg-next">Next ›</button></div>
+      <button type="button" class="pg-skip">Skip this one</button></div>`;
+    const inp=ov.querySelector("#pgIn"); setTimeout(()=>inp.focus(),50);
+    const save=()=>{ PK[s.k]=inp.value.trim(); saveProgress(); };
+    ov.querySelector(".pg-next").onclick=()=>{ save(); k++; draw(); };
+    inp.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); save(); k++; draw(); } };
+    const bk=ov.querySelector(".pg-back"); if(bk) bk.onclick=()=>{ save(); k--; draw(); };
+    ov.querySelector(".pg-skip").onclick=()=>{ k++; draw(); };
+    ov.querySelector(".pg-x").onclick=()=>{ save(); ov.remove(); results(); const pk=document.getElementById("packet"); if(pk) pk.scrollIntoView({block:"start"}); };
+  };
+  draw();
+}
 // One printed page: where each form in the packet goes, what to put in the envelope, and deadlines.
 const SEND={
   msp:{to:["MassHealth Enrollment Center","PO Box 4405","Taunton, MA 02780-0968"], alt:"Or fax to (857) 323-8300."},
@@ -563,10 +617,13 @@ function packetCard(ps){
   let h=`<div class="packet" id="packet"><h3>📄 Your claim packet</h3>
     <p class="pk-lead">Forms and numbers filled in from your answers, <b>right here on this device — nothing is sent to us.</b></p>`;
   if(forms.length){
+    const nSteps=guideSteps(forms.join("")).length, filled=guideSteps(forms.join("")).filter(s=>PK[s.k]).length;
+    h+=`<div class="pk-guidebox"><button type="button" class="btn prim pk-guide">✍️ ${filled?"Finish filling in my forms":"Fill in my forms"} — ${nSteps} quick questions</button>
+      <p class="pk-note">One question at a time. It puts your name, address and other details on every form below. Skip anything you'd rather not answer.${filled?` (${filled} of ${nSteps} done.)`:""}</p></div>`;
     const v=k=>String(PK[k]||"").replace(/"/g,"&quot;");
     const fld=(k,label,type,extra)=>`<label>${label}<input type="${type||"text"}" data-pk="${k}" autocomplete="off" value="${v(k)}"${extra||""}></label>`;
     const cash=(k,label)=>fld(k,label,"text",' inputmode="decimal" placeholder="$ per year"');
-    h+=`<details class="pk-opt" ${PK.fullName?"open":""}><summary>✍️ Step 1 (optional): add details so the forms come out complete</summary><div class="pk-fields">
+    h+=`<details class="pk-opt"><summary>📝 All details (review or change)</summary><div class="pk-fields">
       <p class="pk-note">Everything here stays on this device. It's only used to fill in the forms below — never sent to us. We never ask for a Social Security number.</p>
       <div class="pk-h2">About ${who(A)==="this person"?"them":who(A)}</div>
       ${fld("fullName","Full legal name")}${fld("dob","Date of birth","date")}
@@ -600,6 +657,8 @@ function wirePacket(){
   document.querySelectorAll("[data-pk]").forEach(el=>el.addEventListener("input",()=>{ PK[el.dataset.pk]=el.value; updSum(); saveProgress(); }));
   updSum();
   document.querySelectorAll(".pk-letter").forEach(b=>b.addEventListener("click",()=>downloadLetter(b.dataset.form)));
+  const gd=document.querySelector(".pk-guide");
+  if(gd) gd.addEventListener("click",openGuide);
   const ms=document.querySelector(".pk-mailsheet");
   if(ms) ms.addEventListener("click",downloadMailingSheet);
   const hp=document.querySelector(".pk-heatprint");

@@ -153,6 +153,19 @@
     .tool .packet .pk-link { background: none; border: none; padding: 4px 0; color: var(--pine-soft); font-weight: 700; font-size: 15px; text-decoration: underline; cursor: pointer; }
     .tool .packet .pk-links { margin: 6px 0; padding-left: 18px; font-size: 15px; line-height: 1.5; }
     .tool .packet { background: #fff; border: 2px solid var(--honey, #E4A126); border-radius: 16px; padding: 18px 20px; margin: 0 0 18px; }
+    .tool .packet .pk-guidebox { margin: 0 0 14px; } .tool .packet .pk-guide { width: 100%; font-size: 20px; padding: 18px; white-space: normal; }
+    .pk-guide-ov { position: fixed; inset: 0; background: rgba(20,30,25,.55); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 14px; }
+    .pk-guide-card { position: relative; background: #fff; border-radius: 18px; padding: 26px 20px 18px; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.35); font-size: 19px; }
+    .pk-guide-card .pg-step { font-size: 15px; font-weight: 800; color: var(--clay, #B5552F); margin-bottom: 6px; }
+    .pk-guide-card .pg-q { display: block; font-family: var(--serif); font-size: 25px; font-weight: 700; color: var(--pine-deep, #16382B); line-height: 1.25; margin: 0 0 8px; }
+    .pk-guide-card .pg-h { color: var(--ink-soft, #5a5245); font-size: 16px; margin: 0 0 12px; }
+    .pk-guide-card input { width: 100%; box-sizing: border-box; font-size: 22px; padding: 14px; border: 2px solid var(--line, #E3D9C6); border-radius: 12px; font-family: var(--sans); }
+    .pk-guide-card .pg-btns { display: flex; gap: 10px; margin-top: 16px; } .pk-guide-card .pg-btns .btn { flex: 1; font-size: 20px; padding: 16px; }
+    .pk-guide-card .btn.prim { background: var(--pine, #1E4E3C); color: #fff; border: none; border-radius: 13px; font-weight: 800; cursor: pointer; }
+    .pk-guide-card .btn.ghost { background: #fff; color: var(--ink-soft, #5a5245); border: 2px solid var(--line, #E3D9C6); border-radius: 13px; font-weight: 800; cursor: pointer; }
+    .pk-guide-card .pg-next { width: 100%; font-size: 20px; padding: 16px; }
+    .pk-guide-card .pg-skip { display: block; margin: 12px auto 0; background: none; border: 0; color: var(--pine-soft, #2F6B52); font-weight: 800; font-size: 16px; text-decoration: underline; cursor: pointer; }
+    .pk-guide-card .pg-x { position: absolute; top: 8px; right: 10px; background: none; border: 0; font-size: 22px; cursor: pointer; color: #777; }
     .tool .packet h3 { margin: 0 0 6px; font-size: 21px; color: var(--pine-deep); }
     .tool .packet .pk-lead { margin: 0 0 12px; font-size: 16px; max-width: none; }
     .tool .packet .pk-form { margin: 0 0 14px; }
