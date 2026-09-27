@@ -816,3 +816,10 @@ img { max-width: 100%; display: block; }
   .sticky-cta { transition: none; }
 }
 
+
+/* NP card headshot (2026-09-27): a chest-up portrait is wider than the old full-length cutout, so it sits lower
+   and further right, and the Benefits check sign shrinks to stay readable on the left. */
+.np-panel .np-figure.np-headshot { right: -3%; height: 84%; }
+.np-panel .np-figure.np-headshot picture { display: block; height: 100%; }
+.np-panel .np-figure.np-headshot img.cutout { height: 100%; width: auto; }
+.np-panel:has(.np-headshot) .np-sign { width: 60%; left: 4%; top: 10%; }
