@@ -823,3 +823,6 @@ img { max-width: 100%; display: block; }
 .np-panel .np-figure.np-headshot picture { display: block; height: 100%; }
 .np-panel .np-figure.np-headshot img.cutout { height: 100%; width: auto; }
 .np-panel:has(.np-headshot) .np-sign { width: 60%; left: 4%; top: 10%; }
+
+/* Story card without a photo (2026-09-27): single column, text centered to a readable width. */
+.story.story--text { grid-template-columns: 1fr; max-width: 760px; margin-left: auto; margin-right: auto; }
