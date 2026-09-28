@@ -191,6 +191,13 @@ img { max-width: 100%; display: block; }
   .header-cta .btn { padding: 10px 14px; font-size: .92rem; min-height: 44px; }
 }
 
+/* Narrowest phones (~320px): tighten the header so the CTA button never
+   overflows the viewport (measured: it ran 11px past a 320px screen). */
+@media (max-width: 360px) {
+  .header-inner.wrap { padding-inline: 12px; }
+  .header-cta .btn { padding-inline: 8px; }
+}
+
 /* ---- Hero ------------------------------------------------------------- */
 .hero { padding-block: clamp(44px, 7vw, 76px); position: relative; overflow: hidden; }
 .hero::before {
@@ -698,6 +705,9 @@ img { max-width: 100%; display: block; }
 /* ---- Footer ----------------------------------------------------------- */
 .site-footer { background: var(--pine-deep); color: #CBDDD2; padding-block: 48px 34px; font-size: .98rem; }
 .site-footer a { color: #fff; }
+/* Column headings are h3 (was h4, which skipped a level under the page's h2).
+   Keep the previous h4 look so nothing shifts visually. */
+.site-footer h3 { font-size: 1em; font-weight: bold; margin: 1.33em 0; }
 .footer-top { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 32px; margin-bottom: 30px; }
 .footer-brand .brand-name { color: #fff; }
 .footer-brand p { color: #A9C3B5; max-width: 34ch; }

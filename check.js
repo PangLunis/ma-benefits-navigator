@@ -1970,6 +1970,7 @@ function results(){
       shPick.map(p=>`<li><a href="#prog-${p.id}">${p.name}</a> <span class="sh-v">${p.valTxt}</span></li>`).join("")}</ol>
       <p class="sh-note">Tap one to jump to it — each card shows the form, what to bring, and where to file. Already getting one? Tap "I already get this" on its card.</p></div>` : "";
   let h=`<div class="headline">
+      <h2 class="sr-only">Your results</h2>
       <div class="pill" style="color:#fff;background:rgba(255,255,255,.18)">${String((townLookup(A.town)||{}).name||A.town||"Massachusetts").replace(/[<>&"]/g,"")}</div>
       <div class="big">${total>0?"≈ "+money(total)+"/yr":"Let's dig in"}</div>
       <div class="lbl">in benefits ${nm==="this person"?"they":nm} may be leaving on the table — estimated, if approved for the strong matches</div>
