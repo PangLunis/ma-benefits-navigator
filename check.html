@@ -87,6 +87,16 @@
     .tool button.gotit { appearance: none; margin-top: 10px; background: #fff; border: 1.5px solid var(--t-line); border-radius: 10px; padding: 9px 14px; font-size: 15px; font-weight: 700; color: var(--t-muted); cursor: pointer; font-family: var(--sans); }
     .tool button.gotit.undo { border-style: dashed; }
     .gotit-toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); text-align: center; background: #143829; color: #fff; padding: 12px 18px; border-radius: 12px; font-weight: 700; z-index: 9999; font-family: var(--sans); }
+    .tool .starthere { background: #FFF6E0; border: 2px solid #EFD891; border-radius: 16px; padding: 16px 18px; margin: 14px 0; }
+    .tool .starthere h3 { margin: 0 0 8px; font-size: 20px; }
+    .tool .starthere ol { margin: 0; padding-left: 22px; }
+    .tool .starthere li { margin: 8px 0; font-size: 18px; line-height: 1.35; }
+    .tool .starthere li a { font-weight: 800; }
+    .tool .starthere .sh-v { display: block; font-size: 15px; color: var(--t-muted); font-weight: 600; }
+    .tool .starthere .sh-note { margin: 10px 0 0; font-size: 15px; color: var(--t-muted); }
+    .tool .prog { scroll-margin-top: 84px; }
+    .talkline { margin-top: 10px; }
+    .talkline a { font-weight: 800; white-space: nowrap; }
     .tool .skip { display: block; width: 100%; text-align: center; background: none; border: none; color: var(--t-muted); font-size: 15px; font-weight: 700; padding: 14px 0 2px; cursor: pointer; text-decoration: underline; font-family: var(--sans); }
     .tool details.help { margin: 2px 0 16px; border: none; padding: 0; }
     .tool details.help summary { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--t-brand); cursor: pointer; padding: 4px 0; }
@@ -348,6 +358,7 @@
     <div class="bar" aria-hidden="true"><i id="bar"></i></div>
     <div id="app" aria-live="polite"></div>
     <div class="note" id="privacy">🔒 Your answers stay on this device — we never receive them. We only count, anonymously, how many people start and finish the check.</div>
+    <div class="note talkline" id="talk">📞 <b>Rather talk to a person?</b> Free help from the state: call MassOptions at <a href="tel:+18002434636">(800) 243-4636</a> (weekdays) — they connect you to free Medicare counselors (SHINE) and to your local elder services.</div>
   </main>
 
   <footer class="check-footer">

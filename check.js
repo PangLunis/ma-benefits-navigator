@@ -59,8 +59,8 @@ const Q = [
     opts:[{v:"own_name",l:"In their own name"},{v:"trust",l:"In a trust"},{v:"life_estate",l:"Life estate"},{v:"multi",l:"Shared with others on the deed"}],
     showIf:a=>a.housing==="own"},
   {id:"incomeSS", type:"currency", period:"mo", q:n=>n.marital==="married"?`Social Security income for ${who(n)==="this person"?"them":who(n)} and their spouse, combined?`:`${whoC(n)} Social Security income?`, hint:"Just Social Security, before Medicare is taken out. If married, add both spouses together. Pick per month or per year. Enter 0 if none.",
-    help:"The yearly Social Security total BEFORE the Medicare premium comes out — it's on the annual Social Security letter (Form SSA-1099). If you only know the monthly deposit, add about $203/month for Medicare Part B, then × 12. A rough number is fine."},
-  {id:"incomeOther", type:"currency", period:"yr", q:n=>n.marital==="married"?"Other income — both spouses combined?":"Other income?", hint:"Everything except Social Security — pensions, wages, IRA withdrawals, interest. If married, include the spouse's income too, even if the spouse still works. Pick per month or per year.",
+    help:"The yearly Social Security total BEFORE the Medicare premium comes out — it's on the annual Social Security letter (Social Security benefit statement, Form SSA-1099). If you only know the monthly deposit, add about $203/month for Medicare Part B, then × 12. A rough number is fine."},
+  {id:"incomeOther", type:"currency", period:"yr", q:n=>n.marital==="married"?"Other income — both spouses combined?":"Other income?", hint:"Everything except Social Security — pensions, wages, individual retirement account (IRA) withdrawals, interest. If married, include the spouse's income too, even if the spouse still works. Pick per month or per year.",
     help:"Add up pensions, any wages, IRA/401(k) withdrawals, interest & dividends, and rental income — everything EXCEPT Social Security. A close estimate is fine."},
   {id:"pubPension", type:"single", q:n=>`Does ${who(n)} (or a spouse, living or late) get a pension from a government job that did NOT pay into Social Security?`, hint:"In Massachusetts this includes most public school teachers, and many police officers, firefighters, and city or state workers.",
     help:"Answer Yes if the job paid into a public retirement system (like the Massachusetts Teachers' Retirement System) instead of Social Security — whether it's their own pension or a spouse's. A 2025 law ended the rules that used to cut Social Security for these families, so some are now owed money they never applied for.",
@@ -68,7 +68,7 @@ const Q = [
   {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Do NOT count the home or one car.",
     help:"Add up checking, savings, CDs, and investment/IRA accounts. Do NOT count the home they live in or one car. A ballpark is fine."},
   {id:"medExpenses", type:"currency", q:"Yearly out-of-pocket medical costs?", hint:"A rough estimate is fine. Enter 0 if unsure.", optional:true,
-    help:"Out-of-pocket health costs over a year: premiums, copays, prescriptions, dental, glasses. Seniors get extra SNAP credit for these, so even a rough number helps."},
+    help:"Out-of-pocket health costs over a year: premiums, copays, prescriptions, dental, glasses. Seniors get extra food-assistance (SNAP) credit for these, so even a rough number helps."},
   {id:"propTax", type:"currency", q:"Yearly property tax bill?", hint:"Your best estimate is fine.", showIf:a=>a.housing==="own",
     help:"On the city/town property tax bill. It often comes quarterly — add the four quarters. You can also look it up free on the town's online assessor database by address."},
   {id:"assessed", type:"currency", q:"Assessed value of the home?", hint:"There's a value ceiling for the Circuit Breaker, so this matters.", showIf:a=>a.housing==="own",
@@ -92,15 +92,15 @@ const Q = [
   {id:"vetService", type:"single", q:"Where did they serve?", hint:"For some places, certain health conditions are automatically treated as caused by service.",
     opts:[{v:"ao",l:"Vietnam, Thailand, Laos, Cambodia, Guam, or the Korean DMZ"},{v:"gw",l:"Gulf War, Iraq, Afghanistan, or another post-9/11 deployment"},{v:"other",l:"Somewhere else / stateside"}],
     showIf:a=>a.veteran==="vet"},
-  {id:"vaDis", type:"single", q:"Service-connected disability rating?", hint:"From the VA, if any.",
-    help:"On the VA award/decision letter — a percentage like 30%, 70%, or 100%. Don't have it handy? Tap \"I'm not sure.\"",
+  {id:"vaDis", type:"single", q:"Service-connected disability rating?", hint:"From Veterans Affairs (the VA), if any.",
+    help:"On the Veterans Affairs (VA) award/decision letter — a percentage like 30%, 70%, or 100%. Don't have it handy? Tap \"I'm not sure.\"",
     opts:[{v:"none",l:"None"},{v:"partial",l:"10% – 60%"},{v:"partial70",l:"70% – 90%"},{v:"full",l:"100% or unable to work"}],
     showIf:a=>a.veteran==="vet"||a.veteran==="spouse"},
-  {id:"wartime", type:"single", q:"Did the service include a wartime period?", hint:"Required for the VA Aid & Attendance pension.",
+  {id:"wartime", type:"single", q:"Did the service include a wartime period?", hint:"Required for the Veterans Affairs (VA) Aid & Attendance pension.",
     help:"At least 90 days of active duty with one day during a wartime window (anyone who entered after 9/7/1980 generally needs 24 months, or the full period called up) — e.g., WWII, Korea, Vietnam (8/5/1964–5/7/1975, or from 11/1/1955 if served in Vietnam itself), or the Gulf War (8/2/1990–present). Peacetime-only service doesn't qualify for this particular pension. Not sure of the dates? Tap \"I'm not sure.\"",
     opts:[{v:"yes",l:"Yes — served during a wartime period"},{v:"no",l:"No — peacetime only"}],
     showIf:a=>a.veteran==="vet"||a.veteran==="spouse"},
-  {id:"disability", type:"single", q:n=>`Does ${who(n)} have a disability or get SSDI/SSI?`, hint:"Separate from veterans' disability — opens programs regardless of age.",
+  {id:"disability", type:"single", q:n=>`Does ${who(n)} have a disability or get disability payments from Social Security (SSDI) or Supplemental Security Income (SSI)?`, hint:"Separate from veterans' disability — opens programs regardless of age.",
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]},
   {id:"blind", type:"single", q:n=>`Is ${who(n)} legally blind?`,
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]},
@@ -111,24 +111,24 @@ const Q = [
   {id:"incomeDrop", type:"single", q:n=>`In the last 2 years, did ${who(n)}'s income drop a lot — for example because they retired, stopped working, or a spouse died?`, hint:"Medicare bases one of its charges on income from 2 years ago; a big drop can lower it.",
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}], showIf:a=>a.medicare==="yes"},
   {id:"healthCov", type:"single", q:n=>`What health coverage does ${who(n)} have now?`,
-    opts:[{v:"employer",l:"Through a job or retiree plan"},{v:"masshealth",l:"MassHealth"},{v:"connector",l:"A Health Connector plan"},{v:"none",l:"No coverage right now"}],
+    opts:[{v:"employer",l:"Through a job or retiree plan"},{v:"masshealth",l:"MassHealth (Massachusetts Medicaid)"},{v:"connector",l:"A Health Connector plan"},{v:"none",l:"No coverage right now"}],
     showIf:a=>a.medicare==="no"},
   {id:"adl", type:"single", q:"Need help with daily activities?", hint:"Bathing, dressing, cooking, managing meds, getting around.",
     opts:[{v:"yes",l:"Yes, needs some help"},{v:"no",l:"No, fully independent"}]},
   // Added 2026-09-28 (Ryan: "add the assisted-living question"). Only renters who need daily help are asked.
-  {id:"alRes", type:"single", q:n=>`Does ${who(n)} live in an assisted living residence?`, hint:"Assisted living changes a few answers: MassHealth can pay for daily help there, SSI pays more, and the Circuit Breaker counts only the rent part of the fee.",
+  {id:"alRes", type:"single", q:n=>`Does ${who(n)} live in an assisted living residence?`, hint:"Assisted living changes a few answers: MassHealth can pay for daily help there, Supplemental Security Income (SSI) pays more, and the Circuit Breaker counts only the rent part of the fee.",
     opts:[{v:"yes",l:"Yes, assisted living"},{v:"no",l:"No, a regular apartment or house"}], showIf:a=>a.housing==="rent" && a.adl==="yes"},
-  {id:"already", type:"multi", q:n=>`Is ${who(n)} ALREADY getting any of these?`, hint:"It's totally normal not to know. If you can't tell, pick \"I'm not sure\" at the bottom — we'll help you check.", noSkip:true, exclusive:["none","unsure"],
-    help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) SNAP — do they have an EBT card? 5) Medicare Part B help — is the ~$203/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card that pays for doctor visits? (MassHealth has several programs. If it only pays the Part B premium, that's #5, not #6.) 7) Prescription Advantage — a Prescription Advantage card, or a letter showing a category such as S3 (it isn't MassHealth, even though its letters mention MassHealth). If you can't check any of these right now, just pick \"I'm not sure.\"",
+  {id:"already", type:"multi", noLetter:true, q:n=>`Is ${who(n)} ALREADY getting any of these?`, hint:"It's totally normal not to know. If you can't tell, pick \"I'm not sure\" at the bottom — we'll help you check.", noSkip:true, exclusive:["none","unsure"],
+    help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) Food assistance (SNAP) — do they have an EBT card (the state benefits debit card)? 5) Medicare Part B help — is the ~$203/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card that pays for doctor visits? (MassHealth has several programs. If it only pays the Part B premium, that's #5, not #6.) 7) Prescription Advantage — a Prescription Advantage card, or a letter showing a category such as S3 (it isn't MassHealth, even though its letters mention MassHealth). If you can't check any of these right now, just pick \"I'm not sure.\"",
     opts:[
       {v:"cb",l:"Senior Circuit Breaker tax credit",d:"A refund on the MA state tax return (look for \"Schedule CB\") — often $1,000–$2,800/yr."},
       {v:"exemption",l:"A property-tax exemption",d:"A discount line on the town property tax bill that lowers what's owed."},
-      {v:"liheap",l:"Fuel Assistance (heating-bill help)",d:"Winter heating help, also called LIHEAP."},
-      {v:"snap",l:"SNAP / food assistance",d:"Food benefits on an EBT card (used to be \"food stamps\")."},
-      {v:"msp",l:"Help paying the Medicare Part B premium",d:"The Medicare Savings Program — it used to be called MassHealth Buy-In (levels: QMB, SLMB, QI). The ~$203/mo Part B premium is NOT taken out of their Social Security check."},
+      {v:"liheap",l:"Fuel Assistance (heating-bill help)",d:"Winter heating help, also called LIHEAP (Low Income Home Energy Assistance Program)."},
+      {v:"snap",l:"Food assistance (SNAP)",d:"Food benefits on an EBT card — Electronic Benefit Transfer, a debit-style card (used to be \"food stamps\")."},
+      {v:"msp",l:"Help paying the Medicare Part B premium",d:"The Medicare Savings Program — it used to be called MassHealth Buy-In (levels: Qualified Medicare Beneficiary (QMB), Specified Low-Income Medicare Beneficiary (SLMB), Qualifying Individual (QI)). The ~$203/mo Part B premium is NOT taken out of their Social Security check."},
       {v:"masshealth",l:"MassHealth health coverage",d:"A MassHealth card that pays for doctor visits and prescriptions (like MassHealth Standard). If MassHealth ONLY pays the Part B premium, pick the Part B choice above instead. Have both? Pick both."},
       {v:"rxadv",l:"Prescription Advantage",d:"The state's help with prescription costs — its own member card, and letters that show a category like S1, S2 or S3."},
-      {v:"vacomp",l:"VA disability compensation",d:"A monthly VA payment for a service-connected condition."},
+      {v:"vacomp",l:"Veterans Affairs (VA) disability compensation",d:"A monthly VA payment for a service-connected condition."},
       {v:"homecare",l:"State Home Care services",d:"In-home help arranged by the local Aging Services Access Point (ASAP)."},
       {v:"none",l:"None of these"},
       {v:"unsure",l:"🤔 I'm not sure — help me check"}
@@ -137,7 +137,7 @@ const Q = [
   // Medicare member can have full MassHealth (a card used at the doctor), the Medicare Savings Program (mass.gov: "previously
   // known as MassHealth Buy-In"; QMB, SLMB/QI levels; MassHealth pays the Part B premium), or both. These are things a person
   // can SEE without the letter. Only asked when they ticked MassHealth or "not sure".
-  {id:"mhType", type:"single", q:n=>`Quick check on MassHealth — which fits ${who(n)}?`, hint:"No letter needed — just what you notice day to day.",
+  {id:"mhType", type:"single", noLetter:true, q:n=>`Quick check on MassHealth — which fits ${who(n)}?`, hint:"No letter needed — just what you notice day to day.",
     help:"MassHealth runs two different kinds of help for people on Medicare. Full MassHealth coverage comes with a MassHealth card that's used at the doctor and pharmacy. The Medicare Savings Program (it used to be called MassHealth Buy-In) pays the Medicare Part B premium, so the ~$203 a month stops coming out of the Social Security check. Some people have both.",
     opts:[{v:"full",l:"MassHealth pays for doctor visits and prescriptions",d:"They show a MassHealth card at the doctor or pharmacy."},
           {v:"partb",l:"MassHealth only pays the Medicare Part B premium",d:"The ~$203 a month is NOT taken out of their Social Security check, but they don't use a MassHealth card at the doctor."},
@@ -193,6 +193,35 @@ function alreadyList(){
 const MH_WORK_RULES = "Starting January 1, 2027, some MassHealth members aged 19–64 must work, volunteer or train at least 80 hours a month (or earn at least $580 a month) to keep coverage, unless they\'re excused — for example because of a disability, or because they live with and care for a disabled family member. MassHealth sends the renewal notice in a blue envelope saying what to do.";
 // Everyone in the home is 65+ (for the utility shutoff protection, M.G.L. c.164 s.124E / 220 CMR 25.05)
 function allOld65(){ const hh=homeSize(); return num(A.age)>=65 && (hh===1 || (hh===2 && A.marital==="married" && num(A.spouseAge)>=65)); }
+/* Ways to find out what coverage someone has without the paperwork (Ryan 2026-09-28: "that could happen to elderly people").
+   Phone numbers checked on mass.gov 2026-09-28 (MassHealth customer service; MassOptions, option 3 = Prescription Advantage). */
+const NO_LETTER_HTML = `<ul style="margin:6px 0 0;padding-left:20px">
+  <li><b>Ask the pharmacist.</b> They see what coverage is on file every time a prescription is filled — MassHealth, a Medicare drug plan, or Prescription Advantage.</li>
+  <li><b>Look at the Social Security payment.</b> If the Medicare premium (about $203 a month) is <i>not</i> being taken out, MassHealth or the Medicare Savings Program is paying it. The yearly Social Security letter lists the premium too.</li>
+  <li><b>Call MassHealth:</b> <a href="tel:+18008412900">(800) 841-2900</a> — they can tell you exactly what's active.</li>
+  <li><b>Call MassOptions:</b> <a href="tel:+18002434636">(800) 243-4636</a> for a free Medicare counselor (SHINE) — press 3 for Prescription Advantage.</li>
+</ul>`;
+/* Tap-to-call: every phone number on screen becomes a link (2026-09-28: 17 of 27 numbers on a results page could not be tapped). */
+function linkifyPhones(root){
+  if(!root) return;
+  const RE=/(?:\b1[-. ])?\(?\b\d{3}\)?[-. ]\d{3}[-. ]\d{4}\b|\b1-800-[A-Z]{3}-[A-Z]{4}\b/g;
+  const map={A:2,B:2,C:2,D:3,E:3,F:3,G:4,H:4,I:4,J:5,K:5,L:5,M:6,N:6,O:6,P:7,Q:7,R:7,S:7,T:8,U:8,V:8,W:9,X:9,Y:9,Z:9};
+  const tw=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode:n=>{
+    if(!RE.test(n.nodeValue)){ RE.lastIndex=0; return NodeFilter.FILTER_REJECT; } RE.lastIndex=0;
+    return n.parentElement && n.parentElement.closest("a,button,script,style,textarea,input,select,option,summary") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; }});
+  const nodes=[]; while(tw.nextNode()) nodes.push(tw.currentNode);
+  nodes.forEach(n=>{
+    const frag=document.createDocumentFragment(); let last=0, t=n.nodeValue, m;
+    RE.lastIndex=0;
+    while((m=RE.exec(t))){
+      frag.appendChild(document.createTextNode(t.slice(last,m.index)));
+      let d=m[0].toUpperCase().replace(/[A-Z]/g,c=>map[c]).replace(/[^0-9]/g,""); if(d.length===10) d="1"+d;
+      const a=document.createElement("a"); a.href="tel:+"+d; a.textContent=m[0]; a.className="tel"; frag.appendChild(a);
+      last=m.index+m[0].length;
+    }
+    frag.appendChild(document.createTextNode(t.slice(last))); n.parentNode.replaceChild(frag,n);
+  });
+}
 let editMode = false;   // true when the person jumped back from the results page
 function ansState(q){
   const v=A[q.id];
@@ -794,6 +823,7 @@ function render(){
   inner += `<div class="card"><div class="qstep">Question ${i+1} of ${vis.length} &middot; <span>${doWhat}</span></div><div class="q">${qt}</div>`;
   if(q.hint) inner += `<p class="hint">${q.hint}</p>`;
   if(q.help) inner += `<details class="help"><summary>ⓘ What's this? Where do I find it?</summary><div class="hbox">${q.help}</div></details>`;
+  if(q.noLetter) inner += `<details class="help noletter"><summary>📄 Can't find the letter? How to check without it</summary><div class="hbox">${NO_LETTER_HTML}</div></details>`;
 
   const isInput = (q.type==="number"||q.type==="currency"||q.type==="text");
   if(q.type==="single"||q.type==="multi"){
@@ -836,6 +866,7 @@ function render(){
   app.innerHTML = inner;
   const fb=document.getElementById("freshBtn"); if(fb) fb.onclick=startFresh;
   wireNav(vis);
+  linkifyPhones(app);
   renderedAt = performance.now();
   if(renderCount++ > 0) keepQuestionInView();   // not on first load: the intro text above the first question stays visible
 
@@ -1868,6 +1899,12 @@ function results(){
   const formsReady = nForms ? `<div class="formsready"><div class="fr-t">📄 ${nForms} official form${nForms>1?"s are":" is"} ready for ${nm==="this person"?"you":nm}, already filled in from these answers</div>
       <button type="button" class="btn prim fr-guide">✍️ Fill in my forms — ${nQ} quick questions</button>
       <a class="fr-see" href="#packet">See the forms ↓</a></div>` : "";
+  const shPool = likely.filter(p=>!EXEMPT.includes(p.id) || (p.val||0)===exMax);   // one property-tax exemption at most (they don't stack)
+  let shPick = shPool.slice(0,3);
+  if(shPick.length<3) shPick = shPick.concat(maybes.filter(p=>(p.val||0)>0).sort((a,b)=>b.val-a.val).slice(0,3-shPick.length));
+  const startHere = shPick.length ? `<div class="starthere"><h3>👉 Start here: ${shPick.length===1?"the one worth the most":`the ${shPick.length} worth the most`}</h3><ol>${
+      shPick.map(p=>`<li><a href="#prog-${p.id}">${p.name}</a> <span class="sh-v">${p.valTxt}</span></li>`).join("")}</ol>
+      <p class="sh-note">Tap one to jump to it — each card shows the form, what to bring, and where to file. Already getting one? Tap "I already get this" on its card.</p></div>` : "";
   let h=`<div class="headline">
       <div class="pill" style="color:#fff;background:rgba(255,255,255,.18)">${String((townLookup(A.town)||{}).name||A.town||"Massachusetts").replace(/[<>&"]/g,"")}</div>
       <div class="big">${total>0?"≈ "+money(total)+"/yr":"Let's dig in"}</div>
@@ -1875,6 +1912,7 @@ function results(){
       ${maybeTotal>0?`<div class="lbl" style="opacity:.9;margin-top:4px;">+ up to ~${money(maybeTotal)}/yr more in programs worth verifying</div>`:""}
       <div class="sub">${likely.length} to apply for now &middot; ${maybeN} worth verifying${haveN?` &middot; ${haveN} already active`:""}. Tap any card for the exact form, documents, and where to file.</div>
     </div>
+    ${startHere}
     ${formsReady}
     ${Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0)<60 && A.disability!=="yes" ? `<div class="estnote" style="background:#FFF6E0;border-color:#EFD891"><b>Note:</b> most programs here are for people 60 and older (many start at 65). ${nm==="this person"?"They are":nm+" is"} ${num(A.age)||"under 60"}, so only programs with no age requirement are shown as possible matches.</div>`:""}
     <div class="estnote">These are <b>estimates, not guarantees</b> — each program must be applied for and confirmed, and amounts vary by income and town. This tool finds what to chase; it doesn't approve anything.</div>
@@ -1932,7 +1970,7 @@ function results(){
     g.forEach(p=>{
       const bc={likely:"b-likely",maybe:"b-maybe",have:"b-have",refer:"b-refer",no:"b-no"}[p.status];
       const bt={likely:"Likely eligible",maybe:"Need to verify",have:"Already have",refer:"See a pro",no:"Not a match"}[p.status];
-      h+=`<div class="prog" data-pid="${p.id}" data-status="${p.status}">
+      h+=`<div class="prog" id="prog-${p.id}" data-pid="${p.id}" data-status="${p.status}">
         <div class="top"><h3>${p.name}</h3><span class="val">${p.valTxt}</span></div>
         <span class="badge ${bc}">${bt}</span>
         <p class="why">${p.why}</p>`;
@@ -1972,6 +2010,7 @@ function results(){
     <div class="disc"><b>Important:</b> This tool gives general information based on public Massachusetts and federal program rules (2026 figures). It is <b>not</b> legal, tax, or financial advice. Dollar amounts and eligibility shown are estimates — income limits, exemption amounts, and town rules change and must be confirmed with each program or a licensed professional before you rely on them. Figures last checked September 2026. Property-tax exemptions usually can't be combined — take the one that saves the most. MassHealth/long-term-care planning should go to a licensed elder-law attorney.</div>`;
   h+=`<p class="forget"><button type="button" id="forgetBtn">🗑 Forget my answers on this device</button></p>`;
   document.getElementById("app").innerHTML=h;
+  linkifyPhones(document.getElementById("app"));
   saveProgress();
   document.querySelectorAll(".gotit").forEach(b=>b.onclick=()=>{
     const id=b.dataset.pid, set=new Set(Array.isArray(A.haveAlso)?A.haveAlso:[]);
