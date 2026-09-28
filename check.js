@@ -181,6 +181,10 @@ function alreadyList(){
   }
   return has;
 }
+// mass.gov "New work and education requirements for MassHealth members" (checked 2026-09-28)
+const MH_WORK_RULES = "Starting January 1, 2027, some MassHealth members aged 19–64 must work, volunteer or train at least 80 hours a month (or earn at least $580 a month) to keep coverage, unless they\'re excused — for example because of a disability, or because they live with and care for a disabled family member. MassHealth sends the renewal notice in a blue envelope saying what to do.";
+// Everyone in the home is 65+ (for the utility shutoff protection, M.G.L. c.164 s.124E / 220 CMR 25.05)
+function allOld65(){ const hh=homeSize(); return num(A.age)>=65 && (hh===1 || (hh===2 && A.marital==="married" && num(A.spouseAge)>=65)); }
 let editMode = false;   // true when the person jumped back from the results page
 function ansState(q){
   const v=A[q.id];
@@ -1052,7 +1056,7 @@ function programs(){
     function fa(s,w){return {id:"liheap",name:"Fuel Assistance (HEAP)",status:s,val:s==="no"?0:400,valTxt:s==="no"?"—":"~$200–$600+/winter (depends on funding)",why:w,
       form:"Application through your local Community Action agency.",forml:"https://www.mass.gov/how-to/apply-for-home-energy-assistance-heap",
       docs:["Last 4 weeks of income (all sources)","Most recent heating + electric bill","Lease or mortgage statement"],
-      where:"Applications open October 1; help covers Nov 1–Apr 30; re-apply every year. Find your local fuel-assistance (CAP) agency by ZIP. Also unlocks utility discount rates. Good to know: utilities can't shut off heating service for financial hardship Nov 15–Mar 15, and if everyone in the home is 65+, gas/electric can't be shut off without the DPU's permission."};}
+      where:"Applications open October 1; help covers Nov 1–Apr 30; re-apply every year. Find your local fuel-assistance (CAP) agency by ZIP. Also unlocks utility discount rates. Good to know: utilities can't shut off heating service for financial hardship Nov 15–Mar 15, and if everyone in the home is 65+, gas/electric can't be shut off without the DPU's written approval — tell the utility that everyone is 65+ (DPU consumer line: 877-886-5066)."};}
   })();
 
   // 7. SNAP (food)
@@ -1371,11 +1375,21 @@ function programs(){
   }
 
   // 25. Health coverage before Medicare (ages under 65, not on Medicare)
-  if(age<65 && A.medicare!=="yes" && A.healthCov!=="employer" && A.healthCov!=="masshealth"){
+  // 25a. Already on MassHealth under 65: the 2027 work rules are aimed at exactly this group (mass.gov "New work and education
+  // requirements for MassHealth members": "adults who are 19 through 64 years old AND do not have young children, a disability, or a
+  // medical condition..."). Added 2026-09-28; before this, people already on MassHealth got no card at all.
+  if(age<65 && A.medicare!=="yes" && (A.healthCov==="masshealth" || (A.healthCov!=="employer" && alreadyList().includes("masshealth")))){
+    out.push({id:"health6064",name:"Keeping MassHealth in 2027: New Work Rules",status:"maybe",val:0,valTxt:"keep the coverage",
+      why:`Already on MassHealth. ${MH_WORK_RULES}${disabled?" With a disability they're likely excused — MassHealth decides, so answer the renewal notice.":""} Open the renewal notice as soon as it comes — coverage can end if it isn't answered.`,
+      form:"Nothing to file now — answer the MassHealth renewal notice when it arrives.",forml:"https://www.mass.gov/info-details/new-work-and-education-requirements-for-masshealth-members",
+      docs:["Proof of work, volunteering or training hours, or of the reason they're excused (for example a disability)"],
+      where:"MassHealth customer service: (800) 841-2900."});
+  }
+  else if(age<65 && A.medicare!=="yes" && A.healthCov!=="employer" && A.healthCov!=="masshealth"){
     const f = fplFor(hh), pct = inc/f;
     let st, why, name="Health Coverage Before Medicare";
     if(A.healthCov==="connector"){ st="have"; why="Already on a Health Connector plan. Re-check it during open enrollment (starts Oct 23, 2026) — income changes can move you to a cheaper ConnectorCare tier."; }
-    else if(pct<=1.33){ st="likely"; why=`Income (~${money(inc)}) is at or under 133% of poverty — MassHealth (CarePlus/Standard) coverage, with no premium. Starting January 1, 2027, some MassHealth members aged 19–64 must work, volunteer or train at least 80 hours a month (or earn at least $580 a month) to keep coverage, unless they're excused — for example because of a disability, or because they live with and care for a disabled family member. MassHealth sends the renewal notice in a blue envelope saying what to do.`; }
+    else if(pct<=1.33){ st="likely"; why=`Income (~${money(inc)}) is at or under 133% of poverty — MassHealth (CarePlus/Standard) coverage, with no premium. ${MH_WORK_RULES}`; }
     else if(pct<=4.0){ st="likely"; why=`Income (~${money(inc)}) is between 100% and 400% of poverty — ConnectorCare plans with low or $0 premiums (2026 plan year).`; }
     else { st="maybe"; why=`Income is above 400% of poverty (~${money(4*f)}), so the 2026 federal premium help no longer applies — full-price Connector plans are still available, and a broker or navigator can compare.`; }
     if(disabled) why += " With a disability, MassHealth CommonHealth can also cover people whose income is too high for regular MassHealth.";
@@ -1522,7 +1536,7 @@ function programs(){
   // 31. For the family member who claims them as a dependent: MA Child and Family Tax Credit
   if(A.dependent==="yes" && age>=65){
     out.push({id:"cftc",name:"For the Family Member Who Claims Them: MA Child & Family Tax Credit",status:"likely",val:0,valTxt:"$440/yr (refundable, to the caregiver)",
-      why:"Whoever claims them as a dependent can get the Massachusetts Child and Family Tax Credit — $440 per dependent aged 65+, refundable. Trade-off: while they're claimed as a dependent, THEY can't get the Circuit Breaker (up to $2,820). If their property tax or rent is high, the Circuit Breaker may be worth more — compare both. On the federal return, the same family member may also get the $500 Credit for Other Dependents (it lowers tax owed but isn't refunded), and if they pay for care so they can work, the Child and Dependent Care Credit can apply when the parent can't care for themselves and lives with them more than half the year.",
+      why:"Whoever claims them as a dependent can get the Massachusetts Child and Family Tax Credit — $440 per dependent aged 65+, refundable. Trade-off: while they're claimed as a dependent, THEY can't get the Circuit Breaker (up to $2,820). If their property tax or rent is high, the Circuit Breaker may be worth more — compare both. On the federal return, the same family member may also get the $500 Credit for Other Dependents (it lowers tax owed but isn't refunded), and if they pay for care so they can work, the Child and Dependent Care Credit can apply when the parent can't care for themselves and lives with them more than half the year. If their job offers a Dependent Care FSA, it can pay for that same care (adult day care, for example) with pre-tax money — the limit rose from $5,000 to $7,500 for 2026 (IRS Publication 15-B).",
       form:"Claimed on the family member's MA Form 1 (and federal Form 1040).",forml:"https://www.mass.gov/info-details/massachusetts-child-and-family-tax-credit",
       docs:["The dependent's information on the family member's return"],
       where:"On the family member's own Massachusetts tax return."});
@@ -1692,7 +1706,7 @@ function programs(){
       why:`When someone is behind on rent, mortgage or utilities — or has a notice to quit, an eviction or foreclosure notice, or a shutoff notice — RAFT can pay up to $7,000 in a 12-month period toward rent, utilities, moving costs or mortgage payments. Income must be under 50% of the town's area median income${raftLim?` — about ${money(raftLim)}/yr for ${homeHH===1?"one person":homeHH+" people"} in ${townLookup(A.town).name}`:" (check the town's limit on the application)"}. Apply quickly: a landlord also fills out a short form.`,
       form:"RAFT application (online, or through the regional agency).",forml:"https://www.mass.gov/how-to/apply-for-raft-emergency-help-for-housing-costs",
       docs:["The notice or past-due bill","Proof of income","Lease or mortgage statement","ID"],
-      where:"Apply online at mass.gov (search 'RAFT'), or call Massachusetts 2-1-1 (dial 211, or 877-211-6277) for help finding the regional agency."});
+      where:"Apply online at mass.gov (search 'RAFT'), or call Massachusetts 2-1-1 (dial 211, or 877-211-6277) for help finding the regional agency."+(allOld65()?" Behind on gas or electric? Because everyone in the home is 65 or older, tell the utility company that — it then needs the state Department of Public Utilities' written approval before it can shut service off. DPU consumer line: (877) 886-5066.":"")});
   }
 
   // 44. Lowering the Medicare income surcharge (IRMAA) after a big income drop (batch 2). ssa.gov: higher Part B/D premiums apply when MAGI
