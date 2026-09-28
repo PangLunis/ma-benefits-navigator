@@ -11,3 +11,9 @@ redesign_v1/
 reviews/
 __pycache__/
 .cache
+
+# a11y/test-script outputs (written into the repo dir when run from here)
+bf_*.png
+rot_dots.png
+flow_results.json
+axe_results.json
