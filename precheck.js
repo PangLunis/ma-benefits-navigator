@@ -209,18 +209,34 @@
     var mobileOnly = ul.getAttribute("data-mobile") === "1";   // long card sections rotate on phones only
     var interval = parseInt(ul.getAttribute("data-interval"), 10) || 3800;
     var idx = 0, timer = null, paused = false, on = false;
+    // stopped = the reader took control (tapped a dot or the pause button).
+    // Unlike `paused` (hover/focus/touch, which resumes on its own), this sticks
+    // until they press play — WCAG 2.2.2 Pause, Stop, Hide. (2026-09-28 a11y audit)
+    var stopped = false;
 
     var dots = document.createElement("div");
     dots.className = "rot-dots";
-    dots.setAttribute("aria-label", "Show item");
+    dots.setAttribute("role", "group");
+    dots.setAttribute("aria-label", "Slideshow controls");
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "rot-toggle";
+    toggle.addEventListener("click", function () { if (stopped) { stopped = false; restart(); } else { halt(); } label(); });
     items.forEach(function (li, k) {
       var b = document.createElement("button");
       b.type = "button";
       b.setAttribute("aria-label", "Show point " + (k + 1) + " of " + items.length);
-      b.addEventListener("click", function () { show(k); restart(); });
+      b.addEventListener("click", function () { show(k); halt(); label(); });
       dots.appendChild(b);
     });
+    dots.appendChild(toggle);
     ul.parentNode.insertBefore(dots, ul.nextSibling);
+    function label() {
+      toggle.setAttribute("aria-label", stopped ? "Play slideshow" : "Pause slideshow");
+      toggle.setAttribute("aria-pressed", stopped ? "true" : "false");   // icon is drawn in CSS from this
+    }
+    function halt() { stopped = true; clearInterval(timer); timer = null; }
+    label();
 
     function fit() {
       // Height = tallest item, so the page never jumps as items change.
@@ -239,8 +255,8 @@
         d.setAttribute("aria-current", j === idx ? "true" : "false");
       });
     }
-    function tick() { if (!paused) show(idx + 1); }
-    function restart() { clearInterval(timer); timer = setInterval(tick, interval); }
+    function tick() { if (!paused && !stopped) show(idx + 1); }
+    function restart() { clearInterval(timer); timer = null; if (!stopped) timer = setInterval(tick, interval); }
     function pause() { paused = true; }
     function resume() { paused = false; }
     function start() { if (on) return; on = true; dots.style.display = ""; fit(); show(idx); restart(); }

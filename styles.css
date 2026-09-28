@@ -100,7 +100,7 @@ img { max-width: 100%; display: block; }
 .eyebrow {
   font-family: var(--sans);
   font-size: .82rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
-  color: var(--clay); margin: 0 0 .8em;
+  color: #9F4D2E; margin: 0 0 .8em;   /* deeper than --clay: #B65A38 was 4.32:1 on --paper (needs 4.5); this is 5.45 / 4.96 / 4.63 on paper / paper-2 / paper-3 (2026-09-28 a11y audit) */
 }
 .band-pine .eyebrow { color: var(--honey); }
 .tagline {
@@ -370,12 +370,30 @@ img { max-width: 100%; display: block; }
   transition: opacity .55s ease, transform .55s ease;
 }
 .rotator.is-rotating > .is-active { opacity: 1; transform: none; pointer-events: auto; }
-.rot-dots { display: flex; gap: 8px; margin-top: 10px; }
+/* Dots LOOK 11px but each button is a 28px tap target (WCAG 2.2 min 24px —
+   the 11px buttons failed target-size, 2026-09-28 a11y audit). The last
+   button is pause/play: tapping it or any dot stops the rotation for good. */
+.rot-dots { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: 6px; }
 .rot-dots button {
-  width: 11px; height: 11px; padding: 0; border-radius: 50%; cursor: pointer;
-  border: 1.5px solid currentColor; background: transparent; opacity: .55;
+  width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  background: transparent; color: inherit;
+  display: inline-flex; align-items: center; justify-content: center;
 }
-.rot-dots button[aria-current="true"] { background: currentColor; opacity: 1; }
+.rot-dots button:not(.rot-toggle)::before {
+  content: ""; box-sizing: border-box; width: 11px; height: 11px; border-radius: 50%;
+  border: 1.5px solid currentColor; opacity: .55;
+}
+.rot-dots button[aria-current="true"]::before { background: currentColor; opacity: 1; }
+.rot-dots .rot-toggle { margin-left: 6px; }
+.rot-dots .rot-toggle::before { content: ""; box-sizing: border-box; display: block; }
+/* playing -> shows a pause icon (two bars); stopped -> shows a play triangle */
+.rot-dots .rot-toggle[aria-pressed="false"]::before {
+  width: 10px; height: 12px; border-left: 3.5px solid currentColor; border-right: 3.5px solid currentColor;
+}
+.rot-dots .rot-toggle[aria-pressed="true"]::before {
+  width: 0; height: 0; margin-left: 3px;
+  border-top: 6.5px solid transparent; border-bottom: 6.5px solid transparent; border-left: 11px solid currentColor;
+}
 .free-promise .rot-dots { color: var(--honey); }
 .freecheck .rot-dots { color: var(--pine); justify-content: flex-start; }
 .rot-dots { color: var(--pine); justify-content: center; }
