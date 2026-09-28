@@ -73,6 +73,10 @@ const Q = [
     help:"On the city/town property tax bill. It often comes quarterly — add the four quarters. You can also look it up free on the town's online assessor database by address."},
   {id:"assessed", type:"currency", q:"Assessed value of the home?", hint:"There's a value ceiling for the Circuit Breaker, so this matters.", showIf:a=>a.housing==="own",
     help:"Also on the property tax bill, labeled \"assessed value\" or \"total value\" — what the TOWN values the home at (often lower than market). Same assessor website has it. Truly can't find it? Tap \"I'm not sure.\""},
+  // Added 2026-09-28 (gap audit #5). mass.gov "Massachusetts residential property tax credits", Title V section.
+  {id:"septic", type:"single", q:n=>`This year or last, did ${who(n)} pay to fix or replace a failed septic system or cesspool — or to hook up to town sewer because of it?`, hint:"Massachusetts gives a tax credit for this. Most homes on town sewer can answer No.",
+    help:"Counts: repairing or replacing a failed septic system or cesspool, or an upgrade or sewer hookup required by Title 5 (for example after failing the Title 5 inspection before a sale). Routine pumping doesn't count.",
+    opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}], showIf:a=>a.housing==="own"},
   {id:"rent", type:"currency", q:"Monthly rent?", hint:"Your share of the rent each month.", showIf:a=>a.housing==="rent",
     help:"The monthly rent payment. If utilities are bundled in, just estimate the rent portion."},
   {id:"subsidized", type:"single", q:"Is the rental public, subsidized, or tax-exempt housing?", hint:"Affects the Circuit Breaker.",
@@ -157,7 +161,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   if(up) up.onclick=()=>{ tIdx=Math.min(2,tIdx+1); applyTextSize(); };
   if(dn) dn.onclick=()=>{ tIdx=Math.max(0,tIdx-1); applyTextSize(); };
 });
-function qLabel(id){ const m={alRes:"whether they live in assisted living",mhType:"which kind of MassHealth help they have",housingCrisis:"whether they're behind on housing bills",dementia:"whether there's a dementia diagnosis",incomeDrop:"whether income dropped in the last 2 years",pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
+function qLabel(id){ const m={septic:"whether they paid for a septic repair",alRes:"whether they live in assisted living",mhType:"which kind of MassHealth help they have",housingCrisis:"whether they're behind on housing bills",dementia:"whether there's a dementia diagnosis",incomeDrop:"whether income dropped in the last 2 years",pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
 
 /* ---------- State ---------- */
 let A = {};           // answers
@@ -171,7 +175,7 @@ function visible(){ return Q.filter(q=>!q.showIf || q.showIf(A)); }
    results page). Every question is listed with a dot — green when answered,
    amber "?" when marked not sure, empty when not answered yet — and any item
    can be tapped to jump straight to it. ---------- */
-const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",housingCrisis:"Behind on housing bills",dementia:"Dementia diagnosis",incomeDrop:"Income dropped in last 2 years",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",alRes:"Assisted living",already:"Already getting",mhType:"Which MassHealth help",working:"Still working"};
+const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",housingCrisis:"Behind on housing bills",dementia:"Dementia diagnosis",incomeDrop:"Income dropped in last 2 years",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",alRes:"Assisted living",septic:"Septic repair",already:"Already getting",mhType:"Which MassHealth help",working:"Still working"};
 /* What they already get, after the MassHealth follow-up (mhType) sorts out MassHealth coverage vs the Medicare Savings Program. */
 function alreadyList(){
   let has=[...(A.already||[])];
@@ -1272,6 +1276,19 @@ function programs(){
       form:"State Tax Form 98 (to the town assessors).",forml:"https://www.mass.gov/lists/property-tax-forms-and-guides",
       docs:["Proof of age (birth certificate)","A doctor's description of the illness or disability","A picture of income, savings and monthly bills"],
       where:`${A.town||"Town"} Assessor. File by April 1, or within 3 months after the actual (not preliminary) tax bills are mailed, if that's later — the deadline can't be extended.`});
+  }
+
+  // 15b. Title V septic credit (added 2026-09-28). mass.gov "Massachusetts residential property tax credits": not a dependent, own and occupy
+  // as principal residence; "The credit is 60% (.60) of the costs (not to exceed $30,000). The total amount of the credit cannot exceed
+  // $18,000."; claimed for the year the work is completed; excess carries forward "for up to the next 5 tax years"; reduced by interest subsidies.
+  if(owner && A.septic==="yes"){
+    const dep = A.dependent==="yes";
+    out.push({id:"septic",name:"Massachusetts Septic Repair Tax Credit (Title V)",status: dep?"no":"likely",val:0,valTxt: dep?"—":"60% of the cost, up to $18,000",
+      why: dep ? "Someone claimed as a dependent on another person's return can't take this credit." :
+        `Massachusetts gives a state tax credit of 60% of what they paid to repair or replace a failed septic system or cesspool — or for a Title 5-required upgrade or sewer hookup — on up to $30,000 of costs, so up to $18,000 in total. It's claimed on the state return for the year the work is finished. It only reduces tax owed, but anything left over carries forward for up to 5 more years${A.filing==="none"?" — since they don't file now, they'd need to file (and owe tax) to use it":""}. A low-interest septic loan or betterment reduces the credit by the interest savings. If the work finished last year and the credit wasn't claimed, an amended return can still claim it.`,
+      form:"Schedule SC (Septic Credit) plus Schedule CMS (credit code SEPTIC), filed with the Massachusetts Form 1.",forml:"https://www.mass.gov/info-details/massachusetts-residential-property-tax-credits",
+      docs:["Contractor invoices and proof of payment","The Certificate of Compliance (or, if there isn't one, a verification letter from the city or town)","Any septic loan or betterment paperwork"],
+      where:"On the Massachusetts tax return for the year the work was completed (tax software or a preparer; free help through AARP Tax-Aide or VITA)."});
   }
 
   // 16. Prescription Advantage (MA pharmacy assistance; 65+ or disabled)
