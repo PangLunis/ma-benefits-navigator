@@ -118,13 +118,24 @@ const Q = [
       {v:"exemption",l:"A property-tax exemption",d:"A discount line on the town property tax bill that lowers what's owed."},
       {v:"liheap",l:"Fuel Assistance (heating-bill help)",d:"Winter heating help, also called LIHEAP."},
       {v:"snap",l:"SNAP / food assistance",d:"Food benefits on an EBT card (used to be \"food stamps\")."},
-      {v:"msp",l:"Help paying the Medicare Part B premium",d:"The Medicare Savings Program — MassHealth calls it \"Buy-In\" (also QMB, SLMB or QI). The ~$203/mo Part B premium is NOT taken out of their Social Security check."},
+      {v:"msp",l:"Help paying the Medicare Part B premium",d:"The Medicare Savings Program — it used to be called MassHealth Buy-In (levels: QMB, SLMB, QI). The ~$203/mo Part B premium is NOT taken out of their Social Security check."},
       {v:"masshealth",l:"MassHealth health coverage",d:"A MassHealth card that pays for doctor visits and prescriptions (like MassHealth Standard). If MassHealth ONLY pays the Part B premium, pick the Part B choice above instead. Have both? Pick both."},
       {v:"vacomp",l:"VA disability compensation",d:"A monthly VA payment for a service-connected condition."},
       {v:"homecare",l:"State Home Care services",d:"In-home help arranged by the local Aging Services Access Point (ASAP)."},
       {v:"none",l:"None of these"},
       {v:"unsure",l:"🤔 I'm not sure — help me check"}
     ]},
+  // Added 2026-09-28 (Ryan's dad, on "tier 3" MassHealth, didn't know which box to tick). MassHealth has no tiers; a
+  // Medicare member can have full MassHealth (a card used at the doctor), the Medicare Savings Program (mass.gov: "previously
+  // known as MassHealth Buy-In"; QMB, SLMB/QI levels; MassHealth pays the Part B premium), or both. These are things a person
+  // can SEE without the letter. Only asked when they ticked MassHealth or "not sure".
+  {id:"mhType", type:"single", q:n=>`Quick check on MassHealth — which fits ${who(n)}?`, hint:"No letter needed — just what you notice day to day.",
+    help:"MassHealth runs two different kinds of help for people on Medicare. Full MassHealth coverage comes with a MassHealth card that's used at the doctor and pharmacy. The Medicare Savings Program (it used to be called MassHealth Buy-In) pays the Medicare Part B premium, so the ~$203 a month stops coming out of the Social Security check. Some people have both.",
+    opts:[{v:"full",l:"MassHealth pays for doctor visits and prescriptions",d:"They show a MassHealth card at the doctor or pharmacy."},
+          {v:"partb",l:"MassHealth only pays the Medicare Part B premium",d:"The ~$203 a month is NOT taken out of their Social Security check, but they don't use a MassHealth card at the doctor."},
+          {v:"both",l:"Both",d:"A MassHealth card at the doctor, AND the Part B premium isn't taken out of their check."},
+          {v:"neither",l:"Neither — they pay the Part B premium themselves",d:"The ~$203 comes out of their Social Security check (or they pay a Medicare bill), and there's no MassHealth card."}],
+    showIf:a=>a.medicare==="yes" && (a.already||[]).some(x=>x==="masshealth"||x==="unsure")},
   {id:"working", type:"single", q:"Still earning wages from a job?", hint:"Affects Social Security timing.",
     opts:[{v:"yes",l:"Yes, still working"},{v:"no",l:"No / retired"}], showIf:a=>num(a.age)<70}
 ];
@@ -143,7 +154,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   if(up) up.onclick=()=>{ tIdx=Math.min(2,tIdx+1); applyTextSize(); };
   if(dn) dn.onclick=()=>{ tIdx=Math.max(0,tIdx-1); applyTextSize(); };
 });
-function qLabel(id){ const m={housingCrisis:"whether they're behind on housing bills",dementia:"whether there's a dementia diagnosis",incomeDrop:"whether income dropped in the last 2 years",pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
+function qLabel(id){ const m={mhType:"which kind of MassHealth help they have",housingCrisis:"whether they're behind on housing bills",dementia:"whether there's a dementia diagnosis",incomeDrop:"whether income dropped in the last 2 years",pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
 
 /* ---------- State ---------- */
 let A = {};           // answers
@@ -157,7 +168,19 @@ function visible(){ return Q.filter(q=>!q.showIf || q.showIf(A)); }
    results page). Every question is listed with a dot — green when answered,
    amber "?" when marked not sure, empty when not answered yet — and any item
    can be tapped to jump straight to it. ---------- */
-const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",housingCrisis:"Behind on housing bills",dementia:"Dementia diagnosis",incomeDrop:"Income dropped in last 2 years",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",already:"Already getting",working:"Still working"};
+const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",housingCrisis:"Behind on housing bills",dementia:"Dementia diagnosis",incomeDrop:"Income dropped in last 2 years",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",already:"Already getting",mhType:"Which MassHealth help",working:"Still working"};
+/* What they already get, after the MassHealth follow-up (mhType) sorts out MassHealth coverage vs the Medicare Savings Program. */
+function alreadyList(){
+  let has=[...(A.already||[])];
+  const t=A.mhType;
+  if(A.medicare==="yes" && t && t!=="unknown"){
+    if(t==="partb"||t==="neither") has=has.filter(x=>x!=="masshealth");
+    if(t==="neither") has=has.filter(x=>x!=="msp");
+    if((t==="full"||t==="both") && !has.includes("masshealth")) has.push("masshealth");
+    if((t==="partb"||t==="both") && !has.includes("msp")) has.push("msp");
+  }
+  return has;
+}
 let editMode = false;   // true when the person jumped back from the results page
 function ansState(q){
   const v=A[q.id];
@@ -1139,8 +1162,11 @@ function programs(){
     if(A.marital==="widowed") tips.push("survivor benefits may pay more than the current check — worth checking");
     if(A.marital==="divorced") tips.push("if the marriage lasted at least 10 years, Social Security may pay benefits on the former spouse's record — ask about it");
     if(A.working==="yes" && num(A.age)<67) tips.push("the earnings test may be reducing the check while still working");
+    // 2026-09-28 gap audit #2, verified on ssa.gov: SSA EM-25029 REV (default overpayment withholding changed from 10% to 50%,
+    // effective April 25, 2025; a waiver or reconsideration request stops collection) + ssa.gov/forms/ssa-632.html (SSA-632 / SSA-634).
+    const overpay = (num(A.incomeSS)>0 || A.incomeSS==="unknown") ? " Got a letter saying Social Security overpaid them? Since April 25, 2025, Social Security takes 50% of the monthly check by default to get it back. If they didn't cause the overpayment and can't afford to repay it, Form SSA-632 asks to have it waived; if they can repay but not at that rate, Form SSA-634 asks for a lower rate. Social Security stops collecting while it decides." : "";
     out.push({id:"ss",name:"Social Security Review",status:"maybe",val:0,valTxt:"strategy",
-      why: tips.length?("Worth a one-time look: "+tips.join("; ")+"."):"A one-time claiming/strategy review is usually worthwhile.",
+      why: (tips.length?("Worth a one-time look: "+tips.join("; ")+"."):"A one-time claiming/strategy review is usually worthwhile.")+overpay,
       form:"Free review with a fee-only advisor or SSA.",forml:"https://www.ssa.gov/myaccount/",
       docs:["my Social Security account statement","Spouse's or former spouse's earnings record (if married, widowed or divorced)"],
       where:"Open a my Social Security account to see the actual numbers. NOTE: this is information, not financial advice — confirm with a licensed advisor before changing anything."});
@@ -1250,7 +1276,7 @@ function programs(){
     const utilLim = HEAP_SMI60[homeHH]||HEAP_SMI60[10];
     if(homeInc<=utilLim){
       out.push({id:"wap",name:"Weatherization Assistance (WAP)",status:"maybe",val:0,valTxt:"free home energy upgrades",
-        why:"Free insulation, air-sealing, and heating-system help for income-eligible homes (owners AND renters) — cuts heating bills long-term.",
+        why:"Free insulation, air-sealing, and heating-system help for income-eligible homes (owners AND renters) — cuts heating bills long-term."+(A.housing==="own"?" If the furnace or boiler breaks or isn't safe, the same agency runs HEARTWAP, which repairs or replaces heating systems for homeowners at this income (sometimes with a co-payment).":""),
         form:"Through the local Community Action / fuel-assistance agency.",forml:"https://www.mass.gov/info-details/weatherization-assistance-program-wap",
         docs:["Proof of income","A recent energy bill"],
         where:"Apply at the same local CAP agency as Fuel Assistance — they often screen for both together. Mass Save also offers a free Home Energy Assessment for any 1–4 unit home (masssave.com)."});
@@ -1272,7 +1298,7 @@ function programs(){
 
   // 20a. MassHealth Standard for 65+ living at home (added 2026-09-27; found by the independent answer key). mass.gov senior guide:
   // Standard is for people "with income at or below 100% of the federal poverty level"; countable assets $2,000 single / $3,000 couple.
-  if(A.adl!=="yes" && age>=65 && !(A.already||[]).includes("masshealth") && A.healthCov!=="masshealth" && inc <= fplFor(hh)){
+  if(A.adl!=="yes" && age>=65 && !alreadyList().includes("masshealth") && A.healthCov!=="masshealth" && inc <= fplFor(hh)){
     const assetsKnown = A.assets!=null && A.assets!=="" && A.assets!=="unknown";
     const cap = hh===2 ? 3000 : 2000;
     if(!assetsKnown || assets <= cap){
@@ -1349,7 +1375,7 @@ function programs(){
     const f = fplFor(hh), pct = inc/f;
     let st, why, name="Health Coverage Before Medicare";
     if(A.healthCov==="connector"){ st="have"; why="Already on a Health Connector plan. Re-check it during open enrollment (starts Oct 23, 2026) — income changes can move you to a cheaper ConnectorCare tier."; }
-    else if(pct<=1.33){ st="likely"; why=`Income (~${money(inc)}) is at or under 133% of poverty — MassHealth (CarePlus/Standard) coverage, with no premium.`; }
+    else if(pct<=1.33){ st="likely"; why=`Income (~${money(inc)}) is at or under 133% of poverty — MassHealth (CarePlus/Standard) coverage, with no premium. Starting January 1, 2027, some MassHealth members aged 19–64 must work, volunteer or train at least 80 hours a month (or earn at least $580 a month) to keep coverage, unless they're excused — for example because of a disability, or because they live with and care for a disabled family member. MassHealth sends the renewal notice in a blue envelope saying what to do.`; }
     else if(pct<=4.0){ st="likely"; why=`Income (~${money(inc)}) is between 100% and 400% of poverty — ConnectorCare plans with low or $0 premiums (2026 plan year).`; }
     else { st="maybe"; why=`Income is above 400% of poverty (~${money(4*f)}), so the 2026 federal premium help no longer applies — full-price Connector plans are still available, and a broker or navigator can compare.`; }
     if(disabled) why += " With a disability, MassHealth CommonHealth can also cover people whose income is too high for regular MassHealth.";
@@ -1424,7 +1450,7 @@ function programs(){
       why:"If they qualify for MassHealth (Standard or CommonHealth, or SCO/PACE), MassHealth can pay a relative who lives with them and gives daily care through Adult Foster Care — adult children, siblings and other relatives can be paid; a spouse cannot. The Personal Care Attendant program can also pay relatives other than a spouse.",
       form:"Through a MassHealth Adult Foster Care provider or a PCA agency.",forml:"https://www.mass.gov/info-details/masshealth-adult-foster-care-program-fact-sheet",
       docs:["MassHealth eligibility (or an application)","A doctor's statement of care needs"],
-      where:"Ask the local ASAP (MassOptions 800-243-4636) or an Adult Foster Care provider. MassHealth eligibility comes first — see the other MassHealth cards."});
+      where:"Ask the local ASAP (MassOptions 800-243-4636) or an Adult Foster Care provider. MassHealth eligibility comes first — see the other MassHealth cards. Paying for care out of pocket instead? On a federal tax return that itemizes, medical costs above 7.5% of adjusted gross income can be deducted, including qualified long-term care services — and an adult child who could claim the parent as a dependent except for the parent's income can count the parent's costs too (IRS Publication 502)."});
   }
 
   // 28. Home-delivered meals (Elder Nutrition Program) — 60+, frail/isolated/homebound, no income limit
@@ -1558,7 +1584,7 @@ function programs(){
 
   // 36. Health Safety Net — pays hospital & community-health-center bills; any age; income up to 300% of poverty (101 CMR 613)
   (()=>{
-    const has=(A.already||[]);
+    const has=alreadyList();
     if(has.includes("masshealth") || A.healthCov==="masshealth") return;   // MassHealth itself covers these bills
     const f=fplFor(hh), pct=inc/f, lim150=Math.round(1.5*f), lim300=Math.round(3*f);
     const mc=A.medicare==="yes", priv=A.healthCov==="employer";
@@ -1586,7 +1612,7 @@ function programs(){
   // 37. Rides to medical appointments
   if(age>=60 || disabled || A.veteran==="vet"){
     const t=townLookup(A.town);
-    const mh=(A.already||[]).includes("masshealth") || A.healthCov==="masshealth";
+    const mh=alreadyList().includes("masshealth") || A.healthCov==="masshealth";
     const bits=[];
     if(mh) bits.push("MassHealth Standard, CommonHealth and CarePlus members who can't use the bus or a car get free rides to medical and dental appointments — the doctor's office asks for them online (a \"PT-1\"). The Medicare Savings Program alone doesn't include rides.");
     if(age>=60) bits.push("Councils on Aging often run rides to appointments for people 60+ — each town sets its own rules.");
@@ -1604,7 +1630,7 @@ function programs(){
 
   // 38. Dental, glasses & hearing aids — Original Medicare doesn't cover them
   if(age>=60 || A.medicare==="yes"){
-    const mh=(A.already||[]).includes("masshealth") || A.healthCov==="masshealth";
+    const mh=alreadyList().includes("masshealth") || A.healthCov==="masshealth";
     const hsnOK = !isUnknown("incomeSS") && !isUnknown("incomeOther") && inc <= 3*fplFor(hh);
     let why;
     if(mh) why="MassHealth (Standard, CommonHealth, CarePlus or Family Assistance) covers adult dental — cleanings, fillings, root canals, crowns and dentures — up to $1,750 a year (a new limit since August 1, 2026; certain emergency care, extractions and first full dentures after extractions are still covered past it). It also pays for an eye exam and glasses every 24 months, and hearing aids. The Medicare Savings Program alone covers none of these.";
@@ -1715,7 +1741,7 @@ function programs(){
 
   // ---- "Already receiving" override: don't tell people to apply for what they have ----
   const haveMap={cb:"cb",ex41c:"exemption",ex17d:"exemption",vet22:"exemption",blind37a:"exemption",liheap:"liheap",snap:"snap",msp:"msp",lis:"msp",masshealth:"masshealth",vacomp:"vacomp",homecare:"homecare"};
-  const has=(A.already||[]);
+  const has=alreadyList();
   out.forEach(p=>{
     const k=haveMap[p.id];
     if(k && has.includes(k) && p.status!=="no"){
