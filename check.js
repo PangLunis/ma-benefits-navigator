@@ -44,7 +44,7 @@ const Q = [
     help:"\"U.S. citizen\" covers anyone born in the U.S. or naturalized. \"Green card\" means a lawful permanent resident.",
     opts:[{v:"citizen",l:"U.S. citizen"},{v:"qualified",l:"Green card / lawful permanent resident"},{v:"other",l:"Other immigration status"}]},
   {id:"housing", type:"single", q:n=>`Does ${who(n)} own or rent?`, noSkip:true,
-    opts:[{v:"own",l:"Owns the home"},{v:"rent",l:"Rents"},{v:"family",l:"Lives with family (no rent)"}]},
+    opts:[{v:"own",l:"Owns the home"},{v:"rent",l:"Rents",d:"Including assisted living"},{v:"family",l:"Lives with family (no rent)"}]},
   {id:"town", type:"text", q:"Which city or town in Massachusetts?", hint:"Property-tax breaks are set town-by-town, so we need this.", noSkip:true},
   {id:"hhSize", type:"number", q:n=>`How many people live in the home, counting ${who(n)}?`, hint:"Include a spouse, adult children, grandchildren — everyone who lives there.", suffix:"people"},
   {id:"hhOtherInc", type:"currency", period:"yr", q:"Income of everyone ELSE in the home?", hint:"Not counting them or their spouse. Heating help and utility discounts look at the whole household. Enter 0 if none.", optional:true,
@@ -111,6 +111,9 @@ const Q = [
     showIf:a=>a.medicare==="no"},
   {id:"adl", type:"single", q:"Need help with daily activities?", hint:"Bathing, dressing, cooking, managing meds, getting around.",
     opts:[{v:"yes",l:"Yes, needs some help"},{v:"no",l:"No, fully independent"}]},
+  // Added 2026-09-28 (Ryan: "add the assisted-living question"). Only renters who need daily help are asked.
+  {id:"alRes", type:"single", q:n=>`Does ${who(n)} live in an assisted living residence?`, hint:"Assisted living changes a few answers: MassHealth can pay for daily help there, SSI pays more, and the Circuit Breaker counts only the rent part of the fee.",
+    opts:[{v:"yes",l:"Yes, assisted living"},{v:"no",l:"No, a regular apartment or house"}], showIf:a=>a.housing==="rent" && a.adl==="yes"},
   {id:"already", type:"multi", q:n=>`Is ${who(n)} ALREADY getting any of these?`, hint:"It's totally normal not to know. If you can't tell, pick \"I'm not sure\" at the bottom — we'll help you check.", noSkip:true, exclusive:["none","unsure"],
     help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) SNAP — do they have an EBT card? 5) Medicare Part B help — is the ~$203/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card that pays for doctor visits? (MassHealth has several programs. If it only pays the Part B premium, that's #5, not #6.) If you can't check any of these right now, just pick \"I'm not sure.\"",
     opts:[
@@ -154,7 +157,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   if(up) up.onclick=()=>{ tIdx=Math.min(2,tIdx+1); applyTextSize(); };
   if(dn) dn.onclick=()=>{ tIdx=Math.max(0,tIdx-1); applyTextSize(); };
 });
-function qLabel(id){ const m={mhType:"which kind of MassHealth help they have",housingCrisis:"whether they're behind on housing bills",dementia:"whether there's a dementia diagnosis",incomeDrop:"whether income dropped in the last 2 years",pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
+function qLabel(id){ const m={alRes:"whether they live in assisted living",mhType:"which kind of MassHealth help they have",housingCrisis:"whether they're behind on housing bills",dementia:"whether there's a dementia diagnosis",incomeDrop:"whether income dropped in the last 2 years",pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
 
 /* ---------- State ---------- */
 let A = {};           // answers
@@ -168,7 +171,7 @@ function visible(){ return Q.filter(q=>!q.showIf || q.showIf(A)); }
    results page). Every question is listed with a dot — green when answered,
    amber "?" when marked not sure, empty when not answered yet — and any item
    can be tapped to jump straight to it. ---------- */
-const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",housingCrisis:"Behind on housing bills",dementia:"Dementia diagnosis",incomeDrop:"Income dropped in last 2 years",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",already:"Already getting",mhType:"Which MassHealth help",working:"Still working"};
+const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",housingCrisis:"Behind on housing bills",dementia:"Dementia diagnosis",incomeDrop:"Income dropped in last 2 years",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",alRes:"Assisted living",already:"Already getting",mhType:"Which MassHealth help",working:"Still working"};
 /* What they already get, after the MassHealth follow-up (mhType) sorts out MassHealth coverage vs the Medicare Savings Program. */
 function alreadyList(){
   let has=[...(A.already||[])];
@@ -963,6 +966,11 @@ function programs(){
       if(A.subsidized==="yes"){ out.push(cb("no","Renters in public/subsidized/tax-exempt housing can't claim it — no property tax is paid on the unit.")); return; }
       const rentYr=num(A.rent)*12; const burden = (0.25*rentYr) > 0.10*cinc;
       if(!burden && A.rent!=null && A.rent!=="unknown" && A.subsidized!=="unsure"){ out.push(cb("no",`For renters the credit is 25% of rent (${money(0.25*rentYr)}) minus 10% of income (${money(0.10*cinc)}) — that works out to $0 here.`)); return; }
+      if(A.alRes==="yes"){
+        cbEst = 0;
+        out.push(cb("maybe",`In assisted living, only the RENT part of the monthly fee counts — and only if the residence pays property tax and there's a real landlord-tenant agreement (usually the bill lists rent separately). Use that rent amount: the credit is 25% of it minus 10% of income (${money(0.10*cinc)}). Residences that don't pay property tax (public housing, church-run homes) don't qualify.`));
+        return;
+      }
       status = burden?(A.subsidized==="unsure"?"maybe":"likely"):"maybe";
       why = burden?`25% of rent (${money(0.25*rentYr)}) tops 10% of income — qualifies as a renter${A.subsidized==="unsure"?" (confirm the unit isn't subsidized/tax-exempt).":"."}`:`Income qualifies; 25% of rent must top 10% of income (${money(0.10*cinc)}).`;
     } else { out.push(cb("no","Income qualifies, but the Circuit Breaker is a refund of property tax or rent actually paid on a Massachusetts home they own or rent. If they pay rent to family, answer \"rent\" instead.")); return; }
@@ -1203,14 +1211,15 @@ function programs(){
   // 12. SSI (very low income + STRICT asset limit; aged 65+ or disabled)
   const ssiAssetCap = A.marital==="married"?3000:2000;
   const ssiFbr = SSI_FBR[hh]||SSI_FBR[2];
-  const ssiSsp = SSI_SSP[hh]||SSI_SSP[2];
+  const ssiAL = A.alRes==="yes";
+  const ssiSsp = ssiAL ? (hh===2 ? 2172 : 1448) : (SSI_SSP[hh]||SSI_SSP[2]);
   const ssiIncScreen = ssiSsp*12 + 240;   // federal rate + MA State Supplement + the $20/mo general income exclusion (2026-09-27: was federal-only)
   if((age>=65 || disabled) && assets<=ssiAssetCap+1000 && inc<ssiIncScreen){
     const s = citizenOK()?"maybe":"no";
     out.push({id:"ssi",name:"Supplemental Security Income (SSI)",status:s,
       val: s==="no"?0:Math.round(12*Math.max(0, ssiSsp - Math.max(0, inc/12 - 20))),
       valTxt: s==="no"?"—":`~${money(Math.max(0, ssiSsp - Math.max(0, inc/12 - 20)))}/mo (federal + MA supplement)`,
-      why: citizenOK()?`Income and assets look low enough to be worth a hard look. SSI has a STRICT countable-asset limit (~$${ssiAssetCap.toLocaleString()}) and pays up to ~$${ssiFbr.toLocaleString()}/mo federal (2026), and Massachusetts adds a State Supplement — ~${money(ssiSsp)}/mo in total for ${hh===2?"a couple":"someone"} living independently. Some people with income a bit too high for federal SSI still qualify for the state supplement alone. Confirm exact countable assets & income — these limits are unforgiving, so this is a "verify," not a sure thing.${A.citizen==="qualified"?" Green-card holders generally also need 40 work quarters (plus a 5-year wait if they arrived after 8/22/1996), or a veteran connection.":""}`:"SSI needs U.S. citizen or qualified-immigrant status.",
+      why: citizenOK()?`Income and assets look low enough to be worth a hard look. SSI has a STRICT countable-asset limit (~$${ssiAssetCap.toLocaleString()}) and pays up to ~$${ssiFbr.toLocaleString()}/mo federal (2026), and Massachusetts adds a State Supplement — ~${money(ssiSsp)}/mo in total for ${hh===2?"a couple":"someone"} ${ssiAL?"in assisted living (the state's assisted-living rate — ask the residence whether it qualifies)":"living independently"}. Some people with income a bit too high for federal SSI still qualify for the state supplement alone. Confirm exact countable assets & income — these limits are unforgiving, so this is a "verify," not a sure thing.${A.citizen==="qualified"?" Green-card holders generally also need 40 work quarters (plus a 5-year wait if they arrived after 8/22/1996), or a veteran connection.":""}`:"SSI needs U.S. citizen or qualified-immigrant status.",
       form:"Apply with the Social Security Administration.",forml:"https://www.ssa.gov/ssi/",
       docs:["Bank statements (asset limit is strict — ~$2,000 single / $3,000 couple)","Proof of income","ID & citizenship/immigration docs"],
       where:"Apply at ssa.gov or 1-800-772-1213. SSI in MA usually opens MassHealth automatically."});
@@ -1465,6 +1474,21 @@ function programs(){
       form:"Through a MassHealth Adult Foster Care provider or a PCA agency.",forml:"https://www.mass.gov/info-details/masshealth-adult-foster-care-program-fact-sheet",
       docs:["MassHealth eligibility (or an application)","A doctor's statement of care needs"],
       where:"Ask the local ASAP (MassOptions 800-243-4636) or an Adult Foster Care provider. MassHealth eligibility comes first — see the other MassHealth cards. Paying for care out of pocket instead? On a federal tax return that itemizes, medical costs above 7.5% of adjusted gross income can be deducted, including qualified long-term care services — and an adult child who could claim the parent as a dependent except for the parent's income can count the parent's costs too (IRS Publication 502)."});
+  }
+
+  // 27b. Group Adult Foster Care — assisted living (added 2026-09-28)
+  if(A.alRes==="yes" && A.adl==="yes" && age>=22){
+    const mhHas = alreadyList().includes("masshealth") || A.healthCov==="masshealth";
+    const assetsKnown = A.assets!=null && A.assets!=="" && A.assets!=="unknown", cap = hh===2 ? 3000 : 2000;
+    let st=null, lead="";
+    if(mhHas){ st="likely"; lead="They're already on MassHealth — if it's MassHealth Standard or CommonHealth, this is open to them now."; }
+    else if(age>=65 && inc<=fplFor(hh) && (!assetsKnown || assets<=cap)){ st=assetsKnown?"likely":"maybe"; lead=`At this income (under ~${money(fplFor(hh))}/yr) and ${assetsKnown?"savings":"if savings are under $"+cap.toLocaleString()}, MassHealth Standard looks within reach — apply for that first.`; }
+    else if(age<65 && disabled){ st="maybe"; lead="With a disability, MassHealth CommonHealth has no upper income limit (a premium may apply) — that opens this program."; }
+    if(st) out.push({id:"gafc",name:"MassHealth Help With Daily Care in Assisted Living (GAFC)",status:st,val:0,valTxt:"personal care paid by MassHealth",
+      why:`${lead} MassHealth's Group Adult Foster Care pays for help with daily activities — bathing, dressing, getting around, medication reminders — with a nurse and case manager overseeing the care, delivered where they live. It's for adults who need hands-on help or reminders with at least one daily activity and qualify for MassHealth Standard or CommonHealth. Many assisted living residences work with a GAFC agency; ask the residence.`,
+      form:"Through a GAFC agency (the assisted living residence can usually connect you) — MassHealth eligibility comes first.",forml:"https://www.mass.gov/info-details/masshealth-group-adult-foster-care-program-fact-sheet",
+      docs:["MassHealth card or application","A doctor's note on the daily help needed"],
+      where:"Ask the assisted living residence which GAFC agency it works with, or call MassHealth customer service: (800) 841-2900."});
   }
 
   // 28. Home-delivered meals (Elder Nutrition Program) — 60+, frail/isolated/homebound, no income limit
