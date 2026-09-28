@@ -11,3 +11,5 @@ Before launch:
 3. Booking tool account (free tier) (Ryan).
 4. check.js: point CHECKOUT_URL at book.html, update the offer text to the final price/wording, then SHOW_OFFER=true.
 5. Attorney review (paid -> banker chat first).
+
+- 2026-09-28 (Ryan): Medicare plan comparison/recommendation is OUT of the paid service. Mass. c.175 s.177A-B: advice on a policy's terms/coverage/premium or whether to take it, for a fee, = insurance adviser; needs a Division of Insurance license (sworn application, 3 MA references, written exam at least twice a year with 3 months' notice, 3-year license; a corporation can hold it if most officers qualify). Referred to SHINE (free). Revisit with the attorney whether licensing is worth it. MSP / Extra Help applications stay in (public programs, not policies).
