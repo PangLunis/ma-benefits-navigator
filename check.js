@@ -1103,6 +1103,9 @@ function programs(){
     else if(sixty){ w = `Over the ~${money(lim)} gross limit, and even after the medical and housing deductions seniors get, net income (~${money(netMo)}/mo) is over the ~${money(fplFor(hh)/12)}/mo limit${(A.assets!=null && assets>SNAP_ASSET_ELDERLY)?` (savings are also over the $${SNAP_ASSET_ELDERLY.toLocaleString()} limit)`:""}.`; }
     else { w = `Income above ~${money(lim)} for a household of ${hh}.`; }
     if(s!=="no" && age>=55 && age<65 && !disabled && A.working!=="yes"){ w += " Note: adults 55–64 without a disability may face SNAP work rules and time limits — ask DTA."; }
+    // 7 CFR 273.1: "Individuals must be considered residents of an institution when the institution provides them with the majority of
+    // their meals (over 50 percent of three meals daily)" — ineligible, with narrow exceptions. The screener doesn't ask about meals.
+    if(s!=="no" && A.alRes==="yes"){ s="maybe"; w += " In assisted living: if the residence provides most meals (more than half of three meals a day), federal rules usually count it as an institution and SNAP isn't available — ask DTA about the specific residence."; }
     if(!citizenOK()){ s="no"; w="SNAP needs U.S. citizen or qualified-immigrant status — verify before applying."; }
     const hip = s!=="no" ? ` SNAP households also get HIP automatically: up to $${homeHH>=6?80:(homeHH>=3?60:40)}/mo back for fruits & vegetables bought at participating farms and markets.` : "";
     const shareNote = (s!=="no" && homeHH>hh) ? " (If they live with others and buy/prepare food together, the whole household applies together.)" : "";
@@ -1498,7 +1501,7 @@ function programs(){
   // 27. Getting a family caregiver PAID (Adult Foster Care / PCA through MassHealth)
   if(A.adl==="yes" && (age>=60 || disabled)){
     out.push({id:"paidcare",name:"Getting a Family Caregiver Paid (Adult Foster Care / PCA)",status:"maybe",val:0,valTxt:"a paid stipend for the caregiver",
-      why:"If they qualify for MassHealth (Standard or CommonHealth, or SCO/PACE), MassHealth can pay a relative who lives with them and gives daily care through Adult Foster Care — adult children, siblings and other relatives can be paid; a spouse cannot. The Personal Care Attendant program can also pay relatives other than a spouse.",
+      why:(A.alRes==="yes"?"In assisted living, MassHealth does NOT pay Adult Foster Care (MassHealth rule 130 CMR 408.437) — there, Group Adult Foster Care is how MassHealth pays for daily help (see that card). The rest applies only if they move home with a relative: ":"")+"If they qualify for MassHealth (Standard or CommonHealth, or SCO/PACE), MassHealth can pay a relative who lives with them and gives daily care through Adult Foster Care — adult children, siblings and other relatives can be paid; a spouse cannot. The Personal Care Attendant program can also pay relatives other than a spouse.",
       form:"Through a MassHealth Adult Foster Care provider or a PCA agency.",forml:"https://www.mass.gov/info-details/masshealth-adult-foster-care-program-fact-sheet",
       docs:["MassHealth eligibility (or an application)","A doctor's statement of care needs"],
       where:"Ask the local ASAP (MassOptions 800-243-4636) or an Adult Foster Care provider. MassHealth eligibility comes first — see the other MassHealth cards. Paying for care out of pocket instead? On a federal tax return that itemizes, medical costs above 7.5% of adjusted gross income can be deducted, including qualified long-term care services — and an adult child who could claim the parent as a dependent except for the parent's income can count the parent's costs too (IRS Publication 502)."});
