@@ -792,6 +792,70 @@ document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==
 window.addEventListener("pagehide", statLeave);
 
 /* ---------- Render question ---------- */
+/* ---------- "Engine" animation between the last answer and the results (Ryan approved 2026-09-28; "all of these options flowing into
+   something, then it comes out with the specific results"). The person's OWN answers flow into the Benefighter sun, it counts
+   through the programs, and their actual top matches drop out. ~4.5 s, skippable, skipped entirely for reduced-motion users. */
+let engineShown = false;
+const PROGRAM_TOTAL = 57;   // program ids the engine evaluates (tests/program_list.json)
+function engineWanted(){
+  if(/[?&]anim=0\b/.test(location.search)) return false;
+  if(renderCount===0) return false;   // only right after answering the last question — not when saved answers reopen on the results
+  try{ if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return false; }catch(e){}
+  return true;
+}
+function answerChips(){
+  const c=[], inc=num(A.incomeSS)+num(A.incomeOther);
+  if(num(A.age)>0) c.push(`${Math.round(num(A.age))} years old`);
+  const t=townLookup(A.town); if(t) c.push(t.name);
+  if(A.marital==="married") c.push("Married"); else if(A.marital==="widowed") c.push("Widowed"); else if(A.marital==="divorced") c.push("Divorced");
+  c.push(A.housing==="own"?"Owns the home":A.housing==="rent"?(A.alRes==="yes"?"Assisted living":"Rents"):"Lives with family");
+  if(inc>0) c.push(`${money(inc)} a year`);
+  if(A.medicare==="yes") c.push("On Medicare");
+  if(A.veteran==="vet") c.push("Veteran"); else if(A.veteran==="spouse") c.push("Veteran's spouse");
+  if(A.adl==="yes") c.push("Needs some help at home");
+  if(A.disability==="yes") c.push("Has a disability");
+  return c.slice(0,8);
+}
+function playEngine(done){
+  const app=document.getElementById("app");
+  const ps=programs();
+  const rank={likely:0,maybe:1};
+  const outs=ps.filter(p=>p.status==="likely"||(p.status==="maybe"&&(p.val||0)>0)).sort((a,b)=>(rank[a.status]-rank[b.status])||((b.val||0)-(a.val||0))).slice(0,5);
+  const chips=answerChips();
+  // same headline total as the results page: strong matches, with property-tax exemptions not stacked
+  const EXEMPT=["ex41c","ex17d","vet22","blind37a"], lk=ps.filter(p=>p.status==="likely");
+  const engTotal=lk.filter(p=>!EXEMPT.includes(p.id)).reduce((s2,p)=>s2+(p.val||0),0)+Math.max(0,...lk.filter(p=>EXEMPT.includes(p.id)).map(p=>p.val||0));
+  const SUN=`<svg viewBox="0 0 42 42" aria-hidden="true"><rect width="42" height="42" rx="10" fill="#1E4E3C"/><circle cx="21" cy="26" r="9" fill="#E4A126"/><rect x="7" y="26" width="28" height="3.6" rx="1.8" fill="#FBF6EC"/><g class="rays" stroke="#E4A126" stroke-width="2.4" stroke-linecap="round"><line x1="21" y1="7" x2="21" y2="12"/><line x1="11" y1="10" x2="14" y2="14"/><line x1="31" y1="10" x2="28" y2="14"/></g></svg>`;
+  // a full-screen layer, so it's on screen wherever the page was scrolled
+  const host=document.querySelector(".tool")||document.body;
+  const ov=document.createElement("div"); ov.className="eng-ov"; host.appendChild(ov);
+  ov.innerHTML=`<div class="eng" role="status" aria-live="polite">
+    <button type="button" class="eng-skip">Skip ›</button>
+    <div class="eng-lbl">${esc(who(A)==="this person"?"Your answers":who(A)+"'s answers")}</div>
+    <div class="eng-in">${chips.map((c,k)=>`<span class="eng-chip" style="--k:${k}">${esc(c)}</span>`).join("")}</div>
+    <div class="eng-core"><div class="eng-sun">${SUN}</div>
+      <div class="eng-count">Checking <b id="engN">0</b> of ${PROGRAM_TOTAL} Massachusetts programs…</div></div>
+    <div class="eng-out">${outs.map((p,k)=>`<div class="eng-res ${p.status}" style="--k:${k}"><span class="eng-ic">${p.status==="likely"?"✅":"🔎"}</span><span class="eng-nm">${esc(p.name)}</span>${/^[~≈]?\$|^up to \$/i.test(p.valTxt||"")?`<span class="eng-v">${esc(String(p.valTxt).replace(/\s*\(.*\)\s*$/,""))}</span>`:""}</div>`).join("")}</div>
+    ${engTotal>0?`<div class="eng-total" style="--k:${outs.length}">≈ ${money(engTotal)} a year found</div>`:""}
+  </div>`;
+  let finished=false; const timers=[];
+  const finish=()=>{ if(finished) return; finished=true; timers.forEach(clearTimeout); done();
+    const hdr=document.querySelector(".site-header"), hb=hdr?hdr.getBoundingClientRect().bottom:0, a=document.getElementById("app").getBoundingClientRect().top;
+    window.scrollTo({top:Math.max(0, window.scrollY + a - hb - 8), left:0, behavior:"instant"});   // land on the results, not the page intro
+    ov.classList.add("gone"); setTimeout(()=>ov.remove(), 450); };
+  ov.querySelector(".eng-skip").onclick=finish;
+  const root=ov.querySelector(".eng");
+  timers.push(setTimeout(()=>root.classList.add("s1"), 60));      // answers appear
+  timers.push(setTimeout(()=>{   // answers flow into the sun: aim each chip at the sun's centre
+    const sun=root.querySelector(".eng-sun").getBoundingClientRect(), cx=sun.left+sun.width/2, cy=sun.top+sun.height/2;
+    root.querySelectorAll(".eng-chip").forEach(c=>{ const r=c.getBoundingClientRect(); c.style.setProperty("--dx",(cx-(r.left+r.width/2))+"px"); c.style.setProperty("--dy",(cy-(r.top+r.height/2))+"px"); });
+    root.classList.add("s2"); }, 1100));
+  const n=document.getElementById("engN"), t0=1300, dur=1400;
+  for(let k=1;k<=20;k++) timers.push(setTimeout(()=>{ if(n) n.textContent=Math.round(PROGRAM_TOTAL*k/20); }, t0+dur*k/20));
+  timers.push(setTimeout(()=>root.classList.add("s3"), 2800));    // matches drop out
+  timers.push(setTimeout(finish, 2800 + 350*Math.max(1,outs.length) + (engTotal>0?1700:1100)));
+}
+function esc(x){ return String(x).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
 let renderedAt = -1e9, renderCount = 0;
 /* Each new question must open with its first line on screen (Ryan 2026-09-28: "sometimes you have to slide the screen to see the
    top part of the question"). The page keeps its scroll position between questions, so after tapping an answer low on a long
@@ -807,7 +871,7 @@ function tapTooSoon(){ const g = (typeof window.BF_TAP_GUARD_MS==="number") ? wi
 function render(){
   saveProgress();
   const vis = visible();
-  if(i>=vis.length){ editMode=false; return results(); }
+  if(i>=vis.length){ editMode=false; if(!engineShown && engineWanted()){ engineShown=true; return playEngine(results); } return results(); }
   const q = vis[i];
   statProgress(vis);
   const doneN = vis.filter(x=>ansState(x)!=="empty").length;

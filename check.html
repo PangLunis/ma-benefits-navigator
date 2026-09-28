@@ -97,6 +97,40 @@
     .tool .prog { scroll-margin-top: 84px; }
     .talkline { margin-top: 10px; }
     .talkline a { font-weight: 800; white-space: nowrap; }
+    .tool .eng-ov { position: fixed; inset: 0; z-index: 9000; background: var(--paper, #FBF6EC); overflow: auto; transition: opacity .4s ease; }
+    .tool .eng-ov.gone { opacity: 0; pointer-events: none; }
+    .tool .eng { position: relative; max-width: 560px; margin: 0 auto; min-height: 100%; padding: calc(28px + env(safe-area-inset-top)) 16px 24px; text-align: center; box-sizing: border-box; }
+    .tool .eng-skip { position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 12px; appearance: none; background: #fff; border: 1.5px solid var(--t-line); border-radius: 10px; padding: 8px 14px; font-weight: 800; color: var(--t-muted); font-family: var(--sans); font-size: 15px; cursor: pointer; }
+    .tool .eng-lbl { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; color: var(--t-muted); margin: 8px 0 10px; }
+    .tool .eng-in { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; min-height: 96px; max-height: 400px; transition: max-height .6s ease, min-height .6s ease, margin .6s ease; }
+    .tool .eng.s3 .eng-in { max-height: 0; min-height: 0; overflow: hidden; }
+    .tool .eng.s3 .eng-lbl { opacity: 0; transition: opacity .3s; }
+    .tool .eng.s3 .eng-core { margin-top: 0; transition: margin .6s ease; }
+    .tool .eng-chip { background: #fff; border: 2px solid var(--t-line); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 16px; color: var(--ink);
+      opacity: 0; transform: translateY(-14px) scale(.9); transition: opacity .35s ease, transform .35s ease; transition-delay: calc(var(--k) * 90ms); }
+    .tool .eng.s1 .eng-chip { opacity: 1; transform: none; }
+    .tool .eng.s2 .eng-chip { opacity: 0; transform: translate(var(--dx,0), var(--dy,150px)) scale(.15); transition: opacity .7s cubic-bezier(.9,0,1,1), transform .7s cubic-bezier(.5,0,.9,.4); transition-delay: calc(var(--k) * 70ms); }
+    .tool .eng-core { margin: 26px auto 18px; }
+    .tool .eng-sun { width: 96px; height: 96px; margin: 0 auto; filter: drop-shadow(0 6px 18px rgba(228,161,38,.35)); }
+    .tool .eng-sun svg { width: 100%; height: 100%; }
+    .tool .eng.s2 .eng-sun { animation: engPulse .7s ease-in-out 3; }
+    .tool .eng.s2 .rays { transform-origin: 21px 26px; animation: engRays .6s ease-in-out infinite alternate; }
+    @keyframes engPulse { 50% { transform: scale(1.12); } }
+    @keyframes engRays { from { opacity: .45; transform: scale(.85); } to { opacity: 1; transform: scale(1.18); } }
+    .tool .eng-count { margin-top: 12px; font-size: 17px; color: var(--t-muted); font-weight: 600; opacity: 0; transition: opacity .3s; }
+    .tool .eng.s2 .eng-count { opacity: 1; }
+    .tool .eng-count b { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .tool .eng-out { display: flex; flex-direction: column; gap: 8px; max-width: 460px; margin: 0 auto; }
+    .tool .eng-res { display: flex; align-items: center; gap: 10px; text-align: left; background: #fff; border: 2px solid var(--t-line); border-radius: 14px; padding: 10px 14px;
+      font-weight: 700; font-size: 16px; opacity: 0; transform: translateY(-40px) scale(.85); transition: opacity .4s ease, transform .45s cubic-bezier(.2,1.4,.4,1); transition-delay: calc(var(--k) * 350ms); }
+    .tool .eng-res.likely { border-color: #9BC9A8; background: #F1F8F3; }
+    .tool .eng.s3 .eng-res { opacity: 1; transform: none; }
+    .tool .eng-nm { flex: 1; }
+    .tool .eng-v { font-size: 14px; font-weight: 700; color: var(--t-muted); white-space: nowrap; }
+    .tool .eng-total { margin-top: 16px; font-family: var(--serif, Georgia, serif); font-weight: 700; font-size: 28px; color: var(--pine-deep, #143829);
+      opacity: 0; transform: scale(.9); transition: opacity .45s ease, transform .45s cubic-bezier(.2,1.4,.4,1); transition-delay: calc(var(--k) * 350ms + 250ms); }
+    .tool .eng.s3 .eng-total { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .tool .eng * { transition: none !important; animation: none !important; } }
     .tool .skip { display: block; width: 100%; text-align: center; background: none; border: none; color: var(--t-muted); font-size: 15px; font-weight: 700; padding: 14px 0 2px; cursor: pointer; text-decoration: underline; font-family: var(--sans); }
     .tool details.help { margin: 2px 0 16px; border: none; padding: 0; }
     .tool details.help summary { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--t-brand); cursor: pointer; padding: 4px 0; }
