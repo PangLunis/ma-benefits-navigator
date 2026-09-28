@@ -119,7 +119,7 @@ const Q = [
   {id:"alRes", type:"single", q:n=>`Does ${who(n)} live in an assisted living residence?`, hint:"Assisted living changes a few answers: MassHealth can pay for daily help there, SSI pays more, and the Circuit Breaker counts only the rent part of the fee.",
     opts:[{v:"yes",l:"Yes, assisted living"},{v:"no",l:"No, a regular apartment or house"}], showIf:a=>a.housing==="rent" && a.adl==="yes"},
   {id:"already", type:"multi", q:n=>`Is ${who(n)} ALREADY getting any of these?`, hint:"It's totally normal not to know. If you can't tell, pick \"I'm not sure\" at the bottom — we'll help you check.", noSkip:true, exclusive:["none","unsure"],
-    help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) SNAP — do they have an EBT card? 5) Medicare Part B help — is the ~$203/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card that pays for doctor visits? (MassHealth has several programs. If it only pays the Part B premium, that's #5, not #6.) If you can't check any of these right now, just pick \"I'm not sure.\"",
+    help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) SNAP — do they have an EBT card? 5) Medicare Part B help — is the ~$203/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card that pays for doctor visits? (MassHealth has several programs. If it only pays the Part B premium, that's #5, not #6.) 7) Prescription Advantage — a Prescription Advantage card, or a letter showing a category such as S3 (it isn't MassHealth, even though its letters mention MassHealth). If you can't check any of these right now, just pick \"I'm not sure.\"",
     opts:[
       {v:"cb",l:"Senior Circuit Breaker tax credit",d:"A refund on the MA state tax return (look for \"Schedule CB\") — often $1,000–$2,800/yr."},
       {v:"exemption",l:"A property-tax exemption",d:"A discount line on the town property tax bill that lowers what's owed."},
@@ -127,6 +127,7 @@ const Q = [
       {v:"snap",l:"SNAP / food assistance",d:"Food benefits on an EBT card (used to be \"food stamps\")."},
       {v:"msp",l:"Help paying the Medicare Part B premium",d:"The Medicare Savings Program — it used to be called MassHealth Buy-In (levels: QMB, SLMB, QI). The ~$203/mo Part B premium is NOT taken out of their Social Security check."},
       {v:"masshealth",l:"MassHealth health coverage",d:"A MassHealth card that pays for doctor visits and prescriptions (like MassHealth Standard). If MassHealth ONLY pays the Part B premium, pick the Part B choice above instead. Have both? Pick both."},
+      {v:"rxadv",l:"Prescription Advantage",d:"The state's help with prescription costs — its own member card, and letters that show a category like S1, S2 or S3."},
       {v:"vacomp",l:"VA disability compensation",d:"A monthly VA payment for a service-connected condition."},
       {v:"homecare",l:"State Home Care services",d:"In-home help arranged by the local Aging Services Access Point (ASAP)."},
       {v:"none",l:"None of these"},
@@ -1295,7 +1296,15 @@ function programs(){
   }
 
   // 16. Prescription Advantage (MA pharmacy assistance; 65+ or disabled)
-  if(age>=65 || disabled){
+  // Existing members keep it: mass.gov "Prescription Advantage will stop accepting new applications after September 11, 2026. If you are
+  // currently enrolled, your participation in the program will continue." (2026-09-28: members could not say so before.)
+  if(alreadyList().includes("rxadv")){
+    out.push({id:"rxadv",name:"Prescription Advantage (MA)",status:"have",val:0,valTxt:"keep it — renew",
+      why:"✓ Already a member. New applications closed after September 11, 2026, but current members keep it — renew on time and report income changes so it doesn't lapse. The category on their letter (S0–S5) is set by income; S3 and below may also qualify for the Medicare Savings Program, which pays the Part B premium.",
+      form:"Member forms (renewal, income change).",forml:"https://www.mass.gov/info-details/prescription-advantage-documents-and-resources",
+      docs:["Prescription Advantage member card","Latest income information"],
+      where:"MassOptions 1-800-243-4636, option 3 (Prescription Advantage questions)."});
+  } else if(age>=65 || disabled){
     out.push({id:"rxadv",name:"Prescription Advantage (MA)",status:PA_OPEN?"maybe":"no",val:0,valTxt:PA_OPEN?"lowers drug costs":"closed to new applicants",
       why:PA_OPEN?"MA state pharmacy program that wraps around Medicare Part D.":"Massachusetts stopped accepting NEW Prescription Advantage applications after September 11, 2026. If already enrolled, keep renewing. New applicants: Extra Help (federal) and a free SHINE counselor are the paths for drug costs.",
       form:"Current members only (renewals).",forml:"https://www.mass.gov/info-details/prescription-advantage-documents-and-resources",
@@ -1818,6 +1827,14 @@ function programs(){
       p.why="✓ Already receiving this — no action needed. Just re-confirm it stays active (most must be re-filed/redetermined every year).";
     }
   });
+  // Marked on the results page with "I already get this" (added 2026-09-28): only 12 of 57 programs are on the "already getting" question.
+  const mine = Array.isArray(A.haveAlso) ? A.haveAlso : [];
+  out.forEach(p=>{
+    if(mine.includes(p.id) && p.status!=="no" && p.status!=="have"){
+      p.status="have"; p.val=0; p.userHave=true;
+      p.why="✓ Marked as something they already get. Re-confirm it stays active — most programs must be renewed every year.";
+    }
+  });
 
   return out;
 }
@@ -1900,6 +1917,8 @@ function results(){
       <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Property-tax exemption</div><div class="gh">The town property tax bill — an "exemption"/"senior" line lowering the amount owed.</div></div>
       <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Fuel Assistance / SNAP</div><div class="gh">Did they apply for winter heating help at a local agency? Do they have an EBT card?</div></div>
       <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Medicare Part B help / MassHealth</div><div class="gh">Is the ~$203/mo Part B premium NOT coming out of their Social Security check? Do they carry a MassHealth card?</div></div>
+      <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Prescription Advantage</div><div class="gh">A Prescription Advantage member card, or a letter showing a category like S1–S5. It's the state's prescription help — not MassHealth.</div></div>
+      <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Anything else below</div><div class="gh">If they already get a program listed below, tap "I already get this" on its card to move it out of the way.</div></div>
     </div>`;
   }
 
@@ -1917,6 +1936,8 @@ function results(){
         <div class="top"><h3>${p.name}</h3><span class="val">${p.valTxt}</span></div>
         <span class="badge ${bc}">${bt}</span>
         <p class="why">${p.why}</p>`;
+      if(p.status==="likely"||p.status==="maybe"||p.status==="refer") h+=`<button type="button" class="gotit" data-pid="${p.id}">✓ I already get this</button>`;
+      else if(p.userHave) h+=`<button type="button" class="gotit undo" data-pid="${p.id}">Undo — they don't get this</button>`;
       if(p.status!=="no"){
         h+=`<details><summary>How to claim it →</summary><div class="body">
           <b>Form:</b> ${p.form}<br>
@@ -1952,6 +1973,15 @@ function results(){
   h+=`<p class="forget"><button type="button" id="forgetBtn">🗑 Forget my answers on this device</button></p>`;
   document.getElementById("app").innerHTML=h;
   saveProgress();
+  document.querySelectorAll(".gotit").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.pid, set=new Set(Array.isArray(A.haveAlso)?A.haveAlso:[]);
+    if(b.classList.contains("undo")) set.delete(id); else set.add(id);
+    A.haveAlso=[...set]; saveProgress();
+    const y=window.scrollY; results(); window.scrollTo({top:y, left:0, behavior:"instant"});   // stay put (the page scrolls smoothly by default)
+    const t=document.createElement("div"); t.className="gotit-toast"; t.setAttribute("role","status");
+    t.textContent = b.classList.contains("undo") ? "Moved back to the list to apply for." : "Moved to “Already receiving”.";
+    document.body.appendChild(t); setTimeout(()=>t.remove(), 2600);
+  });
   const fg=document.getElementById("forgetBtn"); if(fg) fg.onclick=()=>{ forgetProgress(); fg.textContent="✓ Forgotten — nothing is saved on this device"; fg.disabled=true; try{ localStorage.setItem("bf_remember","0"); }catch(e){} };
   wirePacket();
   document.querySelectorAll(".a-edit").forEach(b=>b.onclick=()=>{ editMode=true; i=parseInt(b.dataset.k,10); render(); window.scrollTo(0,0); });

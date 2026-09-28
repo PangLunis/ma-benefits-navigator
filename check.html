@@ -84,6 +84,9 @@
     .tool .townsug:empty { display: none; }
     .tool button.tsug { appearance: none; text-align: left; width: 100%; background: #fff; border: 2px solid var(--t-line); border-radius: 12px; padding: 13px 16px; font-size: 19px; font-weight: 600; color: var(--ink); cursor: pointer; font-family: var(--sans); }
     .tool button.tsug:active { border-color: var(--t-brand); background: var(--t-brand-tint); }
+    .tool button.gotit { appearance: none; margin-top: 10px; background: #fff; border: 1.5px solid var(--t-line); border-radius: 10px; padding: 9px 14px; font-size: 15px; font-weight: 700; color: var(--t-muted); cursor: pointer; font-family: var(--sans); }
+    .tool button.gotit.undo { border-style: dashed; }
+    .gotit-toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); text-align: center; background: #143829; color: #fff; padding: 12px 18px; border-radius: 12px; font-weight: 700; z-index: 9999; font-family: var(--sans); }
     .tool .skip { display: block; width: 100%; text-align: center; background: none; border: none; color: var(--t-muted); font-size: 15px; font-weight: 700; padding: 14px 0 2px; cursor: pointer; text-decoration: underline; font-family: var(--sans); }
     .tool details.help { margin: 2px 0 16px; border: none; padding: 0; }
     .tool details.help summary { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--t-brand); cursor: pointer; padding: 4px 0; }
