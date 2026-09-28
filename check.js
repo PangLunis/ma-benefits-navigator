@@ -78,6 +78,11 @@ const Q = [
   {id:"subsidized", type:"single", q:"Is the rental public, subsidized, or tax-exempt housing?", hint:"Affects the Circuit Breaker.",
     help:"\"Yes\" = public housing, a Section 8 voucher building, or housing run by a church/nonprofit at reduced rent. A normal private landlord at market rent = \"No.\"",
     opts:[{v:"no",l:"No — private market rental"},{v:"yes",l:"Yes, subsidized/public"}], showIf:a=>a.housing==="rent"},
+  {id:"housingCrisis", type:"single", q:n=>`Is ${who(n)} behind on rent, mortgage or utility bills — or have they gotten a notice to quit, a foreclosure notice, or a shutoff notice?`, hint:"Massachusetts has emergency money for people about to lose their housing or utilities.",
+    opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}],
+    showIf:a=>(a.housing==="own"||a.housing==="rent") && (()=>{ const k=num(a.hhSize)>=1?Math.min(Math.round(num(a.hhSize)),8):(a.marital==="married"?2:1);
+      const h=hudFor(a.town); const lim=h ? h.l50[k-1] : Math.max(HUD_MAX_L50[k-1], HEAP_SMI60[k]||0);
+      return num(a.incomeSS)+num(a.incomeOther)+num(a.hhOtherInc) < lim; })()},
   {id:"veteran", type:"single", q:n=>`Military service?`, hint:"Veterans qualify for extra programs.",
     opts:[{v:"vet",l:"Is a veteran"},{v:"spouse",l:"Surviving spouse of a veteran"},{v:"no",l:"No military service"}]},
   {id:"vetService", type:"single", q:"Where did they serve?", hint:"For some places, certain health conditions are automatically treated as caused by service.",
@@ -85,7 +90,7 @@ const Q = [
     showIf:a=>a.veteran==="vet"},
   {id:"vaDis", type:"single", q:"Service-connected disability rating?", hint:"From the VA, if any.",
     help:"On the VA award/decision letter — a percentage like 30%, 70%, or 100%. Don't have it handy? Tap \"I'm not sure.\"",
-    opts:[{v:"none",l:"None"},{v:"partial",l:"10% – 90%"},{v:"full",l:"100% or unable to work"}],
+    opts:[{v:"none",l:"None"},{v:"partial",l:"10% – 60%"},{v:"partial70",l:"70% – 90%"},{v:"full",l:"100% or unable to work"}],
     showIf:a=>a.veteran==="vet"||a.veteran==="spouse"},
   {id:"wartime", type:"single", q:"Did the service include a wartime period?", hint:"Required for the VA Aid & Attendance pension.",
     help:"At least 90 days of active duty with one day during a wartime window (anyone who entered after 9/7/1980 generally needs 24 months, or the full period called up) — e.g., WWII, Korea, Vietnam (8/5/1964–5/7/1975, or from 11/1/1955 if served in Vietnam itself), or the Gulf War (8/2/1990–present). Peacetime-only service doesn't qualify for this particular pension. Not sure of the dates? Tap \"I'm not sure.\"",
@@ -97,6 +102,10 @@ const Q = [
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]},
   {id:"medicare", type:"single", q:n=>`Is ${who(n)} on Medicare?`,
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No / not yet"}]},
+  {id:"dementia", type:"single", q:n=>`Has a doctor diagnosed ${who(n)} with dementia or memory loss (such as Alzheimer's)?`, hint:"Medicare has a program that helps families caring for someone with dementia.",
+    opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}], showIf:a=>a.medicare==="yes"},
+  {id:"incomeDrop", type:"single", q:n=>`In the last 2 years, did ${who(n)}'s income drop a lot — for example because they retired, stopped working, or a spouse died?`, hint:"Medicare bases one of its charges on income from 2 years ago; a big drop can lower it.",
+    opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}], showIf:a=>a.medicare==="yes"},
   {id:"healthCov", type:"single", q:n=>`What health coverage does ${who(n)} have now?`,
     opts:[{v:"employer",l:"Through a job or retiree plan"},{v:"masshealth",l:"MassHealth"},{v:"connector",l:"A Health Connector plan"},{v:"none",l:"No coverage right now"}],
     showIf:a=>a.medicare==="no"},
@@ -134,7 +143,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   if(up) up.onclick=()=>{ tIdx=Math.min(2,tIdx+1); applyTextSize(); };
   if(dn) dn.onclick=()=>{ tIdx=Math.max(0,tIdx-1); applyTextSize(); };
 });
-function qLabel(id){ const m={pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
+function qLabel(id){ const m={housingCrisis:"whether they're behind on housing bills",dementia:"whether there's a dementia diagnosis",incomeDrop:"whether income dropped in the last 2 years",pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
 
 /* ---------- State ---------- */
 let A = {};           // answers
@@ -148,7 +157,7 @@ function visible(){ return Q.filter(q=>!q.showIf || q.showIf(A)); }
    results page). Every question is listed with a dot — green when answered,
    amber "?" when marked not sure, empty when not answered yet — and any item
    can be tapped to jump straight to it. ---------- */
-const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",already:"Already getting",working:"Still working"};
+const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",housingCrisis:"Behind on housing bills",dementia:"Dementia diagnosis",incomeDrop:"Income dropped in last 2 years",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",already:"Already getting",working:"Still working"};
 let editMode = false;   // true when the person jumped back from the results page
 function ansState(q){
   const v=A[q.id];
@@ -197,7 +206,7 @@ function wireNav(vis){
    doesn't show it", NEVER "the town doesn't offer it" — the card always says to confirm
    with the assessor. Dollar amounts on file with DLS are deliberately NOT shown (they
    matched towns' own documents in only 3 of 7 spot checks). */
-let TOWNS = null, AGENCIES = {}, TOWN_IDX = null;
+let TOWNS = null, AGENCIES = {}, TOWN_IDX = null, TOWN_WARNED = null, HUD = null;
 const BOSTON_NBHD = ["allston","brighton","charlestown","dorchester","east boston","hyde park","jamaica plain",
   "mattapan","roslindale","roxbury","south boston","west roxbury","back bay","beacon hill","north end","south end",
   "fenway","mission hill","chinatown","west end","readville"];
@@ -213,6 +222,9 @@ function townLookup(s){
   if(!n && BOSTON_NBHD.includes(k)) n="Boston";
   return n ? {name:n, ...TOWNS[n]} : null;
 }
+// HUD FY2026 income limits for the town: l50 = 50% of area median (RAFT), l80 = 80% (public housing / vouchers). null if unknown.
+function hudFor(town){ const t=townLookup(town); return (t && HUD && HUD[t.name]) || null; }
+const HUD_MAX_L50 = [63750,72850,81950,91050,98350,105650,112950,120200];   // highest MA area (Nantucket), FY2026 — used before the town is known
 function fillTownList(){
   const dl=document.getElementById("ma-towns");
   if(dl && TOWNS && !dl.options.length) dl.innerHTML=Object.keys(TOWNS).map(n=>`<option value="${n}">`).join("");
@@ -221,6 +233,7 @@ try{
   fetch("data/towns.json").then(r=>r.ok?r.json():null).then(d=>{
     if(d&&d.towns){ TOWNS=d.towns; AGENCIES=d.agencies||{}; fillTownList(); }
   }).catch(()=>{});
+  fetch("data/hud_limits.json").then(r=>r.ok?r.json():null).then(d=>{ if(d&&d.towns) HUD=d.towns; }).catch(()=>{});
 }catch(e){}
 function agencyHTML(ids, nbhd){
   let list=(Array.isArray(ids)?ids:[ids]).map(i=>AGENCIES[i]).filter(Boolean);
@@ -800,6 +813,16 @@ function render(){
     if(isInput){
       const v=document.getElementById("ip").value.trim();
       if(!v && !q.optional){ document.getElementById("ip").focus(); document.getElementById("ip").style.borderColor="#d23"; return;}
+      // Massachusetts only, for now: warn (once per value) when the town isn't one of the 351, then let them continue
+      if(q.id==="town" && TOWNS && v && !townLookup(v) && TOWN_WARNED!==v){
+        TOWN_WARNED=v;
+        let w=document.getElementById("townwarn");
+        if(!w){ w=document.createElement("p"); w.id="townwarn"; w.className="hint"; w.setAttribute("role","alert");
+          w.style.cssText="margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#FBEECB;color:#5B4210;font-weight:600";
+          document.getElementById("ip").closest(".ipwrap").after(w); }
+        w.textContent=`We couldn't find "${v}" among Massachusetts cities and towns. Benefighter only covers Massachusetts right now, so results won't apply outside the state. Check the spelling (pick from the list), or tap Next again to continue anyway.`;
+        return;
+      }
       saveInput(q,v);
     }
     i++; render();
@@ -948,7 +971,7 @@ function programs(){
     let s = owner ? "maybe":"no", w;
     if(!owner){ w="Veterans property-tax exemption applies to homeowners; renter — skip."; }
     else if(A.vaDis==="full"){ s="likely"; w="Owner + 100% service-connected rating — $1,000 exemption (Clause 22E). A full exemption is only for paraplegia or 100% service-connected blindness. If the rating is \"unemployable\" rather than 100%, confirm with the assessor."; }
-    else if(A.vaDis==="partial"){ s="likely"; w="Owner + 10%+ service-connected disability — qualifies for the veterans' exemption (base $400)."; }
+    else if(A.vaDis==="partial"||A.vaDis==="partial70"){ s="likely"; w="Owner + 10%+ service-connected disability — qualifies for the veterans' exemption (base $400)."; }
     else if(A.veteran==="spouse"){ s="maybe"; w="Surviving spouse of a veteran, owner — qualifies if the veteran would have qualified (10%+ service-connected rating, Purple Heart, POW, etc.); verify with the assessor."; }
     else { s="maybe"; w="Without a VA disability rating, this applies ONLY with a Purple Heart, former-POW status, or certain medals (Clause 22A and related) — otherwise not eligible. Verify with the assessor."; }
     out.push({id:"vet22",name:"Veterans' Property Tax Exemption (Cl. 22)",status:s,val:s==="no"?0:(A.vaDis==="full"?1000:400),valTxt:s==="no"?"—":(A.vaDis==="full"?"$1,000/yr (full for some)":"$400+/yr"),why:w,
@@ -1255,7 +1278,7 @@ function programs(){
 
   // 22. VA disability compensation (+ VA health care). Not means-tested. PACT Act presumptives for Agent Orange / burn-pit locations.
   if(A.veteran==="vet"){
-    const rated = A.vaDis==="partial"||A.vaDis==="full";
+    const rated = A.vaDis==="partial"||A.vaDis==="partial70"||A.vaDis==="full";
     const ao = A.vetService==="ao", gw = A.vetService==="gw";
     let st="maybe", why;
     if(rated){ why="Already has a VA rating. If conditions have gotten worse — or a newer PACT Act presumptive condition applies — a free Veterans Service Officer can file for an increase."; }
@@ -1338,12 +1361,23 @@ function programs(){
   // 23d. VA HISA home-change grant (catalog click-through #3). prosthetics.va.gov: lifetime $6,800 for a service-connected disability (or any
   // disability if rated at least 50%); $2,000 otherwise. Needs a VA physician's prescription; excludes porch lifts, stair glides, routine repairs.
   if(A.veteran==="vet" && (A.adl==="yes" || disabled)){
-    const hisaHi = A.vaDis==="partial" || A.vaDis==="full";
+    const hisaHi = A.vaDis==="partial" || A.vaDis==="partial70" || A.vaDis==="full";
     out.push({id:"hisa",name:"VA Grant for Home Changes (HISA)",status:"maybe",val:0,valTxt: hisaHi ? "up to $6,800 (lifetime)" : "up to $2,000 (lifetime)",
       why:"A VA grant (not a loan) for medically needed changes to the veteran's home — getting in and out, a roll-in shower, lower counters and sinks, permanent ramps. It's $6,800 over a lifetime for a service-connected disability (or for any disability if the rating is at least 50%), and $2,000 for other disabilities. It doesn't cover porch lifts, stair glides or routine repairs.",
       form:"HISA application with a prescription from a VA doctor.",forml:"https://www.prosthetics.va.gov/psas/HISA2.asp",
       docs:["A prescription from a VA doctor for the change","A written, itemized contractor estimate","A color photo of the area to be changed","Renters: a signed, notarized OK from the owner"],
       where:"Ask the VA doctor, or the Prosthetic and Sensory Aids Service at the local VA medical center."});
+  }
+
+  // 23e. VA caregiver stipend, PCAFC (batch 2, 2026-09-27). va.gov: the veteran has "a VA disability rating ... of 70% or higher",
+  // "needs at least 6 months of continuous, in-person personal care services", "needs to be enrolled in VA health care";
+  // Primary Family Caregivers may receive "A monthly stipend (payment)", CHAMPVA, "At least 30 days of respite care per year". VA Form 10-10CG.
+  if(A.veteran==="vet" && (A.vaDis==="partial70"||A.vaDis==="full") && A.adl==="yes"){
+    out.push({id:"pcafc",name:"VA Stipend for the Family Caregiver (PCAFC)",status:"maybe",val:0,valTxt:"monthly stipend to the caregiver",
+      why:"With a VA rating of 70% or more and a need for in-person personal care for at least 6 months, the family member who provides that care can apply to be the veteran's Primary Family Caregiver. The VA can then pay the caregiver a monthly stipend, and give health coverage through CHAMPVA if they have none, at least 30 days of respite a year, and training. The veteran must be enrolled in VA health care.",
+      form:"VA Form 10-10CG (joint application by the veteran and the caregiver).",forml:"https://www.va.gov/family-and-caregiver-benefits/health-and-disability/comprehensive-assistance-for-family-caregivers/",
+      docs:["The veteran's VA rating letter","Details of the daily care provided"],
+      where:"Apply online at va.gov, by mail, or with the Caregiver Support team at the local VA medical center. A Veterans Service Officer can help for free."});
   }
 
   // 26. State Home Care Program (ASAP) — 60+, NOT MassHealth; income sets the co-pay, not eligibility
@@ -1372,8 +1406,14 @@ function programs(){
       form:"Sign up through the local ASAP / Elder Nutrition Program.",forml:"https://www.mass.gov/info-details/senior-nutrition-program",
       docs:["Basic contact information"],
       where:"Call MassOptions at 800-243-4636 to reach the local program."});
+
+  }
+
+  // 28d. Family Caregiver Support (+ PFML). mass.gov FCSP eligibility: the care recipient is an "Individual age 60 or older, OR individual
+  // of any age who is living with Alzheimer's" disease or a related dementia. (2026-09-27: was only shown for ADL + 60+.)
+  if((A.adl==="yes" && age>=60) || A.dementia==="yes"){
     out.push({id:"caregiver",name:"Family Caregiver Support (free respite)",status:"maybe",val:0,valTxt:"free help for the caregiver",
-      why:"If a family member cares for them without pay, the Family Caregiver Support Program is free for that caregiver: respite breaks, training, counseling and help finding services.",
+      why:"If a family member cares for them without pay, the Family Caregiver Support Program is free for that caregiver: respite breaks, training, counseling and help finding services. And if that family member has a job covered by Massachusetts Paid Family and Medical Leave, they can take up to 12 weeks of paid leave a year to care for a parent, spouse, grandparent or other family member with a serious health condition (up to $1,230.39 a week in 2026; a health care provider must certify the condition, and there's a 7-day wait before payments start).",
       form:"Through the local ASAP.",forml:"https://www.mass.gov/info-details/family-caregiver-support-program",
       docs:["None to start — just a call"],
       where:"MassOptions 800-243-4636."});
@@ -1396,6 +1436,17 @@ function programs(){
       form:"Just call to reserve a seat.",forml:"https://www.mass.gov/info-details/senior-nutrition-program",
       docs:["None"],
       where:`Ask the ${A.town||"town"} Council on Aging, or call MassOptions at 1-800-243-4636.`});
+  }
+
+  // 28c. Medicare GUIDE dementia model (batch 2). cms.gov: "respite services up to $2,500 annually", care navigation, 24/7 support line,
+  // caregiver training; began July 1, 2024 and runs 8 years. Fact sheet: doctor's referral confirmed by a GUIDE doctor; "Medicare is your
+  // primary insurance, including enrollment in Medicare Parts A and B"; not in Medicare hospice or PACE; not living in a long-term nursing home.
+  if(A.dementia==="yes" && A.medicare==="yes"){
+    out.push({id:"guide",name:"Medicare Dementia Care Program (GUIDE)",status:"maybe",val:0,valTxt:"up to $2,500/yr of respite + a care team",
+      why:"Medicare's GUIDE program gives people with dementia a care team, a care navigator, a 24/7 support line and training for the family caregiver — plus up to $2,500 a year for respite (in-home help, adult day programs or a short stay) so the caregiver can get a break. It needs a doctor's referral confirmed by a GUIDE doctor, Medicare Parts A and B as the main insurance, and not being in hospice, PACE or a long-term nursing home.",
+      form:"A referral from the doctor to a GUIDE program.",forml:"https://www.cms.gov/priorities/innovation/innovation-models/guide",
+      docs:["Medicare card","The dementia diagnosis from the doctor"],
+      where:"Ask the doctor about a GUIDE program, or call 1-800-MEDICARE (1-800-633-4227) to find one nearby."});
   }
 
   // 29. Medicare plan check-up (annual open enrollment) — dates/cap from Medicare & You 2027; Medigap rule 211 CMR 71.10 (medical factsheet §4)
@@ -1427,7 +1478,8 @@ function programs(){
   // ================= Batch 2 (2026-09-25, from the coverage review; each fact verified on the cited page) =================
 
   // 32. Senior public housing / vouchers — renters with a heavy rent burden
-  if(renter && A.subsidized!=="yes" && (olderAge>=60 || disabled) && num(A.rent)>0 && (inc<=0 || (num(A.rent)*12)/inc > 0.30)){
+  const hH = hudFor(A.town), hLim = hH ? hH.l80[Math.min(homeHH,8)-1] : null;
+  if(renter && A.subsidized!=="yes" && (olderAge>=60 || disabled) && num(A.rent)>0 && (inc<=0 || (num(A.rent)*12)/inc > 0.30) && !(hLim && homeInc > hLim)){
     const burden = inc>0 ? Math.round(100*num(A.rent)*12/inc) : 100;
     out.push({id:"housing",name:"Senior Public Housing & Rental Vouchers",status:"maybe",val:0,valTxt:"rent at about 30% of income",
       why:`${inc>0?`Rent takes about ${burden}% of income.`:"With no income reported, rent is the whole burden."} Massachusetts public housing for older adults and people with disabilities, and MRVP rental vouchers (income up to 80% of area median), generally set rent at about 30% of income. Waiting lists are long, so getting on them NOW matters. Note: the state's Section 8 mobile-voucher waiting list has been closed since January 13, 2025 — public housing (through CHAMP) and MRVP are the open paths; some local housing authorities keep their own lists.`,
@@ -1577,12 +1629,36 @@ function programs(){
       where:"Ask a MassHire career center or the Council on Aging for the nearest SCSEP provider."});
   }
 
+  // 43. RAFT emergency housing money (batch 2). mass.gov: "RAFT provides up to $7,000 per 12-month period ... for rent, utilities,
+  // moving costs, and mortgage payments"; at risk of losing housing (Notice to Quit, eviction notice, behind on the mortgage, utility
+  // shutoff notice ...); income "less than 50% of your city/town's Area Median Income (AMI)". Questions: Massachusetts 2-1-1.
+  const raftH = hudFor(A.town), raftLim = raftH ? raftH.l50[Math.min(homeHH,8)-1] : null;
+  if(A.housingCrisis==="yes" && !(raftLim && homeInc >= raftLim)){
+    out.push({id:"raft",name:"Emergency Money to Keep Your Home (RAFT)",status: raftLim ? "likely" : "maybe",val:0,valTxt:"up to $7,000 a year",
+      why:`When someone is behind on rent, mortgage or utilities — or has a notice to quit, an eviction or foreclosure notice, or a shutoff notice — RAFT can pay up to $7,000 in a 12-month period toward rent, utilities, moving costs or mortgage payments. Income must be under 50% of the town's area median income${raftLim?` — about ${money(raftLim)}/yr for ${homeHH===1?"one person":homeHH+" people"} in ${townLookup(A.town).name}`:" (check the town's limit on the application)"}. Apply quickly: a landlord also fills out a short form.`,
+      form:"RAFT application (online, or through the regional agency).",forml:"https://www.mass.gov/how-to/apply-for-raft-emergency-help-for-housing-costs",
+      docs:["The notice or past-due bill","Proof of income","Lease or mortgage statement","ID"],
+      where:"Apply online at mass.gov (search 'RAFT'), or call Massachusetts 2-1-1 (dial 211, or 877-211-6277) for help finding the regional agency."});
+  }
+
+  // 44. Lowering the Medicare income surcharge (IRMAA) after a big income drop (batch 2). ssa.gov: higher Part B/D premiums apply when MAGI
+  // is "greater than $109,000" (single) / "$218,000" (joint); a new decision can be made if "You married or divorced, or your spouse died",
+  // "You or your spouse stopped working or reduced your work hours" ...; "you may also use Form SSA-44 to request a reduction".
+  if(A.incomeDrop==="yes" && A.medicare==="yes" && inc < (A.marital==="married" && A.filing==="joint" ? 750000 : 500000)){
+    out.push({id:"irmaa",name:"Lower Medicare Premiums After an Income Drop (IRMAA)",status:"maybe",val:0,valTxt:"can remove a monthly surcharge",
+      why:"Medicare adds a surcharge to the Part B and drug-plan premiums when income from 2 years earlier was over $109,000 (over $218,000 for a married couple filing jointly). If they're paying that extra and their income has since dropped because they retired or cut back work, married or divorced, or a spouse died, Social Security can recalculate it using the lower, current income.",
+      form:"Form SSA-44 (Medicare Income-Related Monthly Adjustment Amount – Life-Changing Event).",forml:"https://www.ssa.gov/benefits/medicare/medicare-premiums.html",
+      docs:["The latest Medicare premium notice from Social Security","Proof of the change (retirement letter, death certificate, etc.)","An estimate of this year's income"],
+      where:"Send Form SSA-44 to Social Security, or call 1-800-772-1213."});
+  }
+
   // ---- Unknown-answer handling: a created card that depends on a skipped ("not sure") field becomes "verify — needs info" ----
   const DEP={
     cb:["filing","dependent","incomeSS","incomeOther","propTax","assessed","rent","subsidized","spouseAge"],
     ex41c:["incomeSS","incomeOther","assets","titling","maYears"],
     vet22:["vaDis"],
     aanda:["wartime"],
+    pcafc:["vaDis"],
     vapension:["wartime","incomeSS","incomeOther"],
     ssfa:["pubPension"],
     eaedc:["incomeSS","incomeOther","citizen"],
