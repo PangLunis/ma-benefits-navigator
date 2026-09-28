@@ -31,7 +31,7 @@ const Q = [
   {id:"name", type:"text", q:"Whose benefits are we checking?", hint:"Just a first name, so the results read clearly.", optional:true, noSkip:true},
   {id:"age", type:"number", q:n=>`How old is ${who(n)}?`, hint:"Age as of December 31 this year.", suffix:"years", noSkip:true},
   {id:"marital", type:"single", q:n=>`${whoC(n)} marital status?`, noSkip:true,
-    opts:[{v:"single",l:"Single"},{v:"married",l:"Married"},{v:"widowed",l:"Widowed"}]},
+    opts:[{v:"single",l:"Single"},{v:"married",l:"Married"},{v:"widowed",l:"Widowed"},{v:"divorced",l:"Divorced"}]},
   {id:"spouseAge", type:"number", q:"How old is their spouse?", hint:"Some credits only need ONE spouse to be 65 or older.", suffix:"years",
     showIf:a=>a.marital==="married"},
   {id:"filing", type:"single", q:n=>`How does ${who(n)} file taxes?`, hint:"This sets the income limit for the Circuit Breaker credit.",
@@ -62,6 +62,9 @@ const Q = [
     help:"The yearly Social Security total BEFORE the Medicare premium comes out — it's on the annual Social Security letter (Form SSA-1099). If you only know the monthly deposit, add about $203/month for Medicare Part B, then × 12. A rough number is fine."},
   {id:"incomeOther", type:"currency", period:"yr", q:n=>n.marital==="married"?"Other income — both spouses combined?":"Other income?", hint:"Everything except Social Security — pensions, wages, IRA withdrawals, interest. If married, include the spouse's income too, even if the spouse still works. Pick per month or per year.",
     help:"Add up pensions, any wages, IRA/401(k) withdrawals, interest & dividends, and rental income — everything EXCEPT Social Security. A close estimate is fine."},
+  {id:"pubPension", type:"single", q:n=>`Does ${who(n)} (or a spouse, living or late) get a pension from a government job that did NOT pay into Social Security?`, hint:"In Massachusetts this includes most public school teachers, and many police officers, firefighters, and city or state workers.",
+    help:"Answer Yes if the job paid into a public retirement system (like the Massachusetts Teachers' Retirement System) instead of Social Security — whether it's their own pension or a spouse's. A 2025 law ended the rules that used to cut Social Security for these families, so some are now owed money they never applied for.",
+    opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}], showIf:a=>Math.max(num(a.age), a.marital==="married"?num(a.spouseAge):0)>=55},
   {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Do NOT count the home or one car.",
     help:"Add up checking, savings, CDs, and investment/IRA accounts. Do NOT count the home they live in or one car. A ballpark is fine."},
   {id:"medExpenses", type:"currency", q:"Yearly out-of-pocket medical costs?", hint:"A rough estimate is fine. Enter 0 if unsure.", optional:true,
@@ -131,7 +134,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   if(up) up.onclick=()=>{ tIdx=Math.min(2,tIdx+1); applyTextSize(); };
   if(dn) dn.onclick=()=>{ tIdx=Math.max(0,tIdx-1); applyTextSize(); };
 });
-function qLabel(id){ const m={spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
+function qLabel(id){ const m={pubPension:"whether there's a government pension that didn't pay into Social Security",spouseAge:"spouse's age",hhSize:"household size",hhOtherInc:"other household income",maYears:"years living in Massachusetts",vetService:"where they served",healthCov:"current health coverage",filing:"tax filing status",dependent:"dependent status",incomeSS:"Social Security income",incomeOther:"other income",propTax:"property tax amount",assessed:"home assessed value",rent:"monthly rent",subsidized:"subsidized-housing status",assets:"savings/assets",titling:"how the home is titled",vaDis:"VA disability rating",wartime:"wartime-service status",citizen:"citizenship status"}; return m[id]||id; }
 
 /* ---------- State ---------- */
 let A = {};           // answers
@@ -145,7 +148,7 @@ function visible(){ return Q.filter(q=>!q.showIf || q.showIf(A)); }
    results page). Every question is listed with a dot — green when answered,
    amber "?" when marked not sure, empty when not answered yet — and any item
    can be tapped to jump straight to it. ---------- */
-const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",already:"Already getting",working:"Still working"};
+const NAV = {name:"Name",age:"Age",marital:"Marital status",spouseAge:"Spouse's age",filing:"Tax filing",dependent:"Claimed as a dependent?",citizen:"Citizenship",housing:"Own or rent",town:"City or town",hhSize:"People in the home",hhOtherInc:"Others' income",ownYears:"Years owned",maYears:"10+ years in MA",titling:"How the home is titled",incomeSS:"Social Security",incomeOther:"Other income",pubPension:"Government pension (no Social Security)",assets:"Savings",medExpenses:"Medical costs",propTax:"Property tax",assessed:"Assessed value",rent:"Monthly rent",subsidized:"Subsidized housing?",veteran:"Military service",vetService:"Where they served",vaDis:"VA rating",wartime:"Wartime service",disability:"Disability",blind:"Legally blind",medicare:"Medicare",healthCov:"Health coverage",adl:"Help with daily activities",already:"Already getting",working:"Still working"};
 let editMode = false;   // true when the person jumped back from the results page
 function ansState(q){
   const v=A[q.id];
@@ -366,12 +369,17 @@ function heatSheet(t, ag, hh, homeInc){
   if(!hhText){
     const lines=[];
     const mine=(num(A.incomeSS)+num(A.incomeOther))/12;
-    if(A.marital==="married"){
+    const incKnown = !isUnknown("incomeSS") && !isUnknown("incomeOther");   // (fixed 2026-09-27: "not sure" printed as $0)
+    if(!incKnown){
+      lines.push(`${PK.fullName||A.name||"Applicant"}${PK.dob?", born "+d(PK.dob):""} — monthly income: ______ (fill in — it wasn't answered)`);
+      if(A.marital==="married") lines.push(`${PK.spouseName||"Spouse"}${PK.spouseDob?", born "+d(PK.spouseDob):""} — monthly income: ______`);
+    } else if(A.marital==="married"){
       const sp=num(PK.spouseSS)+num(PK.spouseOther), you=Math.max(0,num(A.incomeSS)+num(A.incomeOther)-sp);
       lines.push(`${PK.fullName||A.name||"Applicant"}${PK.dob?", born "+d(PK.dob):""} — about ${money((sp?you:num(A.incomeSS)+num(A.incomeOther))/12)}/month${sp?"":" (couple, combined)"}`);
       lines.push(`${PK.spouseName||"Spouse"}${PK.spouseDob?", born "+d(PK.spouseDob):""}${sp?` — about ${money(sp/12)}/month`:""}`);
     } else lines.push(`${PK.fullName||A.name||"Applicant"}${PK.dob?", born "+d(PK.dob):""} — about ${money(mine)}/month`);
-    if(num(A.hhOtherInc)>0) lines.push(`Others in the home — about ${money(num(A.hhOtherInc)/12)}/month combined (list each person)`);
+    if(isUnknown("hhOtherInc")) lines.push(`Others in the home — monthly income: ______ (fill in for each person)`);
+    else if(num(A.hhOtherInc)>0) lines.push(`Others in the home — about ${money(num(A.hhOtherInc)/12)}/month combined (list each person)`);
     hhText=lines.join("\n");
   }
   const fuel=["","Oil","Natural gas","Electricity","Propane","Kerosene","Wood or coal","Heat is included in my rent"];
@@ -385,7 +393,7 @@ function heatSheet(t, ag, hh, homeInc){
     <label class="pk-ta">Everyone who lives in the home: name, birth date, monthly income<textarea data-pk="heatHousehold" rows="4">${String(hhText).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</textarea></label>
     <table class="pk-tab">
       <tr><td>People in the household</td><td>${hh}</td></tr>
-      <tr><td>Household income for the year (estimate)</td><td>${homeInc?money(homeInc):"—"}</td></tr>
+      <tr><td>Household income for the year (estimate)</td><td>${(homeInc && !isUnknown("incomeSS") && !isUnknown("incomeOther") && !isUnknown("hhOtherInc"))?money(homeInc):"— (fill in)"}</td></tr>
     </table>
     <p><b>Bring:</b> photo ID · this list of everyone in the home · the heating and electric bills · your lease or mortgage statement · proof of the last 30 days of income (Social Security or pension letter, pay stubs).</p>
     <p>The same application also covers free weatherization and heating-system repair. It's free — nobody legitimate charges an application fee. <a href="fuel-assistance.html" target="_blank" rel="noopener">Heating help guide →</a></p>
@@ -819,9 +827,15 @@ const FPL = {1:15960, 2:21640};                 // 2026 HHS poverty guidelines (
 const FPL135 = {1:21546, 2:29214};              // 135% of 2026 FPL — Lifeline income gate (usac.org)
 const PARTB = 202.90;                           // 2026 standard Part B premium / month (CMS)
 const SSI_FBR = {1:994, 2:1491};                // 2026 SSI federal benefit rate / month (ssa.gov)
+const SSI_SSP = {1:1122.82, 2:1692.72};         // 2026 SSI + MA State Supplement, aged, living independently (SLA A): $994+$128.82; couple $846.36 x 2 (mass.gov CY2026 payment levels PDF)
+const VA_MAPR = {vet1:17441, vet2:22839, spouse:11699}; // VA basic pension MAPR (no Housebound/A&A), eff. 12/1/2025 (va.gov pension + survivors pension rates)
+const EAEDC_INC = {1:441.10, 2:573.90};          // EAEDC gross monthly income limit, living alone / with spouse, with shelter costs (mass.gov EAEDC page)
 const VA_NETWORTH = 163699;                     // VA pension net-worth limit, 12/1/2025–11/30/2026 (va.gov)
 const VA_MAPR_AA = {vet1:29093, vet2:34488, spouse:18697}; // VA pension MAPR with Aid & Attendance, eff. 12/1/2025 (va.gov)
-const SNAP_MAX1 = 306;                          // SNAP max allotment, 1 person, from Oct 1 2026 (USDA FY2027 COLA)
+const SNAP_MAX1 = 306;
+const SNAP_STD = {1:217,2:217,3:217,4:229,5:268,6:308};   // FY2027 standard deduction / month (mass.gov, 106 CMR 364.400)
+const SNAP_SUA = 945;                           // FY2027 heating standard utility allowance / month (mass.gov, 106 CMR 364.945)
+const SNAP_ASSET_ELDERLY = 4750;                // FY2027 asset limit, elderly/disabled households NOT categorically eligible (106 CMR 363.110)                          // SNAP max allotment, 1 person, from Oct 1 2026 (USDA FY2027 COLA)
 const PA_OPEN = false;                          // Prescription Advantage: no new applications after Sept 11, 2026 (mass.gov)
 
 function hhSize(){ return A.marital==="married"?2:1; }   // the person (+ spouse): used for MSP, SSI, SNAP, VA
@@ -851,25 +865,32 @@ function programs(){
     if(A.dependent==="unsure"){ out.push(cb("maybe","Eligible only if NOT claimed as a dependent by anyone — confirm this first.")); return; }
     if(A.filing==="mfs"){ out.push(cb("no","Married filing separately can't claim it — a married couple must file jointly.")); return; }
     const cap = (A.filing==="none" && A.marital==="married") ? CB_INC.joint : (CB_INC[A.filing] || CB_INC.single); // married non-filers must file jointly to claim
-    if(inc>cap){ out.push(cb("no",`Total income ~${money(inc)} is over the $${cap.toLocaleString()} limit for this filing status.`)); return; }
+    // Schedule CB line 9 "Qualifying income" = total income (incl. all Social Security) minus line 8 = the Form 1 exemptions:
+    // $700 for each person 65+, $2,200 if legally blind. (Fixed 2026-09-27: the independent answer key caught that we skipped this.)
+    const cbJoint = A.marital==="married" && (A.filing==="joint" || A.filing==="none");
+    const cbEx = (age>=65?700:0) + (cbJoint && spouseAge>=65?700:0) + (A.blind==="yes"?2200:0);
+    const cinc = Math.max(0, inc - cbEx);
+    if(cinc>cap){ out.push(cb("no",`Qualifying income ~${money(cinc)} (total income minus the $700 age-65${A.blind==="yes"?" and $2,200 blindness":""} exemption${cbEx>700?"s":""}) is over the $${cap.toLocaleString()} limit for this filing status.`)); return; }
     let status="maybe", why="";
     if(owner){
       const tax=num(A.propTax);
-      const burden = tax > 0.10*inc;
+      const burden = tax > 0.10*cinc;
       if(A.assessed && num(A.assessed)>CB_ASSESS){ out.push(cb("no",`Home assessed over the $${CB_ASSESS.toLocaleString()} value ceiling.`)); return; }
       const assessedKnown = A.assessed && num(A.assessed)>0;
       if(burden && assessedKnown){ status="likely"; why=`Property tax (${money(tax)}) tops 10% of income and the home is under the value ceiling — strong match. (50% of water/sewer also counts toward the test.)`; }
       else if(burden && !assessedKnown){ status="maybe"; why=`Property tax tops 10% of income — likely, but you MUST confirm the home is assessed under $${CB_ASSESS.toLocaleString()} (hard cutoff).`; }
-      else { status="maybe"; why=`Income qualifies; confirm property tax + 50% of water/sewer exceeds 10% of income (${money(0.10*inc)}).`; }
+      else if(A.propTax!=null && A.propTax!=="unknown" && tax + 1500 <= 0.10*cinc){ out.push(cb("no",`Property tax (${money(tax)}) plus even a large water/sewer bill stays under 10% of income (${money(0.10*cinc)}), so the credit works out to $0.`)); return; }
+      else { status="maybe"; why=`Income qualifies; confirm property tax + 50% of water/sewer exceeds 10% of income (${money(0.10*cinc)}).`; }
     } else if(renter){
       if(A.subsidized==="yes"){ out.push(cb("no","Renters in public/subsidized/tax-exempt housing can't claim it — no property tax is paid on the unit.")); return; }
-      const rentYr=num(A.rent)*12; const burden = (0.25*rentYr) > 0.10*inc;
+      const rentYr=num(A.rent)*12; const burden = (0.25*rentYr) > 0.10*cinc;
+      if(!burden && A.rent!=null && A.rent!=="unknown" && A.subsidized!=="unsure"){ out.push(cb("no",`For renters the credit is 25% of rent (${money(0.25*rentYr)}) minus 10% of income (${money(0.10*cinc)}) — that works out to $0 here.`)); return; }
       status = burden?(A.subsidized==="unsure"?"maybe":"likely"):"maybe";
-      why = burden?`25% of rent (${money(0.25*rentYr)}) tops 10% of income — qualifies as a renter${A.subsidized==="unsure"?" (confirm the unit isn't subsidized/tax-exempt).":"."}`:`Income qualifies; 25% of rent must top 10% of income (${money(0.10*inc)}).`;
-    } else { out.push(cb("maybe","Income qualifies, but the Circuit Breaker needs you to own or rent your principal MA home.")); return; }
+      why = burden?`25% of rent (${money(0.25*rentYr)}) tops 10% of income — qualifies as a renter${A.subsidized==="unsure"?" (confirm the unit isn't subsidized/tax-exempt).":"."}`:`Income qualifies; 25% of rent must top 10% of income (${money(0.10*cinc)}).`;
+    } else { out.push(cb("no","Income qualifies, but the Circuit Breaker is a refund of property tax or rent actually paid on a Massachusetts home they own or rent. If they pay rent to family, answer \"rent\" instead.")); return; }
     // Estimated credit, not the maximum: owners = tax (+ half of water/sewer, not asked) − 10% of income; renters = 25% of rent − 10% of income. Capped at CB_MAX.
     let est = 0;
-    if(owner){ est = num(A.propTax) - 0.10*inc; } else if(renter){ est = 0.25*num(A.rent)*12 - 0.10*inc; }
+    if(owner){ est = num(A.propTax) - 0.10*cinc; } else if(renter){ est = 0.25*num(A.rent)*12 - 0.10*cinc; }
     est = Math.max(0, Math.min(CB_MAX, Math.round(est)));
     if(status==="likely" && est<=0) status="maybe";
     cbEst = est;
@@ -947,8 +968,11 @@ function programs(){
 
   // 6. Fuel Assistance / LIHEAP
   (()=>{
-    if(A.housing==="family"){ out.push(fa("maybe","May still qualify if responsible for any heat/utility costs.")); return;}
     const lim = HEAP_SMI60[homeHH]||HEAP_SMI60[10];
+    if(A.housing==="family"){   // the application counts everyone in the home (2026-09-27: was "maybe" at any income)
+      if(homeInc>lim){ out.push(fa("no",`Everyone in the home counts: household income (~${money(homeInc)}) is above the ~${money(lim)} limit for ${homeHH} people.`)); return; }
+      out.push(fa("maybe",`Household income is under the ~${money(lim)} limit for ${homeHH} people — the household applies together, for the home's heating costs.`)); return;
+    }
     const s = homeInc<=lim?"likely":"no";   // no eligibility above 60% of state median income
     out.push(fa(s, s==="no"?`Household income (~${money(homeInc)}) is above the ~${money(lim)} limit for a household of ${homeHH} (60% of state median income).`:`Household income under the ~${money(lim)} limit for a household of ${homeHH} — heating help. Renters qualify even if heat is included in rent.`));
     function fa(s,w){return {id:"liheap",name:"Fuel Assistance (HEAP)",status:s,val:s==="no"?0:400,valTxt:s==="no"?"—":"~$200–$600+/winter (depends on funding)",why:w,
@@ -962,9 +986,20 @@ function programs(){
     const lim=SNAP200[hh]||SNAP200[2];
     const sixty = olderAge>=60 || disabled;
     let s = inc<=lim?"likely":(sixty?"maybe":"no");
-    let w;
+    let w, netMo = null;
+    if(inc>lim && sixty){   // regular rules: net income test only (7 CFR 273.9), shelter deduction uncapped for 60+/disabled
+      const g = inc/12, std = SNAP_STD[Math.min(hh,6)]||217;
+      const medD = Math.max(0, med/12 - 35);
+      const adj = Math.max(0, g - std - medD);
+      const shelter = (renter ? num(A.rent) : owner ? num(A.propTax)/12 : 0) + ((renter||owner) ? SNAP_SUA : 0);
+      netMo = Math.max(0, adj - Math.max(0, shelter - 0.5*adj));
+      const netLim = fplFor(hh)/12;
+      const assetsKnown = A.assets!=null && A.assets!=="" && A.assets!=="unknown";
+      if(netMo > netLim*1.10 || (assetsKnown && assets > SNAP_ASSET_ELDERLY)) s="no";
+    }
     if(inc<=lim){ w = sixty ? `Under the ~${money(lim)} gross limit for a household of ${hh}. Age 60+ (or disabled) also gets extra deductions for medical costs and high housing costs.${med>0?` Their ~${money(med)}/yr medical costs help via that deduction.`:""}` : `Under the ~${money(lim)} gross limit for a household of ${hh}.`; }
-    else if(sixty){ w = `Over the ~${money(lim)} gross limit, but households with someone 60+ or disabled can still qualify under the regular rules if medical and housing costs are high — worth a check.`; }
+    else if(sixty && s!=="no"){ w = `Over the ~${money(lim)} gross limit, but households with someone 60+ or disabled are judged on NET income: after the medical (over $35/mo) and housing deductions it comes to roughly ${money(netMo)}/mo against a ~${money(fplFor(hh)/12)}/mo limit — worth a check (savings must be under $${SNAP_ASSET_ELDERLY.toLocaleString()}).`; }
+    else if(sixty){ w = `Over the ~${money(lim)} gross limit, and even after the medical and housing deductions seniors get, net income (~${money(netMo)}/mo) is over the ~${money(fplFor(hh)/12)}/mo limit${(A.assets!=null && assets>SNAP_ASSET_ELDERLY)?` (savings are also over the $${SNAP_ASSET_ELDERLY.toLocaleString()} limit)`:""}.`; }
     else { w = `Income above ~${money(lim)} for a household of ${hh}.`; }
     if(s!=="no" && age>=55 && age<65 && !disabled && A.working!=="yes"){ w += " Note: adults 55–64 without a disability may face SNAP work rules and time limits — ask DTA."; }
     if(!citizenOK()){ s="no"; w="SNAP needs U.S. citizen or qualified-immigrant status — verify before applying."; }
@@ -980,7 +1015,7 @@ function programs(){
   if(A.medicare==="yes"){
     const lim=MSP_INC[hh]||MSP_INC[2];
     const qmb = MSP_QMB[hh]||MSP_QMB[2];
-    let s = inc<=lim?"likely":(inc<=lim*1.05?"maybe":"no");   // "maybe" only right at the line
+    let s = inc<=lim?"likely":(inc<=lim+240?"maybe":"no");   // "maybe" only within the $20/mo general income disregard of the line
     let mw = s==="no"?`Income above the ~${money(lim)} limit (225% of poverty) for a household of ${hh}; a free SHINE counselor can double-check.`:`Massachusetts covers incomes up to ~${money(lim)} for a household of ${hh} with NO asset test — it pays the Part B premium (~$${Math.round(PARTB)}/mo).${inc<=qmb?` At this income (under ~${money(qmb)}) the QMB level can also cover Medicare deductibles and coinsurance.`:""} High-value, often missed.${citizenNote()}`;
     if(!citizenOK()){ s="no"; mw="Needs U.S. citizen or qualified-immigrant status — verify."; }
     out.push({id:"msp",name:"Medicare Savings Program (pays Part B)",status:s,val:s==="no"?0:Math.round(PARTB*12),valTxt:s==="no"?"—":`~${money(PARTB*12)}+/yr`,
@@ -1002,7 +1037,8 @@ function programs(){
     const wt = A.wartime==="yes";
     const mapr = A.veteran==="spouse" ? VA_MAPR_AA.spouse : (A.marital==="married" ? VA_MAPR_AA.vet2 : VA_MAPR_AA.vet1);
     // VA pays MAPR minus countable income; unreimbursed medical costs above 5% of MAPR are deducted from income. Net worth = assets + annual income.
-    const medDed = Math.max(0, med - 0.05*mapr);
+    const baseMapr = A.veteran==="spouse" ? VA_MAPR.spouse : (A.marital==="married" ? VA_MAPR.vet2 : VA_MAPR.vet1);
+    const medDed = Math.max(0, med - 0.05*baseMapr);   // va.gov: deduct only medical costs above 5% of the BASIC MAPR ($872 / $1,141 / $584)
     const est = Math.max(0, Math.round(mapr - Math.max(0, inc - medDed)));
     const nw = assets + inc;
     const nwKnown = A.assets!=null && A.assets!=="" && A.assets!=="unknown";
@@ -1019,22 +1055,63 @@ function programs(){
       where:"File with the VA; a free accredited VSO (Veterans Service Officer) or the town Veterans' Agent can do this with you — never pay someone to file it."});
   }
 
+  // 9b. VA Veterans Pension / Survivors Pension WITHOUT Aid & Attendance (added 2026-09-27, gap audit #2).
+  // Basic pension needs no care need: veteran 65+ (or permanently disabled); a surviving spouse who hasn't remarried has no age test.
+  // MAPR minus countable income; medical costs (incl. Medicare premiums) above 5% of MAPR are deducted. va.gov pension/survivors rates, eff. 12/1/2025.
+  if((A.veteran==="vet"||A.veteran==="spouse") && A.adl!=="yes" && A.wartime!=="no" && (A.veteran==="spouse" || age>=65 || disabled)){
+    const wt = A.wartime==="yes", sp = A.veteran==="spouse";
+    const mapr = sp ? VA_MAPR.spouse : (A.marital==="married" ? VA_MAPR.vet2 : VA_MAPR.vet1);
+    const medDed = Math.max(0, med - 0.05*mapr);
+    const countable = Math.max(0, inc - medDed);
+    const est = Math.max(0, Math.round(mapr - countable));
+    const nw = assets + inc;
+    const nwKnown = A.assets!=null && A.assets!=="" && A.assets!=="unknown";
+    const who2 = sp ? "surviving spouse of a wartime veteran" : "wartime veteran";
+    let st, why;
+    if(nwKnown && nw > VA_NETWORTH){ st="no"; why=`VA's net-worth limit is $${VA_NETWORTH.toLocaleString()} (savings + a year of income); this household is at ~${money(nw)}.`; }
+    else if(est<=0){ st="no"; why=`Countable income (~${money(countable)}) is above the ~${money(mapr)}/yr pension limit. Medical costs — including Medicare premiums and other health insurance — are subtracted from income, so if those are higher than you entered, check again.`; }
+    else if(!wt){ st="maybe"; why=`Could pay up to ~${money(est)}/yr IF the service included a wartime period (usually 90 days of active duty with at least 1 day in wartime) — confirm the dates on the DD-214.`; }
+    else { st="likely"; why=`A ${who2} with income under the VA pension limit. VA pays the gap between countable income and ~${money(mapr)}/yr — about ${money(est)}/yr here. No need for help with daily activities; that's only for the larger Aid & Attendance rate.${sp?" The surviving spouse must not have remarried.":""}`; }
+    out.push({id:"vapension",name: sp ? "VA Survivors Pension" : "VA Veterans Pension",status:st,val:(st==="likely")?est:0,
+      valTxt: st==="no"?"—":`~${money(est)}/yr (limit ${money(mapr)})`,
+      why: why,
+      form: sp ? "VA Form 21P-534EZ (survivors pension)." : "VA Form 21P-527EZ (veterans pension).",forml: sp ? "https://www.va.gov/pension/survivors-pension/" : "https://www.va.gov/pension/eligibility/",
+      docs:["DD-214 (shows the service dates)","Income and net-worth statement","Medical and insurance costs, including Medicare premiums — they lower countable income"].concat(sp?["Marriage certificate and the veteran's death certificate"]:[]),
+      where:"File with the VA; a free accredited Veterans Service Officer or the town Veterans' Agent can do it with you — never pay someone to file."});
+  }
+
   // 10. Social Security review (informational)
   {
     const tips=[];
     if(num(A.age)<70 && A.working==="no") tips.push("delaying claiming raises the monthly check ~8%/yr until 70");
     if(A.marital==="married") tips.push("a spousal benefit can be worth up to 50% of the higher earner's");
     if(A.marital==="widowed") tips.push("survivor benefits may pay more than the current check — worth checking");
+    if(A.marital==="divorced") tips.push("if the marriage lasted at least 10 years, Social Security may pay benefits on the former spouse's record — ask about it");
     if(A.working==="yes" && num(A.age)<67) tips.push("the earnings test may be reducing the check while still working");
     out.push({id:"ss",name:"Social Security Review",status:"maybe",val:0,valTxt:"strategy",
       why: tips.length?("Worth a one-time look: "+tips.join("; ")+"."):"A one-time claiming/strategy review is usually worthwhile.",
       form:"Free review with a fee-only advisor or SSA.",forml:"https://www.ssa.gov/myaccount/",
-      docs:["my Social Security account statement","Spouse's earnings record (if married/widowed)"],
+      docs:["my Social Security account statement","Spouse's or former spouse's earnings record (if married, widowed or divorced)"],
       where:"Open a my Social Security account to see the actual numbers. NOTE: this is information, not financial advice — confirm with a licensed advisor before changing anything."});
   }
 
+  // 10b. Social Security Fairness Act (added 2026-09-27, gap audit #1). The Act (signed 1/5/2025) ended WEP and GPO. SSA:
+  // "If you never applied for retirement due to WEP or spouse's or surviving spouse's benefits because of GPO: You may need to file an application."
+  // Retroactivity is "generally limited to six months" — so every month of waiting costs money. ssa.gov/benefits/retirement/social-security-fairness-act.html
+  if((A.pubPension==="yes"||A.pubPension==="unknown") && (age>=62 || (A.marital==="widowed" && age>=60))){
+    const noSS = incSS<=0;
+    out.push({id:"ssfa",name:"Social Security You May Never Have Claimed (Fairness Act)",status: noSS?"likely":"maybe",val:0,valTxt:"monthly Social Security",
+      why:(noSS
+        ? "A government pension that didn't pay into Social Security used to shrink or wipe out Social Security — so many teachers, police, firefighters and public workers (and their husbands, wives and widows) never applied. A 2025 law ended those rules. With a pension like that and no Social Security coming in yet, it's worth applying now: their own retirement benefit if they ever worked a job that paid into Social Security, or a spouse's or widow's benefit on a husband's or wife's record."
+        : "A 2025 law ended the rules that cut Social Security for people with a government pension that didn't pay into it. Social Security raised checks it was already paying — but a spouse's or widow's benefit that was never applied for (because the old rules made it $0) has to be applied for now.")
+        +" Back pay generally only reaches 6 months before the month you apply, so don't wait.",
+      form:"Apply with Social Security.",forml:"https://www.ssa.gov/benefits/retirement/social-security-fairness-act.html",
+      docs:["Social Security number (and the spouse's or late spouse's)","The government pension statement","Marriage certificate (and death or divorce papers, if they apply)"],
+      where:"Call Social Security at 1-800-772-1213. Survivor (widow's) benefits can't be applied for online — it has to be by phone or at an office."});
+  }
+
   // 11. MassHealth — REFER, never advise
-  if(age>=65 && (A.adl==="yes" || assets<100000)){
+  if(age>=65 && A.adl==="yes"){   // 2026-09-27: was also shown to anyone 65+ with <$100k savings and no care need
     out.push({id:"masshealth",name:"MassHealth / Long-Term Care",status:"refer",val:0,valTxt:"see an attorney",
       why:"Potentially major help with care costs — BUT eligibility & asset planning is legal work (5-year lookback, estate recovery). Don't DIY.",
       form:"Handled by an elder-law attorney.",forml:"https://www.mass.gov/masshealth",
@@ -1045,19 +1122,21 @@ function programs(){
   // 12. SSI (very low income + STRICT asset limit; aged 65+ or disabled)
   const ssiAssetCap = A.marital==="married"?3000:2000;
   const ssiFbr = SSI_FBR[hh]||SSI_FBR[2];
-  const ssiIncScreen = ssiFbr*12 + 240;   // federal rate + the $20/mo general income exclusion
+  const ssiSsp = SSI_SSP[hh]||SSI_SSP[2];
+  const ssiIncScreen = ssiSsp*12 + 240;   // federal rate + MA State Supplement + the $20/mo general income exclusion (2026-09-27: was federal-only)
   if((age>=65 || disabled) && assets<=ssiAssetCap+1000 && inc<ssiIncScreen){
     const s = citizenOK()?"maybe":"no";
     out.push({id:"ssi",name:"Supplemental Security Income (SSI)",status:s,
-      val: s==="no"?0:6000, valTxt: s==="no"?"—":`up to ~$${ssiFbr.toLocaleString()}/mo`,
-      why: citizenOK()?`Income and assets look low enough to be worth a hard look. SSI has a STRICT countable-asset limit (~$${ssiAssetCap.toLocaleString()}) and pays up to ~$${ssiFbr.toLocaleString()}/mo federal (2026) + a small MA supplement. Confirm exact countable assets & income — these limits are unforgiving, so this is a "verify," not a sure thing.${A.citizen==="qualified"?" Green-card holders generally also need 40 work quarters (plus a 5-year wait if they arrived after 8/22/1996), or a veteran connection.":""}`:"SSI needs U.S. citizen or qualified-immigrant status.",
+      val: s==="no"?0:Math.round(12*Math.max(0, ssiSsp - Math.max(0, inc/12 - 20))),
+      valTxt: s==="no"?"—":`~${money(Math.max(0, ssiSsp - Math.max(0, inc/12 - 20)))}/mo (federal + MA supplement)`,
+      why: citizenOK()?`Income and assets look low enough to be worth a hard look. SSI has a STRICT countable-asset limit (~$${ssiAssetCap.toLocaleString()}) and pays up to ~$${ssiFbr.toLocaleString()}/mo federal (2026), and Massachusetts adds a State Supplement — ~${money(ssiSsp)}/mo in total for ${hh===2?"a couple":"someone"} living independently. Some people with income a bit too high for federal SSI still qualify for the state supplement alone. Confirm exact countable assets & income — these limits are unforgiving, so this is a "verify," not a sure thing.${A.citizen==="qualified"?" Green-card holders generally also need 40 work quarters (plus a 5-year wait if they arrived after 8/22/1996), or a veteran connection.":""}`:"SSI needs U.S. citizen or qualified-immigrant status.",
       form:"Apply with the Social Security Administration.",forml:"https://www.ssa.gov/ssi/",
       docs:["Bank statements (asset limit is strict — ~$2,000 single / $3,000 couple)","Proof of income","ID & citizenship/immigration docs"],
       where:"Apply at ssa.gov or 1-800-772-1213. SSI in MA usually opens MassHealth automatically."});
   }
 
   // 13. Chapter 115 MA veterans' benefits (need-based; separate from the Cl.22 exemption)
-  if((A.veteran==="vet"||A.veteran==="spouse") && inc < (hh===2?42300:31300)){
+  if((A.veteran==="vet"||A.veteran==="spouse") && inc <= 2*fplFor(hh)){   // 108 CMR 5: medical budget up to 200% of the current FPL
     out.push({id:"ch115",name:"MA Veterans' Benefits (Chapter 115)",status:"maybe",val:6000,valTxt:"need-based, can be substantial",
       why:"Need-based MA cash + medical benefit for low-income veterans and surviving spouses — separate from the property-tax exemption, and often missed. Income AND asset limits apply (roughly $31k single / $42k couple); medical-only help can apply a bit above that. The Veterans' Service Officer runs the exact budget.",
       form:"Through your city/town Veterans' Service Officer (VSO).",forml:"https://www.mass.gov/info-details/chapter-115-benefitssafety-net-program",
@@ -1066,7 +1145,7 @@ function programs(){
   }
 
   // 14. Property tax deferral Clause 41A (owner 65+) — the income-too-high fallback
-  if(owner && age>=65){
+  if(owner && age>=65 && inc<=CB_INC.single && A.maYears!=="no"){   // above the highest limit a town can adopt, no town can grant it
     out.push({id:"defer41a",name:"Property Tax Deferral (Clause 41A)",status:"maybe",val:0,valTxt:"defers up to 100% of the bill",
       why:"Lets a 65+ owner defer property tax, repaid (with interest up to 8%, or lower if the town sets it) when the home is sold or transferred; the total deferred plus interest is capped at 50% of your share of the home's value. The fallback when income is too high for the 41C exemption.",
       form:"State Tax Form 97 (town assessor) + a tax-deferral agreement.",forml:"https://www.mass.gov/info-details/ask-dls-property-tax-deferrals-for-qualifying-seniors",
@@ -1083,6 +1162,17 @@ function programs(){
       where:`Ask the ${A.town||"town"} Council on Aging or Assessor if they run a Senior Work-Off program and whether slots are open.`});
   }
 
+  // 15b. Clause 18 hardship exemption (added 2026-09-27, gap audit #9). Statewide, but DISCRETIONARY: assessors may excuse all or part
+  // of the tax for an owner who, by age, infirmity AND financial hardship, can't pay. State Tax Form 98 ("You must meet both age and
+  // infirmity requisites"); owned and occupied as of July 1; filed by April 1 or 3 months after actual bills are mailed, if later.
+  if(owner && age>=65 && (A.adl==="yes" || disabled || A.blind==="yes")){
+    out.push({id:"cl18",name:"Hardship Property-Tax Exemption (Clause 18)",status:"maybe",val:0,valTxt:"part or all of the tax bill, if approved",
+      why:"For an older homeowner with an illness or disability who is also struggling financially, the town's assessors can excuse part or all of the property tax. It's case by case — the board decides — so it's worth asking, especially if the regular senior exemptions aren't enough.",
+      form:"State Tax Form 98 (to the town assessors).",forml:"https://www.mass.gov/lists/property-tax-forms-and-guides",
+      docs:["Proof of age (birth certificate)","A doctor's description of the illness or disability","A picture of income, savings and monthly bills"],
+      where:`${A.town||"Town"} Assessor. File by April 1, or within 3 months after the actual (not preliminary) tax bills are mailed, if that's later — the deadline can't be extended.`});
+  }
+
   // 16. Prescription Advantage (MA pharmacy assistance; 65+ or disabled)
   if(age>=65 || disabled){
     out.push({id:"rxadv",name:"Prescription Advantage (MA)",status:PA_OPEN?"maybe":"no",val:0,valTxt:PA_OPEN?"lowers drug costs":"closed to new applicants",
@@ -1095,7 +1185,7 @@ function programs(){
   // 17. Utility low-income discount rate + arrearage forgiveness (income-eligible)
   if(A.housing!=="family"){
     const utilLim = HEAP_SMI60[homeHH]||HEAP_SMI60[10];
-    if(homeInc<=utilLim){
+    if(homeInc<=utilLim || A.subsidized==="yes"){
       out.push({id:"utildisc",name:"Utility Discount Rate",status:"likely",val:450,valTxt:"significant monthly discount",
         why:"Households at or under 60% of state median income (or on Fuel Assistance, SNAP, MassHealth, etc.) get a discounted electric & gas rate (tiered by income), plus arrearage-forgiveness if bills are past due. Separate from — and stackable with — Fuel Assistance.",
         form:"Enroll with the electric/gas utility (often automatic with Fuel Assistance/SNAP/MassHealth).",forml:"https://www.mass.gov/info-details/help-paying-your-utility-bill",
@@ -1128,6 +1218,20 @@ function programs(){
       docs:["Proof of income OR proof of SNAP/MassHealth/SSI enrollment","ID"],
       where:"Easiest path: once SNAP/MassHealth is approved, the carrier can enroll you automatically. One discount per household."});
   })();
+
+  // 20a. MassHealth Standard for 65+ living at home (added 2026-09-27; found by the independent answer key). mass.gov senior guide:
+  // Standard is for people "with income at or below 100% of the federal poverty level"; countable assets $2,000 single / $3,000 couple.
+  if(A.adl!=="yes" && age>=65 && !(A.already||[]).includes("masshealth") && A.healthCov!=="masshealth" && inc <= fplFor(hh)){
+    const assetsKnown = A.assets!=null && A.assets!=="" && A.assets!=="unknown";
+    const cap = hh===2 ? 3000 : 2000;
+    if(!assetsKnown || assets <= cap){
+      out.push({id:"mhcommunity",name:"MassHealth Standard (full health coverage)",status: assetsKnown?"likely":"maybe",val:0,valTxt:"full coverage + Medicare costs",
+        why:`With income under the poverty line (~${money(fplFor(hh))}/yr for ${hh===2?"a couple":"one person"}) and savings under $${cap.toLocaleString()}${assetsKnown?"":" (confirm savings)"}, a person 65+ can get MassHealth Standard on top of Medicare: it pays Medicare premiums and cost-sharing and adds coverage Medicare lacks, like dental and eyeglasses. It isn't long-term-care planning — no lawyer needed.`,
+        form:"MassHealth senior application (SACA-2) — this site can pre-fill it.",forml:"https://www.mass.gov/info-details/masshealth-coverage-types-for-individuals-and-families-including-people-with-disabilities",
+        docs:["Proof of income","Bank statements","Medicare card","ID and citizenship/immigration papers"],
+        where:"Mail or fax the SACA-2 to MassHealth (the mailing page lists the address), or get free help from a SHINE counselor at 1-800-243-4636."});
+    }
+  }
 
   // 20. Community MassHealth / Frail Elder (the FREE, no-lawyer, no-lookback path — distinct from LTC planning)
   if(A.adl==="yes" && (age>=65 || disabled)){
@@ -1205,6 +1309,43 @@ function programs(){
       where:"MAhealthconnector.org or 1-877-623-6765; free in-person help from Navigators."});
   }
 
+  // 23b. CHAMPVA (added 2026-09-27, catalog click-through #1). va.gov: spouse of a veteran "rated permanently and totally disabled from a
+  // service-connected disability", or surviving spouse of a veteran who "died from a service-connected disability" or was P&T-rated at death;
+  // not eligible if TRICARE-eligible; at Medicare age must have Parts A and B (or Medicare Advantage). "CHAMPVA is a cost-sharing program." Form 10-10d.
+  if(A.veteran==="spouse" || (A.veteran==="vet" && A.marital==="married" && A.vaDis==="full")){
+    const sp = A.veteran==="spouse";
+    out.push({id:"champva",name: sp ? "VA Health Coverage for a Veteran's Widow or Widower (CHAMPVA)" : "VA Health Coverage for the Veteran's Spouse (CHAMPVA)",status:"maybe",val:0,valTxt:"VA shares health costs",
+      why:(sp
+        ? "If the veteran died from a service-connected condition, or was rated permanently and totally disabled when they died, the surviving spouse can get CHAMPVA — the VA shares the cost of health care and supplies. It's separate from the monthly DIC payment."
+        : "Because the veteran's rating is 100%, their husband or wife may get CHAMPVA — VA health cost-sharing — IF the rating is permanent and total (the VA letter says so).")
+        +" Not available to anyone who can get TRICARE. At 65 or older, they need Medicare Part A and Part B (or a Medicare Advantage plan) to keep it.",
+      form:"VA Form 10-10d (Application for CHAMPVA Benefits).",forml:"https://www.va.gov/family-and-caregiver-benefits/health-and-disability/champva/",
+      docs:["The veteran's VA rating letter"+(sp?" and death certificate":""),"Marriage certificate","Medicare card (if 65 or older)"],
+      where:"Apply online at va.gov or by mail. A free Veterans Service Officer or the town Veterans' Agent can help."});
+  }
+
+  // 23c. VA-paid help at home (catalog click-through #2): Veteran-Directed Care ("given a budget ... hire their own workers", which "might
+  // include their own family member or neighbor") and Respite Care ("pays for care for a short time when family caregivers need a break").
+  // Both: "All enrolled Veterans are eligible ... if they meet the clinical criteria ... and it is available. Services vary by location."
+  if(A.veteran==="vet" && A.adl==="yes"){
+    out.push({id:"vahomecare",name:"VA-Paid Help at Home for the Veteran",status:"maybe",val:0,valTxt:"paid in-home help",
+      why:"Veterans enrolled in VA health care who need help with daily activities can get the VA to pay for care at home. Veteran-Directed Care gives a budget to hire their own helpers — which can include a family member or neighbor — and Respite Care pays for someone to come in (or for adult day health care) so a family caregiver can take a break. Services vary by location, and respite can carry a copay.",
+      form:"Ask the veteran's VA social worker or care team.",forml:"https://www.va.gov/GERIATRICS/pages/Veteran-Directed_Care.asp",
+      docs:["VA health care enrollment (apply at va.gov if not enrolled)","A list of the daily help needed"],
+      where:"The veteran's VA medical center social worker. Not enrolled in VA health care yet? A Veterans Service Officer can help with that first."});
+  }
+
+  // 23d. VA HISA home-change grant (catalog click-through #3). prosthetics.va.gov: lifetime $6,800 for a service-connected disability (or any
+  // disability if rated at least 50%); $2,000 otherwise. Needs a VA physician's prescription; excludes porch lifts, stair glides, routine repairs.
+  if(A.veteran==="vet" && (A.adl==="yes" || disabled)){
+    const hisaHi = A.vaDis==="partial" || A.vaDis==="full";
+    out.push({id:"hisa",name:"VA Grant for Home Changes (HISA)",status:"maybe",val:0,valTxt: hisaHi ? "up to $6,800 (lifetime)" : "up to $2,000 (lifetime)",
+      why:"A VA grant (not a loan) for medically needed changes to the veteran's home — getting in and out, a roll-in shower, lower counters and sinks, permanent ramps. It's $6,800 over a lifetime for a service-connected disability (or for any disability if the rating is at least 50%), and $2,000 for other disabilities. It doesn't cover porch lifts, stair glides or routine repairs.",
+      form:"HISA application with a prescription from a VA doctor.",forml:"https://www.prosthetics.va.gov/psas/HISA2.asp",
+      docs:["A prescription from a VA doctor for the change","A written, itemized contractor estimate","A color photo of the area to be changed","Renters: a signed, notarized OK from the owner"],
+      where:"Ask the VA doctor, or the Prosthetic and Sensory Aids Service at the local VA medical center."});
+  }
+
   // 26. State Home Care Program (ASAP) — 60+, NOT MassHealth; income sets the co-pay, not eligibility
   if(A.adl==="yes" && (age>=60 || disabled)){
     const low = inc < 35784;
@@ -1238,6 +1379,25 @@ function programs(){
       where:"MassOptions 800-243-4636."});
   }
 
+  // 28a. REquipment (catalog click-through #4). dmereuse.org: "Find free, gently used, durable home medical equipment and assistive
+  // technology ... delivered to people of all ages throughout Massachusetts. No prescription necessary." Call 1-800-261-9841.
+  if(A.adl==="yes" || disabled || A.blind==="yes"){
+    out.push({id:"requip",name:"Free Medical Equipment (REquipment)",status:"likely",val:0,valTxt:"free, gently used",
+      why:"Anyone in Massachusetts can get free, cleaned and refurbished home medical equipment — wheelchairs, walkers, shower chairs, big-button phones and more. No prescription is needed. Handy for things Medicare doesn't cover, like shower chairs. There may be a fee for delivery or pickup.",
+      form:"Search the inventory online or call.",forml:"https://dmereuse.org/",
+      docs:["None — just what's needed"],
+      where:"REquipment: dmereuse.org or 1-800-261-9841."});
+  }
+
+  // 28b. Community group meals (added 2026-09-27, gap audit #20) — any adult 60+, no income limit, 325+ sites (mass.gov Senior Nutrition Program)
+  if(age>=60){
+    out.push({id:"commmeals",name:"Free or Low-Cost Community Meals (60+)",status:"likely",val:0,valTxt:"hot meals + company",
+      why:"Any adult 60 or older can eat community meals at senior centers, Councils on Aging, senior housing and other sites — more than 325 locations in Massachusetts, with no income limit. A spouse can come too.",
+      form:"Just call to reserve a seat.",forml:"https://www.mass.gov/info-details/senior-nutrition-program",
+      docs:["None"],
+      where:`Ask the ${A.town||"town"} Council on Aging, or call MassOptions at 1-800-243-4636.`});
+  }
+
   // 29. Medicare plan check-up (annual open enrollment) — dates/cap from Medicare & You 2027; Medigap rule 211 CMR 71.10 (medical factsheet §4)
   if(A.medicare==="yes"){
     out.push({id:"medicareoe",name:"Medicare Plan Check-Up (Oct 15 – Dec 7)",status:"maybe",val:0,valTxt:"often lowers drug & plan costs",
@@ -1248,17 +1408,17 @@ function programs(){
   }
 
   // 30. Unclaimed property — everyone
-  out.push({id:"unclaimed",name:"Unclaimed Money Held by the State",status:"maybe",val:0,valTxt:"one in ten people have some",
-    why:"The State Treasurer holds billions of dollars in unclaimed property — old bank accounts, uncashed checks, insurance. Especially worth a search for widows and widowers (a late spouse's accounts).",
+  out.push({id:"unclaimed",name:"Unclaimed Money: the State, Old Pensions & Life Insurance",status:"maybe",val:0,valTxt:"one in ten people have some",
+    why:"There's no single place to look for money you're owed, so check each of these (all free): the Massachusetts Treasurer holds old bank accounts, uncashed checks and insurance payouts; every other state you've lived in has its own list; the federal PBGC holds pensions from company plans that ended; the Labor Department's Lost and Found finds old 401(k)s and pensions; and the free NAIC Life Insurance Policy Locator finds a late relative's life insurance policies."+(A.marital==="widowed"?" For a widow or widower, the life-insurance search and the late spouse's old accounts are especially worth it.":""),
     form:"Free search and claim at FindMassMoney.gov.",forml:"https://www.mass.gov/how-to/find-unclaimed-property",
-    docs:["ID","Proof of past address, if asked"],
-    where:"Search online at findmassmoney.gov, or call (617) 367-0400. It's free — never pay a 'finder' to claim it."});
+    docs:["ID","Past addresses and old employers","For a late relative: the death certificate"],
+    where:"Massachusetts: findmassmoney.gov or (617) 367-0400. Old company pensions: pbgc.gov (\"Find unclaimed retirement benefits\") or 1-800-400-7242. Old 401(k)s and pensions: lostandfound.dol.gov (needs a Login.gov account). Life insurance: the NAIC Life Insurance Policy Locator at naic.org. All free — never pay a \"finder\" to claim it."});
 
   // 31. For the family member who claims them as a dependent: MA Child and Family Tax Credit
   if(A.dependent==="yes" && age>=65){
     out.push({id:"cftc",name:"For the Family Member Who Claims Them: MA Child & Family Tax Credit",status:"likely",val:0,valTxt:"$440/yr (refundable, to the caregiver)",
-      why:"Whoever claims them as a dependent can get the Massachusetts Child and Family Tax Credit — $440 per dependent aged 65+, refundable. Trade-off: while they're claimed as a dependent, THEY can't get the Circuit Breaker (up to $2,820). If their property tax or rent is high, the Circuit Breaker may be worth more — compare both.",
-      form:"Claimed on the family member's MA Form 1.",forml:"https://www.mass.gov/info-details/massachusetts-child-and-family-tax-credit",
+      why:"Whoever claims them as a dependent can get the Massachusetts Child and Family Tax Credit — $440 per dependent aged 65+, refundable. Trade-off: while they're claimed as a dependent, THEY can't get the Circuit Breaker (up to $2,820). If their property tax or rent is high, the Circuit Breaker may be worth more — compare both. On the federal return, the same family member may also get the $500 Credit for Other Dependents (it lowers tax owed but isn't refunded), and if they pay for care so they can work, the Child and Dependent Care Credit can apply when the parent can't care for themselves and lives with them more than half the year.",
+      form:"Claimed on the family member's MA Form 1 (and federal Form 1040).",forml:"https://www.mass.gov/info-details/massachusetts-child-and-family-tax-credit",
       docs:["The dependent's information on the family member's return"],
       where:"On the family member's own Massachusetts tax return."});
   }
@@ -1267,10 +1427,10 @@ function programs(){
   // ================= Batch 2 (2026-09-25, from the coverage review; each fact verified on the cited page) =================
 
   // 32. Senior public housing / vouchers — renters with a heavy rent burden
-  if(renter && A.subsidized!=="yes" && (olderAge>=60 || disabled) && num(A.rent)>0 && inc>0 && (num(A.rent)*12)/inc > 0.30){
-    const burden = Math.round(100*num(A.rent)*12/inc);
+  if(renter && A.subsidized!=="yes" && (olderAge>=60 || disabled) && num(A.rent)>0 && (inc<=0 || (num(A.rent)*12)/inc > 0.30)){
+    const burden = inc>0 ? Math.round(100*num(A.rent)*12/inc) : 100;
     out.push({id:"housing",name:"Senior Public Housing & Rental Vouchers",status:"maybe",val:0,valTxt:"rent at about 30% of income",
-      why:`Rent takes about ${burden}% of income. Massachusetts public housing for older adults and people with disabilities, and MRVP rental vouchers (income up to 80% of area median), generally set rent at about 30% of income. Waiting lists are long, so getting on them NOW matters. Note: the state's Section 8 mobile-voucher waiting list has been closed since January 13, 2025 — public housing (through CHAMP) and MRVP are the open paths; some local housing authorities keep their own lists.`,
+      why:`${inc>0?`Rent takes about ${burden}% of income.`:"With no income reported, rent is the whole burden."} Massachusetts public housing for older adults and people with disabilities, and MRVP rental vouchers (income up to 80% of area median), generally set rent at about 30% of income. Waiting lists are long, so getting on them NOW matters. Note: the state's Section 8 mobile-voucher waiting list has been closed since January 13, 2025 — public housing (through CHAMP) and MRVP are the open paths; some local housing authorities keep their own lists.`,
       form:"One online application (CHAMP) covers most state public housing; MRVP through local housing agencies.",forml:"https://www.mass.gov/how-to/apply-for-state-funded-public-housing",
       docs:["Proof of income","ID","Current lease"],
       where:"Apply online through CHAMP and pick the towns you'd accept. A local housing authority can help with the application."});
@@ -1302,10 +1462,12 @@ function programs(){
   // 35. Senior food extras: farmers-market coupons (SFMNP) + CSFP food boxes
   if(olderAge>=60){
     const SFMNP={1:29526,2:40034};   // Jul 1 2026 – Jun 30 2027, mass.gov
-    const sf = SFMNP[hh]||SFMNP[2], csfp = Math.round(1.5*fplFor(hh));
-    if(inc<=sf){
+    // These count the whole HOUSEHOLD (everyone who lives and eats together), not just the person + spouse.
+    const fh = homeHH, finc = homeInc;
+    const sf = SFMNP[fh]||Math.round(1.85*fplFor(fh)), csfp = Math.round(1.5*fplFor(fh));
+    if(finc<=sf){
       out.push({id:"seniorfood",name:"Senior Food Extras (Farmers-Market Coupons, Food Boxes)",status:"maybe",val:0,valTxt:"free produce + monthly food box",
-        why:`Adults 60+ under ~${money(sf)} (household of ${hh}) can get Senior Farmers Market coupons each summer while the season's supply lasts.${inc<=csfp?` At this income (under ~${money(csfp)}), the federal senior food box program (CSFP) is also available — a free monthly box of groceries through local food banks and Councils on Aging.`:""}`,
+        why:`Adults 60+ under ~${money(sf)} (household of ${fh}) can get Senior Farmers Market coupons each summer while the season's supply lasts.${finc<=csfp?` At this income (under ~${money(csfp)}), the federal senior food box program (CSFP) is also available — a free monthly box of groceries through local food banks and Councils on Aging.`:""}`,
         form:"Coupons: apply through the state program. Food box: through the local food bank or Council on Aging.",forml:"https://www.mass.gov/info-details/applying-for-senior-farmers-market-nutrition-program-coupons",
         docs:["Proof of age","Proof of income"],
         where:"Ask the local Council on Aging — they usually hand out coupons and know the food-box sites."});
@@ -1374,12 +1536,57 @@ function programs(){
       where: mh ? "MassHealth dental customer service: (866) 616-2699 (finds dentists who take MassHealth)." : "Dental school clinics: Tufts (617) 636-6998 · BU (617) 358-8310 · Harvard (617) 432-1434 ext. 1. If hearing loss seems severe, see an audiologist or doctor rather than buying over the counter."});
   }
 
+  // 39. EAEDC (added 2026-09-27, gap audit #17): state cash for people 65+ who aren't on SSI. Gross income limit $441.10/mo living alone
+  // ($573.90 with a spouse), with shelter costs; citizen or eligible noncitizen; benefits go back to the application date. mass.gov EAEDC page.
+  if(age>=65 && citizenOK() && inc/12 < (EAEDC_INC[hh]||EAEDC_INC[2])){
+    out.push({id:"eaedc",name:"Emergency Aid to the Elderly (EAEDC cash)",status:"maybe",val:0,valTxt:"monthly state cash",
+      why:`State cash help for people 65+ who aren't getting SSI. The gross income limit is $${(EAEDC_INC[hh]||EAEDC_INC[2]).toFixed(2)}/month ${hh===2?"for a couple":"for someone living alone"}, so it only fits very low incomes. If SSI is possible, apply for that first.${citizenNote()}`,
+      form:"Apply with the Department of Transitional Assistance (DTA).",forml:"https://www.mass.gov/info-details/emergency-aid-to-the-elderly-disabled-and-children-eaedc",
+      docs:["ID","Proof of income","Proof of rent or housing costs","Immigration papers, if not a citizen"],
+      where:"Apply online at DTA Connect or call the DTA Assistance Line at (877) 382-2363."});
+  }
+
+  // 40. Federal tax refund for people who don't file (added 2026-09-27, gap audit #12). IRS: "taxpayers usually have three years to file
+  // and claim their tax refunds. If they do not file within three years, the money becomes the property of the U.S. Treasury."
+  if(A.filing==="none" && incOther>0){
+    out.push({id:"irsrefund",name:"A Federal Tax Refund They Never Claimed",status:"maybe",val:0,valTxt:"any tax withheld, back",
+      why:"If federal tax was taken out of a pension, an IRA withdrawal or a paycheck and no tax return was filed, the IRS may be holding a refund. You usually have three years to file and claim it — after that the money goes to the U.S. Treasury for good. In Massachusetts the median unclaimed refund for 2022 was $786.",
+      form:"File the missing year's return (free help is available).",forml:"https://www.irs.gov/newsroom/time-is-running-out-to-claim-1-point-2-billion-in-refunds-for-tax-year-2022-taxpayers-face-april-15-deadline",
+      docs:["Form 1099-R from the pension or IRA (shows tax withheld)","Form SSA-1099","Any W-2s"],
+      where:"Free tax preparation for seniors: AARP Foundation Tax-Aide and the IRS's free volunteer sites — ask the Council on Aging where the nearest one is."});
+  }
+
+  // 41. Home Modification Loan Program (added 2026-09-27, gap audit #15). mass.gov: "All eligible borrowers receive a zero-interest
+  // deferred-payment loan"; a household member with a disability or over 60; documentation of need; income-based requirements.
+  if(owner && (age>=60 || disabled) && (A.adl==="yes" || disabled || A.blind==="yes")){
+    out.push({id:"hmlp",name:"Zero-Interest Loan for Home Changes (HMLP)",status:"maybe",val:0,valTxt:"0% deferred-payment loan",
+      why:"For ramps, stair lifts, bathroom and kitchen changes and other work that helps someone over 60 or with a disability keep living at home, the state's Home Modification Loan Program gives a zero-interest, deferred-payment loan. Income limits apply.",
+      form:"Apply through the regional HMLP provider.",forml:"https://www.mass.gov/home-modification-loan-program-hmlp",
+      docs:["Proof of ownership","A note from a doctor or therapist about the need","Contractor estimates","Proof of income"],
+      where:"See the program page for the regional provider, or ask MassOptions at 1-800-243-4636."});
+  }
+
+  // 42. SCSEP paid job training (added 2026-09-27, gap audit #19). DOL: "Participants must be at least 55, unemployed, and have a family
+  // income of no more than 125% of the federal poverty level." Paid at the highest of the federal, state or local minimum wage.
+  const scsepInc = Math.max(0, homeInc - 0.25*incSS);   // TEGL 12-06: 25% of Social Security (title II) is not counted
+  if(age>=55 && A.working==="no" && scsepInc <= 1.25*fplFor(homeHH)){   // "working" is only asked under 70
+    out.push({id:"scsep",name:"Paid Part-Time Job Training for 55+ (SCSEP)",status:"maybe",val:0,valTxt:"paid community-service work",
+      why:`A federal program that pays people 55+ who are out of work and have low income to train in community-service jobs (at a senior center, library, school or nonprofit) as a bridge to a regular job. The family income limit is 125% of the poverty line — about ${money(1.25*fplFor(homeHH))}/yr for ${homeHH===1?"one person":homeHH+" people"}. Veterans and people over 65 get priority.`,
+      form:"Enroll with the local SCSEP provider.",forml:"https://www.dol.gov/agencies/eta/seniors",
+      docs:["ID and proof of age","Proof of income"],
+      where:"Ask a MassHire career center or the Council on Aging for the nearest SCSEP provider."});
+  }
+
   // ---- Unknown-answer handling: a created card that depends on a skipped ("not sure") field becomes "verify — needs info" ----
   const DEP={
     cb:["filing","dependent","incomeSS","incomeOther","propTax","assessed","rent","subsidized","spouseAge"],
     ex41c:["incomeSS","incomeOther","assets","titling","maYears"],
     vet22:["vaDis"],
     aanda:["wartime"],
+    vapension:["wartime","incomeSS","incomeOther"],
+    ssfa:["pubPension"],
+    eaedc:["incomeSS","incomeOther","citizen"],
+    scsep:["incomeSS","incomeOther","hhSize","hhOtherInc"],
     liheap:["incomeSS","incomeOther","hhSize","hhOtherInc"],
     snap:["incomeSS","incomeOther","citizen"],
     msp:["incomeSS","incomeOther","citizen"],
@@ -1507,7 +1714,7 @@ function results(){
     g.forEach(p=>{
       const bc={likely:"b-likely",maybe:"b-maybe",have:"b-have",refer:"b-refer",no:"b-no"}[p.status];
       const bt={likely:"Likely eligible",maybe:"Need to verify",have:"Already have",refer:"See a pro",no:"Not a match"}[p.status];
-      h+=`<div class="prog">
+      h+=`<div class="prog" data-pid="${p.id}" data-status="${p.status}">
         <div class="top"><h3>${p.name}</h3><span class="val">${p.valTxt}</span></div>
         <span class="badge ${bc}">${bt}</span>
         <p class="why">${p.why}</p>`;

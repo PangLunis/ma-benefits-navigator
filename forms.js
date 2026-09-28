@@ -338,7 +338,9 @@
     else if(A.citizen==="qualified") yesNo(PDFLib, form,"12. Are you a U.S. citizen or U.S. national?", false);
     if(A.housing==="rent") yesNo(PDFLib, form,"18. Do you rent or own your property?", true);        // "1" = Rent (left)
     else if(A.housing==="own") yesNo(PDFLib, form,"18. Do you rent or own your property?", false);   // "2" = Own
-    if(A.disability==="yes"||A.disability==="no") yesNo(PDFLib, form,"19. Do you have a disability?", A.disability==="yes");
+    // The form: "19. Do you have a disability? (If legally blind, answer Yes.)"  (fixed 2026-09-27, found by the forms test)
+    if(A.disability==="yes"||A.blind==="yes") yesNo(PDFLib, form,"19. Do you have a disability?", true);
+    else if(A.disability==="no") yesNo(PDFLib, form,"19. Do you have a disability?", false);
     const ss=n(A.incomeSS), other=n(A.incomeOther), S=split(extra), PP=perPerson(A, extra);
     if(!married && known(A.incomeSS) && known(A.incomeOther)) yesNo(PDFLib, form,"22. Do you have any income?", ss+other>0);
     if(PP){
@@ -358,6 +360,20 @@
       if(S.pension){ check(form,"28. Retirement or Pension"); setText(form,"Retirement or Pension   $", usd(S.pension)); setText(form,"How often Retirement or Pension","Yearly"); }
       if(S.interest){ check(form,"29 Interest dividends and other investment income"); setText(form,"Interest, dividends, and other investment income   $", usd(S.interest)); setText(form,"How often Interest, dividends, and other investment income","Yearly"); }
       if(S.wages){ setText(form,"24a.  Wagestips before taxes", usd(S.wages)); check(form,"Yearly Subtract any pretax deductions such as nontaxable health insurance premiums"); }
+      // Whatever part of "other income" isn't itemized above (rental, anything else, or all of it when no breakdown was
+      // given) goes on the "Other taxable income" line, so the lines add up to the Q33 total. (fixed 2026-09-27, forms test)
+      if(known(A.incomeOther)){
+        // Rental income has its own question (29, "You must answer this question") — it goes there, not under "other".
+        const rest = other - (S.pension||0) - (S.interest||0) - (S.wages||0) - (S.rental||0);
+        if(rest>0.5){
+          check(form,"Other taxable income include type"); setText(form,"Other taxable income   $", usd(rest)); setText(form,"How often Other taxable income","Yearly");
+          setText(form,"Other taxable income Type", hasSplit(S) ? "Other income" : "Pensions, interest & other (total)");
+        }
+        if(S.rental!=null){
+          yesNo(PDFLib, form,"29. Do you get rental income?", S.rental>0);
+          if(S.rental>0) setText(form,"How much monthly rental income or loss do you get from each rental unit from the real estate indicated above", usd(S.rental/12));
+        }
+      }
       if(known(A.incomeSS) && known(A.incomeOther) && ss+other>0) setText(form,"33. What is your total expected income for the current calendar year?", "$"+usd(ss+other));
     }
     // Person 2: the spouse (name, birth date, same address)
@@ -365,9 +381,9 @@
       setText(form,"1 First name middle name last name and suffix_P2", extra.spouseName);
       setText(form,"2 Date of birth mmddyy_P2", dob(extra.spouseDob));
       setText(form,"4 Relationship to Person 1_P2", "Spouse");
-      setText(form,"5 Provide street address_P2", extra.street);
-      setText(form,"9 City_P2", town); setText(form,"10 State_P2", "MA");
-      if(/^\d{5}$/.test(String(extra.zip||"").trim())) setText(form,"11 ZIP code_P2", String(extra.zip).trim());
+      // "5 Does this person live with Person 1? Yes / No. If No, provide street address" — a married couple applying
+      // together lives together, so Yes and the address block stays empty. (fixed 2026-09-27, found by the forms test)
+      yesNo(PDFLib, form,"5 Does this person live with Person 1?_P2", true);
     }
     // Step 5: assets (a couple's assets count together, so totals are fine here)
     if(A.housing==="own"||A.housing==="rent") yesNo(PDFLib, form,"Do you own or have a legal interest in your primary residence?", A.housing==="own");
