@@ -758,7 +758,17 @@ document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==
 window.addEventListener("pagehide", statLeave);
 
 /* ---------- Render question ---------- */
-let renderedAt = -1e9;
+let renderedAt = -1e9, renderCount = 0;
+/* Each new question must open with its first line on screen (Ryan 2026-09-28: "sometimes you have to slide the screen to see the
+   top part of the question"). The page keeps its scroll position between questions, so after tapping an answer low on a long
+   question — or when the phone keyboard pushes the page up — the next question's top ended up under the sticky header. */
+function keepQuestionInView(){
+  const card=document.querySelector("#app .qmain .card"); if(!card) return;
+  const hdr=document.querySelector(".site-header");
+  const top=(hdr && /sticky|fixed/.test(getComputedStyle(hdr).position)) ? hdr.getBoundingClientRect().bottom : 0;
+  const r=card.getBoundingClientRect();
+  if(r.top < top+4 || r.top > window.innerHeight*0.75) window.scrollTo(0, Math.max(0, window.scrollY + r.top - top - 12));
+}
 function tapTooSoon(){ const g = (typeof window.BF_TAP_GUARD_MS==="number") ? window.BF_TAP_GUARD_MS : 350; return performance.now()-renderedAt < g; }
 function render(){
   saveProgress();
@@ -822,6 +832,7 @@ function render(){
   const fb=document.getElementById("freshBtn"); if(fb) fb.onclick=startFresh;
   wireNav(vis);
   renderedAt = performance.now();
+  if(renderCount++ > 0) keepQuestionInView();   // not on first load: the intro text above the first question stays visible
 
   // wire choices
   if(q.type==="single"){
@@ -835,7 +846,7 @@ function render(){
       A[q.id]=[...set]; render();
     });
   } else {
-    const ip=document.getElementById("ip"); ip.focus();
+    const ip=document.getElementById("ip"); try{ ip.focus({preventScroll:true}); }catch(e){ ip.focus(); }
     ip.onkeydown=e=>{if(e.key==="Enter")document.getElementById("next").click();};
     app.querySelectorAll(".per").forEach(b=>b.onclick=()=>{
       A[q.id+"_per"]=b.dataset.per;
