@@ -80,6 +80,10 @@
     .tool button.opt.unsure { border-style: dashed; border-color: #D3C9B6; color: var(--t-muted); font-weight: 600; margin-top: 4px; }
     .tool button.opt.unsure .chk { display: none; }
     .tool button.opt.unsure.sel { background: #F3EEE3; border-color: #A99F8C; color: var(--ink); }
+    .tool .townsug { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .tool .townsug:empty { display: none; }
+    .tool button.tsug { appearance: none; text-align: left; width: 100%; background: #fff; border: 2px solid var(--t-line); border-radius: 12px; padding: 13px 16px; font-size: 19px; font-weight: 600; color: var(--ink); cursor: pointer; font-family: var(--sans); }
+    .tool button.tsug:active { border-color: var(--t-brand); background: var(--t-brand-tint); }
     .tool .skip { display: block; width: 100%; text-align: center; background: none; border: none; color: var(--t-muted); font-size: 15px; font-weight: 700; padding: 14px 0 2px; cursor: pointer; text-decoration: underline; font-family: var(--sans); }
     .tool details.help { margin: 2px 0 16px; border: none; padding: 0; }
     .tool details.help summary { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: var(--t-brand); cursor: pointer; padding: 4px 0; }

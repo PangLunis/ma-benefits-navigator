@@ -112,14 +112,14 @@ const Q = [
   {id:"adl", type:"single", q:"Need help with daily activities?", hint:"Bathing, dressing, cooking, managing meds, getting around.",
     opts:[{v:"yes",l:"Yes, needs some help"},{v:"no",l:"No, fully independent"}]},
   {id:"already", type:"multi", q:n=>`Is ${who(n)} ALREADY getting any of these?`, hint:"It's totally normal not to know. If you can't tell, pick \"I'm not sure\" at the bottom — we'll help you check.", noSkip:true, exclusive:["none","unsure"],
-    help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) SNAP — do they have an EBT card? 5) Medicare Part B help — is the ~$203/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card? If you can't check any of these right now, just pick \"I'm not sure.\"",
+    help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) SNAP — do they have an EBT card? 5) Medicare Part B help — is the ~$203/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card that pays for doctor visits? (MassHealth has several programs. If it only pays the Part B premium, that's #5, not #6.) If you can't check any of these right now, just pick \"I'm not sure.\"",
     opts:[
       {v:"cb",l:"Senior Circuit Breaker tax credit",d:"A refund on the MA state tax return (look for \"Schedule CB\") — often $1,000–$2,800/yr."},
       {v:"exemption",l:"A property-tax exemption",d:"A discount line on the town property tax bill that lowers what's owed."},
       {v:"liheap",l:"Fuel Assistance (heating-bill help)",d:"Winter heating help, also called LIHEAP."},
       {v:"snap",l:"SNAP / food assistance",d:"Food benefits on an EBT card (used to be \"food stamps\")."},
-      {v:"msp",l:"Help paying the Medicare Part B premium",d:"Something other than their Social Security check covers the ~$203/mo Part B premium."},
-      {v:"masshealth",l:"MassHealth",d:"MassHealth — Massachusetts Medicaid (they'd have a MassHealth card)."},
+      {v:"msp",l:"Help paying the Medicare Part B premium",d:"The Medicare Savings Program — MassHealth calls it \"Buy-In\" (also QMB, SLMB or QI). The ~$203/mo Part B premium is NOT taken out of their Social Security check."},
+      {v:"masshealth",l:"MassHealth health coverage",d:"A MassHealth card that pays for doctor visits and prescriptions (like MassHealth Standard). If MassHealth ONLY pays the Part B premium, pick the Part B choice above instead. Have both? Pick both."},
       {v:"vacomp",l:"VA disability compensation",d:"A monthly VA payment for a service-connected condition."},
       {v:"homecare",l:"State Home Care services",d:"In-home help arranged by the local Aging Services Access Point (ASAP)."},
       {v:"none",l:"None of these"},
@@ -190,7 +190,7 @@ function navHTML(vis){
 function wireNav(vis){
   const nav=document.getElementById("qnav"); if(!nav) return;
   if(window.innerWidth>=900) nav.open=true;
-  nav.querySelectorAll(".qn").forEach(b=>b.onclick=()=>{ i=parseInt(b.dataset.k,10); render(); const m=document.querySelector(".qmain"); if(m&&window.innerWidth<900) m.scrollIntoView({block:"start"}); });
+  nav.querySelectorAll(".qn").forEach(b=>b.onclick=()=>{ if(tapTooSoon()) return; i=parseInt(b.dataset.k,10); render(); const m=document.querySelector(".qmain"); if(m&&window.innerWidth<900) m.scrollIntoView({block:"start"}); });
   const r=document.getElementById("navres"); if(r) r.onclick=()=>{ editMode=false; i=visible().length; render(); };
 }
 
@@ -225,13 +225,22 @@ function townLookup(s){
 // HUD FY2026 income limits for the town: l50 = 50% of area median (RAFT), l80 = 80% (public housing / vouchers). null if unknown.
 function hudFor(town){ const t=townLookup(town); return (t && HUD && HUD[t.name]) || null; }
 const HUD_MAX_L50 = [63750,72850,81950,91050,98350,105650,112950,120200];   // highest MA area (Nantucket), FY2026 — used before the town is known
-function fillTownList(){
-  const dl=document.getElementById("ma-towns");
-  if(dl && TOWNS && !dl.options.length) dl.innerHTML=Object.keys(TOWNS).map(n=>`<option value="${n}">`).join("");
+/* Town suggestions. This used to be an HTML <datalist> of all 351 towns. On an iPhone, focusing that box
+   froze the screen for several seconds and then opened a pop-up of all 351 towns ON TOP of the question —
+   any extra taps made while waiting picked a random town (reported by Ryan 2026-09-28, reproduced in the iOS
+   Simulator). Now: at most 6 matches, shown only after the person starts typing, as big buttons in the page. */
+function townSuggest(s){
+  const k=townKey(s); if(!TOWNS || k.length<2) return [];
+  if(!TOWN_IDX){ TOWN_IDX={}; for(const n in TOWNS) TOWN_IDX[townKey(n)]=n; }
+  const starts=[], within=[];
+  for(const kk in TOWN_IDX){ if(kk.startsWith(k)) starts.push({v:TOWN_IDX[kk], l:TOWN_IDX[kk]}); else if(kk.includes(" "+k)) within.push({v:TOWN_IDX[kk], l:TOWN_IDX[kk]}); }
+  BOSTON_NBHD.forEach(nb=>{ if(nb.startsWith(k)){ const v=nb.replace(/\b[a-z]/g,c=>c.toUpperCase()); starts.push({v, l:v+" (Boston)"}); } });
+  const byLen=(a,b)=>a.l.length-b.l.length||a.l.localeCompare(b.l);
+  return starts.sort(byLen).concat(within.sort(byLen)).slice(0,6);
 }
 try{
   fetch("data/towns.json").then(r=>r.ok?r.json():null).then(d=>{
-    if(d&&d.towns){ TOWNS=d.towns; AGENCIES=d.agencies||{}; fillTownList(); }
+    if(d&&d.towns){ TOWNS=d.towns; AGENCIES=d.agencies||{}; TOWN_IDX=null; }
   }).catch(()=>{});
   fetch("data/hud_limits.json").then(r=>r.ok?r.json():null).then(d=>{ if(d&&d.towns) HUD=d.towns; }).catch(()=>{});
 }catch(e){}
@@ -719,6 +728,8 @@ document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==
 window.addEventListener("pagehide", statLeave);
 
 /* ---------- Render question ---------- */
+let renderedAt = -1e9;
+function tapTooSoon(){ const g = (typeof window.BF_TAP_GUARD_MS==="number") ? window.BF_TAP_GUARD_MS : 350; return performance.now()-renderedAt < g; }
 function render(){
   saveProgress();
   const vis = visible();
@@ -764,7 +775,7 @@ function render(){
     }
     inner += `<div class="ipwrap ${isCur?'cur':''}">${isCur?'<span class="pre">$</span>':''}
       <input id="ip" type="${q.type==='text'?'text':'number'}" inputmode="${q.type==='text'?'text':'decimal'}"
-      value="${val}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}"${q.id==="town"?' list="ma-towns" autocomplete="off"':''}></div>${q.id==="town"?'<datalist id="ma-towns"></datalist>':''}`;
+      value="${val}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}"${q.id==="town"?' autocomplete="off" autocapitalize="words" aria-autocomplete="list" aria-controls="townsug"':''}></div>${q.id==="town"?'<div id="townsug" class="townsug" role="listbox" aria-label="Matching Massachusetts towns"></div>':''}`;
     if(per) inner += `<p class="hint" style="margin:8px 0 0" id="perhint">${per==='mo'?'dollars per month':'dollars per year'}</p>`;
     else if(q.suffix) inner += `<p class="hint" style="margin:8px 0 0">in ${q.suffix}</p>`;
   }
@@ -779,12 +790,12 @@ function render(){
   if(RESTORED){ inner = `<div class="restored">✓ We brought back your answers from last time. <button type="button" id="freshBtn">Start fresh</button></div>` + inner; RESTORED=false; }
   app.innerHTML = inner;
   const fb=document.getElementById("freshBtn"); if(fb) fb.onclick=startFresh;
-  if(q && q.id==="town") fillTownList();
   wireNav(vis);
+  renderedAt = performance.now();
 
   // wire choices
   if(q.type==="single"){
-    app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{A[q.id]=b.dataset.v;i++;render();});
+    app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{ if(tapTooSoon()) return; A[q.id]=b.dataset.v;i++;render();});
   } else if(q.type==="multi"){
     const excl=q.exclusive||[];
     app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
@@ -803,13 +814,30 @@ function render(){
       ip.focus();
     });
   }
-  const back=document.getElementById("back"); if(back) back.onclick=()=>{i=Math.max(0,i-1);render();};
-  const skip=document.getElementById("skip"); if(skip) skip.onclick=()=>{A[q.id]="unknown"; i++; render();};
+  const back=document.getElementById("back"); if(back) back.onclick=()=>{ if(tapTooSoon()) return; i=Math.max(0,i-1);render();};
+  const skip=document.getElementById("skip"); if(skip) skip.onclick=()=>{ if(tapTooSoon()) return; A[q.id]="unknown"; i++; render();};
+  if(q.id==="town"){
+    const ip=document.getElementById("ip"), box=document.getElementById("townsug");
+    const draw=()=>{ const m=townSuggest(ip.value); const exact=m.length===1 && townKey(m[0].v)===townKey(ip.value);
+      box.innerHTML = exact ? "" : m.map(o=>`<button type="button" class="tsug" role="option" data-v="${o.v}">${o.l}</button>`).join("");
+      box.querySelectorAll(".tsug").forEach(b=>b.onclick=()=>{ ip.value=b.dataset.v; box.innerHTML=""; ip.style.borderColor=""; const w=document.getElementById("townwarn"); if(w) w.remove(); ip.blur(); }); };
+    ip.addEventListener("input", draw);
+  }
   const br=document.getElementById("backres"); if(br) br.onclick=()=>{
     if(isInput){ const v=document.getElementById("ip").value.trim(); if(v) saveInput(q,v); }
     editMode=false; i=visible().length; render();
   };
   document.getElementById("next").onclick=()=>{
+    if(tapTooSoon()) return;
+    // a single-choice question needs a tapped answer ("I'm not sure" counts); Next used to skip it silently
+    if(q.type==="single" && (A[q.id]==null || A[q.id]==="")){
+      let w=document.getElementById("pickone");
+      if(!w){ w=document.createElement("p"); w.id="pickone"; w.className="hint"; w.setAttribute("role","alert");
+        w.style.cssText="margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#FBEECB;color:#5B4210;font-weight:600";
+        w.textContent = q.noSkip ? "Tap one of the answers above to continue." : "Tap one of the answers above — or \"I'm not sure\" — to continue.";
+        app.querySelector(".opts").after(w); }
+      return;
+    }
     if(isInput){
       const v=document.getElementById("ip").value.trim();
       if(!v && !q.optional){ document.getElementById("ip").focus(); document.getElementById("ip").style.borderColor="#d23"; return;}
