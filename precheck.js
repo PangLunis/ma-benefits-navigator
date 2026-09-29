@@ -335,7 +335,7 @@
     if (st) { if (instant) st.classList.add("on"); else demoTimers.push(setTimeout(function () { st.classList.add("on"); }, t + 200)); }
   }
 
-  var demo = document.querySelector(".formsdemo-band");
+  var demo = document.querySelector(".fd-form");   // the Form 96-1 card (in the hero since 2026-09-28)
   if (!hasIO || reduce) {
     document.querySelectorAll(".reveal").forEach(function (s) { s.classList.add("in"); });
     if (demo) demoFill(demo, true);
