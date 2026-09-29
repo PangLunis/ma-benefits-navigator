@@ -41,16 +41,23 @@
       max-width: 720px; margin: 0 auto; padding: 28px 18px 64px;
       font-size: 19px; line-height: 1.5;
     }
-    .tool-intro { text-align: left; margin-bottom: 18px; }
-    .tool-intro .eyebrow { margin-bottom: .5em; }
-    .tool-intro h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin-bottom: .25em; }
-    .tool-intro p { color: var(--ink-soft); margin: 0; font-size: 1.05rem; }
-    .tool-intro .freeline { margin-top: 12px; background: var(--pine-tint); border: 1px solid #BFD6C7; border-radius: 12px; padding: 12px 14px; color: var(--pine-deep); }
-    .tool-top { display: flex; align-items: center; gap: 12px; margin: 18px 0 10px; }
-    .tool-top .tlabel { font-size: .85rem; font-weight: 700; color: var(--ink-soft); }
-    .tool .tsize { margin-left: auto; display: flex; gap: 6px; align-items: center; }
-    .tool .tsize button { appearance: none; border: 1.5px solid var(--t-line); background: #fff; border-radius: 9px; font-weight: 800; color: var(--t-brand); cursor: pointer; padding: 7px 11px; line-height: 1; }
-    .tool .tsize button.am { font-size: 14px; } .tool .tsize button.ap { font-size: 19px; }
+    /* Check start (2026-09-29, design round r1 #3 "Question first", picked by Ryan): no intro paragraph.
+       One free-and-private strip, then question 1 on the first screen. The old intro's other facts moved
+       under the question (.checkfacts); "what you get" and "for a parent" are on the home page. */
+    .tool-intro { margin: 0 0 14px; }
+    .promise { display: flex; align-items: center; gap: 12px; margin: 0; padding: 12px 16px; background: var(--pine-tint); border: 1px solid #BFD6C7; border-radius: 12px; color: var(--pine-deep); font-size: 17px; line-height: 1.4; }
+    .promise svg { flex: 0 0 auto; color: var(--pine); }
+    .promise b { display: block; font-weight: 800; }
+    body.lg .promise { font-size: 19px; } body.xl .promise { font-size: 21px; }
+    /* Text-size buttons live in the site header now (check.js finds them by id) */
+    .site-header .tsize { display: flex; gap: 6px; align-items: center; margin-left: 10px; flex: 0 0 auto; }
+    .tsize button { appearance: none; min-width: 44px; min-height: 44px; border: 1.5px solid var(--line); background: #fff; border-radius: 10px; font-weight: 800; color: var(--pine); cursor: pointer; padding: 0 11px; line-height: 1; font-family: var(--sans); }
+    .tsize button.am { font-size: 14px; } .tsize button.ap { font-size: 19px; }
+    .tsize button:focus-visible { outline: 3px solid var(--honey-deep); outline-offset: 2px; }
+    .checkfacts { max-width: 720px; display: grid; gap: 12px; margin-top: 18px; }
+    .checkfacts .where, .checkfacts .fine { margin: 0; font-size: 16px; color: var(--ink-soft); line-height: 1.45; }
+    .checkfacts .fine b { color: var(--pine-deep); }
+    .tool .checkfacts .remember { margin-top: 0; }
 
     .tool .bar { height: 10px; background: #E9E0CE; border-radius: 99px; overflow: hidden; margin: 0 0 18px; }
     .tool .bar > i { display: block; height: 100%; background: var(--honey); width: 0; transition: width .25s ease; }
@@ -294,8 +301,14 @@
 
     /* ---- Question list with answered dots (Dad's test, 2026-09-25) ---- */
     .tool { max-width: 1040px; }
-    .tool-intro, .tool-top, .tool .bar, .tool .note { max-width: 720px; }
+    .tool-intro, .tool .bar, .tool .note { max-width: 720px; }
     .qwrap { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (max-width: 899px) {
+      .qwrap { display: flex; flex-direction: column; }
+      .qwrap > .qnav { order: 2; }
+      .qmain { display: flex; flex-direction: column; }
+      .qmain > .reassure { order: 2; margin: 14px 0 0; }
+    }
     @media (min-width: 900px) {
       .qwrap { grid-template-columns: 250px minmax(0, 1fr); gap: 26px; align-items: start; }
       .qnav { position: sticky; top: 92px; max-height: calc(100vh - 110px); overflow: auto; }
@@ -339,10 +352,11 @@
       .tool { padding: 20px 14px 56px; }
       .tool .q { font-size: 23px; }
       .tool .headline .big { font-size: 38px; }
-      .tool-top .tlabel { display: none; }
+      .tool-intro { margin: -20px -14px 14px; }
+      .promise { border-radius: 0; border-width: 0 0 1px; padding: 12px 15px; }
     }
     @media print {
-      .site-header, .check-footer, .tool-top, .tool .bar, .tool .acts, .tool .note, .tool .bf-next, .tool .offer, .skip-link { display: none !important; }
+      .site-header, .check-footer, .checkfacts, .tool .bar, .tool .acts, .tool .note, .tool .bf-next, .tool .offer, .skip-link { display: none !important; }
       body { background: #fff; }
       .tool details { display: block; } .tool details > .body { display: block; }
     }
@@ -374,29 +388,28 @@
         <a class="navlink" href="index.html#programs">What we check</a>
         <a class="navlink" href="index.html#faq">Questions</a>
       </nav>
-    </div>
-  </header>
-
-  <main class="tool" id="main">
-    <div class="tool-intro">
-      <p class="eyebrow">Free · private · Massachusetts only, for now</p>
-      <h1>Your free benefits check</h1>
-      <p>About 20–25 quick questions (a few more for veterans and couples), 5–10 minutes — for yourself or for a parent. At the end you'll see every Massachusetts program that looks like a match, roughly what each is worth, and exactly how to claim it.</p>
-      <p class="freeline"><strong>100% free.</strong> You'll never be asked for a card or payment, there's no sign-up, and your results appear on the screen the moment you finish. We never receive anything you enter — your answers stay on this device.</p>
-      <label class="remember"><input type="checkbox" id="rememberBox" checked> Remember my answers on this device, so I can stop and come back later</label>
-      <script>(function(){var b=document.getElementById("rememberBox");try{b.checked=localStorage.getItem("bf_remember")!=="0";}catch(e){b.checked=false;b.disabled=true;}
-        b.addEventListener("change",function(){try{localStorage.setItem("bf_remember",b.checked?"1":"0");if(!b.checked)localStorage.removeItem("bf_check_v1");}catch(e){}});})();</script>
-    </div>
-
-    <div class="tool-top">
-      <span class="tlabel">Text too small?</span>
       <div class="tsize" role="group" aria-label="Text size">
         <button class="am" id="tdown" aria-label="Smaller text">A&minus;</button>
         <button class="ap" id="tup" aria-label="Larger text">A+</button>
       </div>
     </div>
+  </header>
+
+  <main class="tool" id="main">
+    <div class="tool-intro">
+      <h1 class="sr-only">Your free benefits check</h1>
+      <p class="promise"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span><b>Free and private.</b> Your answers stay on this device.</span></p>
+    </div>
+
     <div class="bar" aria-hidden="true"><i id="bar"></i></div>
     <div id="app" aria-live="polite"></div>
+    <div class="checkfacts">
+      <label class="remember"><input type="checkbox" id="rememberBox" checked> Remember my answers on this device, so I can stop and come back later</label>
+      <script>(function(){var b=document.getElementById("rememberBox");try{b.checked=localStorage.getItem("bf_remember")!=="0";}catch(e){b.checked=false;b.disabled=true;}
+        b.addEventListener("change",function(){try{localStorage.setItem("bf_remember",b.checked?"1":"0");if(!b.checked)localStorage.removeItem("bf_check_v1");}catch(e){}});})();</script>
+      <p class="where">Massachusetts only, for now.</p>
+      <p class="fine"><b>No sign-up, no card.</b> We never ask for your Social Security number.</p>
+    </div>
     <div class="note" id="privacy">🔒 Your answers stay on this device — we never receive them. We only count, anonymously, how many people start and finish the check.</div>
     <div class="note talkline" id="talk">📞 <b>Rather talk to a person?</b> Free help from the state: call MassOptions at <a href="tel:+18002434636">(800) 243-4636</a> (weekdays) — they connect you to free Medicare counselors (SHINE) and to your local elder services.</div>
   </main>

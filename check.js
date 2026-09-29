@@ -884,7 +884,10 @@ function render(){
   const doWhat = q.type==="single" ? "Tap the answer that fits — it moves on by itself."
                : q.type==="multi" ? "Tap every one that applies, then tap Next."
                : "Type your answer, then tap Next.";
-  inner += `<div class="card"><div class="qstep">Question ${i+1} of ${vis.length} &middot; <span>${doWhat}</span></div><div class="q">${qt}</div>`;
+  // Question 1 carries the length that used to sit in the page intro (2026-09-29, "Question first" start)
+  const stepTxt = i===0 ? `Question 1 of about ${vis.length} &middot; <span>5–10 minutes</span>`
+                        : `Question ${i+1} of ${vis.length} &middot; <span>${doWhat}</span>`;
+  inner += `<div class="card"><div class="qstep">${stepTxt}</div><div class="q">${qt}</div>`;
   if(q.hint) inner += `<p class="hint">${q.hint}</p>`;
   if(q.help) inner += `<details class="help"><summary>ⓘ What's this? Where do I find it?</summary><div class="hbox">${q.help}</div></details>`;
   if(q.noLetter) inner += `<details class="help noletter"><summary>📄 Can't find the letter? How to check without it</summary><div class="hbox">${NO_LETTER_HTML}</div></details>`;
