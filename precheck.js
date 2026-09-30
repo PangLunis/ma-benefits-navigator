@@ -266,7 +266,9 @@
       items.forEach(function (li) { li.classList.remove("is-active"); });
       dots.style.display = "none";
     }
-    function apply() { if (!mobileOnly || PHONE.matches) start(); else stop(); }
+    // Audit F3 (2026-09-29): on phones every list shows in full (1 of 8 programs at 3.6 s each was faster than most
+    // people read). Only the short "100% free" list still rotates, and only on wider screens.
+    function apply() { if (!mobileOnly && !PHONE.matches) start(); else stop(); }
 
     [ul, dots].forEach(function (el) {
       el.addEventListener("mouseenter", pause);
