@@ -413,7 +413,9 @@ img { max-width: 100%; display: block; }
 .programs .p-desc { display: none; }
 
 /* Header tagline under the logo (replaces "Massachusetts Senior Benefits") */
-.brand-sub.brand-tag { font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: 0; font-size: .82rem; font-weight: 700; color: var(--clay); margin-top: 4px; }
+/* Slogan colour: a slightly deeper clay than --clay (#B65A38 = 4.32:1 on the cream header, under the 4.5:1 WCAG AA
+   minimum for 13px text); #A8522F = 4.98:1. Measured 2026-09-29. */
+.brand-sub.brand-tag { font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: 0; font-size: .82rem; font-weight: 700; color: #A8522F; margin-top: 4px; }
 
 /* Full Benefits Check card — its own band directly below the hero now,
    instead of sitting inside the hero and covering the artwork. */
@@ -889,3 +891,13 @@ img { max-width: 100%; display: block; }
 .hd-cap { margin: 12px 0 0; font-size: 14px; color: var(--soft, #4A4338); text-align: center; }
 @media (prefers-reduced-motion: reduce) { .hd * { transition: none !important; animation: none !important; } }
 .hd.still .hd-in { max-height: none; min-height: 92px; overflow: visible; }
+
+/* Slogan on phones (Ryan 2026-09-29): at 430px and below the brand block can't fit "We fight for your benefits"
+   beside the header button (that is why .brand-sub was hidden above). It now sits as its own line under the logo,
+   placed absolutely so it can never push the button off the screen. Measured 320-430px on home, check and a guide:
+   no overlap with the button, no sideways scroll; the header grows from 59px to 83px. */
+@media (max-width: 430px) {
+  .brand { position: relative; }
+  .brand-sub.brand-tag { display: block; position: absolute; left: 0; top: calc(100% + 7px); font-size: 13px; line-height: 1.2; white-space: nowrap; margin: 0; }
+  .header-inner.wrap { padding-bottom: 26px; }
+}
