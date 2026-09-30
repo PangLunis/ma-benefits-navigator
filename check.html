@@ -87,7 +87,9 @@
     .tool .btn.prim:hover, .tool .btn.prim:active { background: var(--t-brand-d); color: #fff; }
     .tool .btn.ghost { background: #fff; color: var(--t-muted); border: 2px solid var(--t-line); flex: 0 0 auto; white-space: nowrap; padding-inline: 18px; }
     .tool .btn:disabled { opacity: .4; cursor: default; }
-    .tool .note { font-size: 14px; color: var(--t-muted); text-align: center; margin-top: 16px; line-height: 1.45; }
+    /* Audit F4 (2026-09-29): 16px floor for text a reader must act on — the phone-help and privacy notes (were 14px), the
+       eligibility badges (12px), the results section labels (13px) and the deadline/form notes (14.5px). */
+    .tool .note { font-size: 16px; color: var(--t-muted); text-align: center; margin-top: 16px; line-height: 1.45; }
     .tool button.opt .ol { display: block; }
     .tool button.opt .od { display: block; font-weight: 600; font-size: 14px; color: var(--t-muted); margin-top: 3px; line-height: 1.4; }
     .tool button.opt.unsure { border-style: dashed; border-color: #D3C9B6; color: var(--t-muted); font-weight: 600; margin-top: 4px; }
@@ -165,13 +167,13 @@
     .tool .headline .lbl { font-size: 16px; font-weight: 700; opacity: .95; margin-top: 9px; }
     .tool .headline .sub { font-size: 14px; opacity: .88; margin-top: 10px; }
     .tool .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 99px; margin-bottom: 12px; text-transform: none; letter-spacing: 0; }
-    .tool .sech { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .8px; color: var(--t-muted); margin: 24px 4px 10px; }
+    .tool .sech { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--t-muted); margin: 24px 4px 10px; }
     .tool .prog { background: #fff; border: 1px solid var(--t-line); border-radius: 15px; padding: 17px; margin-bottom: 12px; }
     .tool .prog .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
     .tool .prog h3 { margin: 0; font-size: 20px; font-weight: 700; }
     .tool .prog .val { font-weight: 800; font-size: 16px; color: var(--pine-deep); text-align: right; max-width: 46%; flex: 0 0 auto; }
     /* was white-space:nowrap in the original — long values like "free home energy upgrades" pushed the page 27px wider than a 390px phone */
-    .tool .badge { display: inline-block; font-size: 12px; font-weight: 800; padding: 4px 9px; border-radius: 99px; margin-top: 7px; }
+    .tool .badge { display: inline-block; font-size: 16px; font-weight: 800; padding: 5px 11px; border-radius: 99px; margin-top: 7px; }
     .tool .b-likely { color: var(--green); background: var(--green-bg); }
     .tool .b-maybe { color: var(--amber); background: var(--amber-bg); }
     .tool .b-refer { color: var(--blue); background: var(--blue-bg); }
@@ -238,7 +240,7 @@
     .tool .packet .pk-lead { margin: 0 0 12px; font-size: 16px; max-width: none; }
     .tool .packet .pk-form { margin: 0 0 14px; }
     .tool .packet .pk-dl { width: 100%; flex: none; text-align: left; font-size: 17px; }
-    .tool .packet .pk-note { font-size: 14.5px; color: var(--t-muted); margin: 6px 2px 0; line-height: 1.45; max-width: none; }
+    .tool .packet .pk-note { font-size: 16px; color: var(--t-muted); margin: 6px 2px 0; line-height: 1.45; max-width: none; }
     .tool .packet details { border: 1px solid var(--t-line); border-radius: 12px; padding: 10px 14px; margin: 0 0 12px; background: #FBFAF6; }
     .tool .packet summary { font-weight: 800; cursor: pointer; font-size: 16px; }
     .tool .packet .pk-fields { display: grid; gap: 10px; margin-top: 10px; }
