@@ -296,8 +296,23 @@
     /* larger-text modes — check.js sets body.className to "", "lg" or "xl" */
     body.lg .tool { font-size: 21px; } body.xl .tool { font-size: 24px; }
     body.lg .tool .q { font-size: 29px; } body.xl .tool .q { font-size: 32px; }
-    body.lg .tool .hint, body.lg .tool button.opt, body.lg .tool input, body.lg .tool .why, body.lg .tool details .body, body.lg .tool .gh, body.lg .tool .gaps p.lead, body.lg .tool .od, body.lg .tool details.help summary, body.lg .tool .legend, body.lg .tool .nextsteps ol { font-size: 18px; }
-    body.xl .tool .hint, body.xl .tool button.opt, body.xl .tool input, body.xl .tool .why, body.xl .tool details .body, body.xl .tool .gh, body.xl .tool .gaps p.lead, body.xl .tool .od, body.xl .tool details.help summary, body.xl .tool .legend, body.xl .tool .nextsteps ol { font-size: 21px; }
+    /* Larger-text sizes (audit F2, 2026-09-29): EVERY lg/xl size is bigger than its default. Before, lg set answers and
+       text boxes to 18px (default 19/21px), so the first A+ press made them SMALLER, and Next, the step line and the
+       question list never grew. Defaults -> lg / xl, px: answers 19->22/25, text box 21->24/27, buttons 19->22/25,
+       step line 14->16/18, question list 16->18/20, hints and help 14-17 -> 17-19 / 19-22, notes 14->18/20. */
+    body.lg .tool button.opt { font-size: 22px; } body.xl .tool button.opt { font-size: 25px; }
+    body.lg .tool input { font-size: 24px; } body.xl .tool input { font-size: 27px; }
+    body.lg .tool .btn { font-size: 22px; } body.xl .tool .btn { font-size: 25px; }
+    body.lg .tool .acts .btn { font-size: 19px; } body.xl .tool .acts .btn { font-size: 21px; }
+    body.lg .tool .qstep { font-size: 16px; } body.xl .tool .qstep { font-size: 18px; }
+    body.lg .tool .qn, body.lg .qnav > summary { font-size: 18px; } body.xl .tool .qn, body.xl .qnav > summary { font-size: 20px; }
+    body.lg .qnav-c { font-size: 15.5px; } body.xl .qnav-c { font-size: 17.5px; }
+    body.lg .tool .hint, body.lg .tool .why, body.lg .tool details .body, body.lg .tool .gh, body.lg .tool .gaps p.lead, body.lg .tool details.help summary { font-size: 18px; }
+    body.xl .tool .hint, body.xl .tool .why, body.xl .tool details .body, body.xl .tool .gh, body.xl .tool .gaps p.lead, body.xl .tool details.help summary { font-size: 21px; }
+    body.lg .tool .od, body.lg .tool .legend { font-size: 17px; } body.xl .tool .od, body.xl .tool .legend { font-size: 19px; }
+    body.lg .tool .nextsteps ol { font-size: 19px; } body.xl .tool .nextsteps ol { font-size: 22px; }
+    body.lg .tool .skip, body.lg .tool .note, body.lg .tool .remember, body.lg .tool .restored { font-size: 18px; }
+    body.xl .tool .skip, body.xl .tool .note, body.xl .tool .remember, body.xl .tool .restored { font-size: 20px; }
 
     /* ---- Question list with answered dots (Dad's test, 2026-09-25) ---- */
     .tool { max-width: 1040px; }
