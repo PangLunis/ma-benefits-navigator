@@ -1046,6 +1046,9 @@ function hhSize(){ return A.marital==="married"?2:1; }   // the person (+ spouse
 function homeSize(){ const k=num(A.hhSize); return k>=1 ? Math.min(Math.round(k),10) : hhSize(); }   // everyone in the home: HEAP, utility discount, WAP, Lifeline
 function fplFor(k){ return 15960 + 5680*(Math.max(1,k)-1); }   // 2026 HHS poverty guideline (48 states), 91 FR 1797
 const HEAP_SMI60 = {1:53585,2:70073,3:86561,4:103049,5:119536,6:136024,7:139116,8:142207,9:145299,10:148390}; // FY2027, mass.gov HEAP page
+// Mass Save 'Enhanced Incentive' upper limits (80% SMI), 2026-2027 heating season, masssave.com income-based-offers
+// (checked 2026-09-30). Used instead of round(60% x 4/3), which came out $1 low for 5, 6 and 8 people.
+const MASSSAVE_ENH80 = {1:71447,2:93431,3:115415,4:137399,5:159382,6:181366,7:185488,8:189610,9:193732,10:197854};
 // citizenship gate for federal means-tested programs (SNAP/MSP/SSI)
 function citizenOK(){ return A.citizen!=="other"; } // citizen or qualified immigrant
 function citizenNote(){ return A.citizen==="qualified"?" (qualified-immigrant rules can add a waiting period — verify.)":""; }
@@ -1740,7 +1743,7 @@ function programs(){
 
   // 34. Energy help just ABOVE the fuel-assistance line (60–80% of state median income)
   if(A.housing!=="family"){
-    const lim60 = HEAP_SMI60[homeHH]||HEAP_SMI60[10], lim80 = Math.round(lim60*80/60);
+    const lim60 = HEAP_SMI60[homeHH]||HEAP_SMI60[10], lim80 = MASSSAVE_ENH80[homeHH]||MASSSAVE_ENH80[10];
     if(homeInc>lim60 && homeInc<=lim80){
       out.push({id:"energy6080",name:"Energy Help Just Above the Fuel-Assistance Limit",status:"maybe",val:0,valTxt:"one-time grant + low/no-cost upgrades",
         why:`Household income is a little over the Fuel Assistance limit, but between 60% and 80% of state median income. That opens: (1) the Salvation Army's Good Neighbor Energy Fund — a one-time grant when a month's energy bill is a hardship (call 800-334-3047); and (2) Mass Save's moderate-income offers — insulation, air-sealing and heating upgrades for up to no cost. A Mass Save Home Energy Assessment is free for any 1–4 unit home.`,
