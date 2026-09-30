@@ -360,6 +360,17 @@
     .tool .pertoggle { display: inline-flex; gap: 0; margin: 0 0 12px; border: 2px solid var(--t-line); border-radius: 12px; overflow: hidden; }
     .tool .per { appearance: none; border: 0; background: #fff; padding: 10px 16px; font: inherit; font-size: 16px; font-weight: 700; color: var(--t-muted); cursor: pointer; }
     .tool .per.sel { background: var(--pine); color: #fff; }
+    /* Tap-to-answer (Ryan, 2026-09-30): number buttons for household size, and a "None ($0)" button on money questions
+       where zero is a common answer. A tap saves exactly what typing that number would. */
+    .tool .quick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+    .tool .quick .qk { appearance: none; background: #fff; border: 2px solid var(--t-line); border-radius: 13px; min-height: 60px; padding: 8px 2px; font-family: var(--sans); font-size: 24px; font-weight: 800; color: var(--ink); cursor: pointer; }
+    .tool .quick .qk.more { grid-column: 1 / -1; font-size: 19px; min-height: 56px; }
+    @media (max-width: 360px) { .tool .quick { gap: 6px; } }   /* keeps each number button 44px+ wide on the smallest phones */
+    .tool .quick .qk.sel, .tool .nonebtn.sel { border-color: var(--t-brand); background: var(--t-brand-tint); }
+    .tool .quick + .ipwrap, .tool .quick ~ .ipwrap { margin-top: 12px; }
+    .tool .nonebtn { display: block; width: 100%; margin-top: 12px; appearance: none; background: #fff; border: 2px solid var(--t-line); border-radius: 13px; padding: 14px 16px; font-family: var(--sans); font-size: 19px; font-weight: 700; color: var(--ink); cursor: pointer; text-align: left; }
+    body.lg .tool .quick .qk { font-size: 27px; } body.xl .tool .quick .qk { font-size: 30px; }
+    body.lg .tool .quick .qk.more, body.lg .tool .nonebtn { font-size: 22px; } body.xl .tool .quick .qk.more, body.xl .tool .nonebtn { font-size: 25px; }
     .tool .btn.backres { display: block; width: 100%; margin-top: 12px; background: var(--honey-tint); color: var(--pine-deep); border: 2px solid #EFD891; font-size: 17px; }
     .tool .answers { background: #fff; border: 1px solid var(--t-line); border-radius: 15px; padding: 12px 16px; margin: 0 0 18px; border-top: 1px solid var(--t-line); }
     .tool .answers > summary { font-size: 17px; font-weight: 800; color: var(--pine-deep); cursor: pointer; list-style: none; }

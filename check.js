@@ -46,8 +46,9 @@ const Q = [
   {id:"housing", type:"single", q:n=>`Does ${who(n)} own or rent?`, noSkip:true,
     opts:[{v:"own",l:"Owns the home"},{v:"rent",l:"Rents",d:"Including assisted living"},{v:"family",l:"Lives with family (no rent)"}]},
   {id:"town", type:"text", q:"Which city or town in Massachusetts?", hint:"Property-tax breaks are set town-by-town, so we need this.", noSkip:true},
-  {id:"hhSize", type:"number", q:n=>`How many people live in the home, counting ${who(n)}?`, hint:"Include a spouse, adult children, grandchildren — everyone who lives there.", suffix:"people"},
-  {id:"hhOtherInc", type:"currency", period:"yr", q:"Income of everyone ELSE in the home?", hint:"Not counting them or their spouse. Heating help and utility discounts look at the whole household. Enter 0 if none.", optional:true,
+  {id:"hhSize", type:"number", q:n=>`How many people live in the home, counting ${who(n)}?`, hint:"Include a spouse, adult children, grandchildren — everyone who lives there.", suffix:"people",
+    quick:["1","2","3","4","5"], more:"6 or more", unit1:"person"},
+  {id:"hhOtherInc", type:"currency", period:"yr", q:"Income of everyone ELSE in the home?", hint:"Not counting them or their spouse. Heating help and utility discounts look at the whole household. Enter 0 if none.", optional:true, none:true,
     help:"Add up wages, Social Security, pensions and other income of the other people who live there. A rough number is fine.",
     showIf:a=>num(a.hhSize) > (a.marital==="married"?2:1)},
   {id:"ownYears", type:"number", q:"About how many years owned?", hint:"Some senior exemptions require owning ~5 years.", suffix:"years",
@@ -60,14 +61,14 @@ const Q = [
     showIf:a=>a.housing==="own"},
   {id:"incomeSS", type:"currency", period:"mo", q:n=>n.marital==="married"?`Social Security income for ${who(n)==="this person"?"them":who(n)} and their spouse, combined?`:`${whoC(n)} Social Security income?`, hint:"Just Social Security, before Medicare is taken out. If married, add both spouses together. Pick per month or per year. Enter 0 if none.",
     help:"The yearly Social Security total BEFORE the Medicare premium comes out — it's on the annual Social Security letter (Social Security benefit statement, Form SSA-1099). If you only know the monthly deposit, add about $203/month for Medicare Part B, then × 12. A rough number is fine."},
-  {id:"incomeOther", type:"currency", period:"yr", q:n=>n.marital==="married"?"Other income — both spouses combined?":"Other income?", hint:"Everything except Social Security — pensions, wages, individual retirement account (IRA) withdrawals, interest. If married, include the spouse's income too, even if the spouse still works. Pick per month or per year.",
+  {id:"incomeOther", type:"currency", period:"yr", q:n=>n.marital==="married"?"Other income — both spouses combined?":"Other income?", hint:"Everything except Social Security — pensions, wages, individual retirement account (IRA) withdrawals, interest. If married, include the spouse's income too, even if the spouse still works. Pick per month or per year.", none:true,
     help:"Add up pensions, any wages, IRA/401(k) withdrawals, interest & dividends, and rental income — everything EXCEPT Social Security. A close estimate is fine."},
   {id:"pubPension", type:"single", q:n=>`Does ${who(n)} (or a spouse, living or late) get a pension from a government job that did NOT pay into Social Security?`, hint:"In Massachusetts this includes most public school teachers, and many police officers, firefighters, and city or state workers.",
     help:"Answer Yes if the job paid into a public retirement system (like the Massachusetts Teachers' Retirement System) instead of Social Security — whether it's their own pension or a spouse's. A 2025 law ended the rules that used to cut Social Security for these families, so some are now owed money they never applied for.",
     opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}], showIf:a=>Math.max(num(a.age), a.marital==="married"?num(a.spouseAge):0)>=55},
-  {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Do NOT count the home or one car.",
+  {id:"assets", type:"currency", q:"Roughly, total savings & investments?", hint:"Do NOT count the home or one car.", none:true,
     help:"Add up checking, savings, CDs, and investment/IRA accounts. Do NOT count the home they live in or one car. A ballpark is fine."},
-  {id:"medExpenses", type:"currency", q:"Yearly out-of-pocket medical costs?", hint:"A rough estimate is fine. Enter 0 if unsure.", optional:true,
+  {id:"medExpenses", type:"currency", q:"Yearly out-of-pocket medical costs?", hint:"A rough estimate is fine. Enter 0 if unsure.", optional:true, none:true,
     help:"Out-of-pocket health costs over a year: premiums, copays, prescriptions, dental, glasses. Seniors get extra food-assistance (SNAP) credit for these, so even a rough number helps."},
   {id:"propTax", type:"currency", q:"Yearly property tax bill?", hint:"Your best estimate is fine.", showIf:a=>a.housing==="own",
     help:"On the city/town property tax bill. It often comes quarterly — add the four quarters. You can also look it up free on the town's online assessor database by address."},
@@ -897,6 +898,7 @@ function render(){
   const isLast = (i===vis.length-1);
   const doWhat = q.type==="single" ? "Tap the answer that fits — it moves on by itself."
                : q.type==="multi" ? "Tap every one that applies, then tap Next."
+               : q.quick ? "Tap the number — it moves on by itself."
                : "Type your answer, then tap Next.";
   // Question 1 carries the length that used to sit in the page intro (2026-09-29, "Question first" start)
   const stepTxt = i===0 ? `Question 1 of about ${vis.length} &middot; <span>5–10 minutes</span>`
@@ -924,17 +926,31 @@ function render(){
     const per = q.period ? (A[q.id+"_per"] || q.period) : null;
     let val = (A[q.id]!=null && A[q.id]!=="unknown")?A[q.id]:"";
     if(per==="mo" && val!=="") val = String(Math.round(num(val)/12));
+    // Tap-to-answer (Ryan, 2026-09-30): household size is a row of number buttons; the box only opens for "6 or more"
+    // (or when a bigger number is already saved). A tap stores exactly what typing that number would.
+    const quick = q.quick || null;
+    const boxOpen = !quick || (val!=="" && !quick.includes(String(val)));
+    if(quick){
+      inner += `<div class="quick" role="radiogroup" aria-labelledby="qtext"${q.hint?' aria-describedby="qhint"':''}>`;
+      quick.forEach(v=>{ const on = String(val)===v;
+        inner += `<button type="button" class="qk${on?' sel':''}" data-v="${v}" role="radio" aria-checked="${on}" aria-label="${v} ${v==="1"&&q.unit1?q.unit1:q.suffix}">${v}</button>`; });
+      const moreOn = boxOpen && val!=="";
+      inner += `<button type="button" class="qk more${moreOn?' sel':''}" id="qmore" role="radio" aria-checked="${moreOn}">${q.more}</button></div>`;
+    }
     if(per){
       inner += `<div class="pertoggle" role="radiogroup" aria-label="Per month or per year">
         <button type="button" class="per ${per==='mo'?'sel':''}" data-per="mo" role="radio" aria-checked="${per==='mo'}">Per month</button>
         <button type="button" class="per ${per==='yr'?'sel':''}" data-per="yr" role="radio" aria-checked="${per==='yr'}">Per year</button>
       </div>`;
     }
-    inner += `<div class="ipwrap ${isCur?'cur':''}">${isCur?'<span class="pre">$</span>':''}
+    inner += `<div class="ipwrap ${isCur?'cur':''}" id="ipbox"${boxOpen?'':' hidden'}>${isCur?'<span class="pre">$</span>':''}
       <input id="ip" type="${q.type==='text'?'text':'number'}" inputmode="${q.type==='text'?'text':'decimal'}"
-      value="${val}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}" aria-labelledby="qtext"${q.hint?' aria-describedby="qhint"':''}${q.id==="town"?' autocomplete="off" autocapitalize="words" aria-autocomplete="list" aria-controls="townsug"':''}></div>${q.id==="town"?'<div id="townsug" class="townsug" role="listbox" aria-label="Matching Massachusetts towns"></div>':''}`;
+      value="${boxOpen?val:''}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}" aria-labelledby="qtext"${q.hint?' aria-describedby="qhint"':''}${q.id==="town"?' autocomplete="off" autocapitalize="words" aria-autocomplete="list" aria-controls="townsug"':''}></div>${q.id==="town"?'<div id="townsug" class="townsug" role="listbox" aria-label="Matching Massachusetts towns"></div>':''}`;
     if(per) inner += `<p class="hint" style="margin:8px 0 0" id="perhint">${per==='mo'?'dollars per month':'dollars per year'}</p>`;
-    else if(q.suffix) inner += `<p class="hint" style="margin:8px 0 0">in ${q.suffix}</p>`;
+    else if(q.suffix) inner += `<p class="hint" style="margin:8px 0 0" id="sfxhint"${boxOpen?'':' hidden'}>in ${q.suffix}</p>`;
+    // "None ($0)" where zero is a common, honest answer (other income, others' income, savings, medical costs)
+    if(q.none){ const on = A[q.id]!=null && A[q.id]!=="" && A[q.id]!=="unknown" && num(A[q.id])===0;
+      inner += `<button type="button" class="nonebtn${on?' sel':''}" id="none0" aria-pressed="${on}">None ($0)</button>`; }
   }
 
   inner += `<div class="nav">
@@ -967,6 +983,14 @@ function render(){
   } else {
     const ip=document.getElementById("ip"); if(!TOUCH){ try{ ip.focus({preventScroll:true}); }catch(e){ ip.focus(); } }   // no auto-keyboard on phones
     ip.onkeydown=e=>{if(e.key==="Enter")document.getElementById("next").click();};
+    app.querySelectorAll(".quick .qk[data-v]").forEach(b=>b.onclick=()=>{ if(tapTooSoon()) return; saveInput(q,b.dataset.v); i++; render(); });
+    const qm=document.getElementById("qmore"); if(qm) qm.onclick=()=>{
+      document.getElementById("ipbox").hidden=false; const sh=document.getElementById("sfxhint"); if(sh) sh.hidden=false;
+      app.querySelectorAll(".quick .qk").forEach(x=>{ const on=x===qm; x.classList.toggle("sel",on); x.setAttribute("aria-checked",on); });
+      const pw=document.getElementById("pickone"); if(pw) pw.remove();
+      try{ ip.focus({preventScroll:true}); }catch(e){ ip.focus(); }   // they chose to type, so the keyboard opening is wanted
+    };
+    const n0=document.getElementById("none0"); if(n0) n0.onclick=()=>{ if(tapTooSoon()) return; saveInput(q,"0"); i++; render(); };
     app.querySelectorAll(".per").forEach(b=>b.onclick=()=>{
       A[q.id+"_per"]=b.dataset.per;
       app.querySelectorAll(".per").forEach(x=>{const on=x===b; x.classList.toggle("sel",on); x.setAttribute("aria-checked",on);});
@@ -1002,6 +1026,15 @@ function render(){
         w.style.cssText="margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#FBEECB;color:#5B4210;font-weight:600";
         w.textContent = q.noSkip ? "Tap one of the answers above to continue." : "Tap one of the answers above — or \"I'm not sure\" — to continue.";
         app.querySelector(".opts").after(w); }
+      return;
+    }
+    if(isInput && q.quick && document.getElementById("ipbox").hidden){
+      if(A[q.id]!=null && q.quick.includes(String(A[q.id]))){ i++; render(); return; }   // came back and kept the tapped answer
+      let w=document.getElementById("pickone");
+      if(!w){ w=document.createElement("p"); w.id="pickone"; w.className="hint"; w.setAttribute("role","alert");
+        w.style.cssText="margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#FBEECB;color:#5B4210;font-weight:600";
+        w.textContent = "Tap a number above — or \"I'm not sure\" — to continue.";
+        app.querySelector(".quick").after(w); }
       return;
     }
     if(isInput){
