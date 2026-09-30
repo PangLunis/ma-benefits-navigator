@@ -866,10 +866,23 @@ function keepQuestionInView(){
   const hdr=document.querySelector(".site-header");
   const top=(hdr && /sticky|fixed/.test(getComputedStyle(hdr).position)) ? hdr.getBoundingClientRect().bottom : 0;
   const r=card.getBoundingClientRect();
-  if(r.top < top+4 || r.top > window.innerHeight*0.75) window.scrollTo(0, Math.max(0, window.scrollY + r.top - top - 12));
+  if(r.top < top+4 || r.top > window.innerHeight*0.75) window.scrollTo({top: Math.max(0, window.scrollY + r.top - top - 12), left: 0, behavior: "instant"});
+}
+/* Phones (Ryan 2026-09-30: "these pages don't load at the top"): the page auto-focused each text box, so the iPhone
+   keyboard popped up and Safari scrolled the page to make room, pushing the question under the sticky header; when the
+   keyboard closed the page stayed there. On touch screens we no longer auto-focus (the person taps the box), we close
+   the keyboard before showing the next question, and we line the question up again once the keyboard has closed. */
+const TOUCH = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+function realignAfterKeyboard(){
+  if(!TOUCH || !window.visualViewport) return;
+  const vv = window.visualViewport; let done = false;
+  const once = () => { if(done) return; done = true; vv.removeEventListener("resize", once); setTimeout(keepQuestionInView, 80); };
+  vv.addEventListener("resize", once);
+  setTimeout(() => { if(!done){ done = true; vv.removeEventListener("resize", once); } }, 1500);
 }
 function tapTooSoon(){ const g = (typeof window.BF_TAP_GUARD_MS==="number") ? window.BF_TAP_GUARD_MS : 350; return performance.now()-renderedAt < g; }
 function render(){
+  if(TOUCH){ const ae=document.activeElement; if(ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName)) ae.blur(); }   // close the phone keyboard first
   saveProgress();
   const vis = visible();
   if(i>=vis.length){ editMode=false; if(!engineShown && engineWanted()){ engineShown=true; return playEngine(results); } return results(); }
@@ -937,7 +950,7 @@ function render(){
   wireNav(vis);
   linkifyPhones(app);
   renderedAt = performance.now();
-  if(renderCount++ > 0) keepQuestionInView();   // not on first load: the intro text above the first question stays visible
+  if(renderCount++ > 0){ keepQuestionInView(); realignAfterKeyboard(); }   // not on first load: the intro text above the first question stays visible
 
   // wire choices
   if(q.type==="single"){
@@ -952,7 +965,7 @@ function render(){
       const nb=document.querySelector('#app .opt[data-v="'+v+'"]'); if(nb) try{ nb.focus({preventScroll:true}); }catch(e){ nb.focus(); }   // keep focus on the ticked box
     });
   } else {
-    const ip=document.getElementById("ip"); try{ ip.focus({preventScroll:true}); }catch(e){ ip.focus(); }
+    const ip=document.getElementById("ip"); if(!TOUCH){ try{ ip.focus({preventScroll:true}); }catch(e){ ip.focus(); } }   // no auto-keyboard on phones
     ip.onkeydown=e=>{if(e.key==="Enter")document.getElementById("next").click();};
     app.querySelectorAll(".per").forEach(b=>b.onclick=()=>{
       A[q.id+"_per"]=b.dataset.per;
