@@ -2041,8 +2041,12 @@ function results(){
       <h2 class="sr-only">Your results</h2>
       <div class="pill" style="color:#fff;background:rgba(255,255,255,.18)">${String((townLookup(A.town)||{}).name||A.town||"Massachusetts").replace(/[<>&"]/g,"")}</div>
       <div class="big">${total>0?"≈ "+money(total)+"/yr":"Let's dig in"}</div>
-      <div class="lbl">in benefits ${nm==="this person"?"they":nm} may be leaving on the table — estimated, if approved for the strong matches</div>
-      ${maybeTotal>0?`<div class="lbl" style="opacity:.9;margin-top:4px;">+ up to ~${money(maybeTotal)}/yr more in programs worth verifying</div>`:""}
+      ${total>0 ? `<div class="lbl">in benefits ${nm==="this person"?"they":nm} may be leaving on the table — estimated, if approved for the strong matches</div>
+      ${maybeTotal>0?`<div class="lbl" style="opacity:.9;margin-top:4px;">+ up to ~${money(maybeTotal)}/yr more in programs worth verifying</div>`:""}`
+      /* no strong matches (2026-09-30): "Let's dig in" used to run straight into "in benefits ... leaving on the table" */
+      : `<div class="lbl">${maybeTotal>0 ? `Up to ~${money(maybeTotal)}/yr in programs worth verifying for ${nm==="this person"?"them":nm}`
+          : maybeN ? `No strong matches yet, but ${maybeN} program${maybeN>1?"s":""} worth a closer look for ${nm==="this person"?"them":nm}`
+          : `No strong matches for ${nm==="this person"?"them":nm} right now`}</div>`}
       <div class="sub">${likely.length} to apply for now &middot; ${maybeN} worth verifying${haveN?` &middot; ${haveN} already active`:""}. Tap any card for the exact form, documents, and where to file.</div>
     </div>
     ${startHere}
