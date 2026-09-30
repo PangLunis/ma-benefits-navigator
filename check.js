@@ -48,7 +48,13 @@ const Q = [
   {id:"town", type:"text", q:"Which city or town in Massachusetts?", hint:"Property-tax breaks are set town-by-town, so we need this.", noSkip:true},
   {id:"hhSize", type:"number", q:n=>`How many people live in the home, counting ${who(n)}?`, hint:"Include a spouse, adult children, grandchildren — everyone who lives there.", suffix:"people",
     quick:["1","2","3","4","5"], more:"6 or more", unit1:"person"},
-  {id:"hhOtherInc", type:"currency", period:"yr", q:"Income of everyone ELSE in the home?", hint:"Not counting them or their spouse. Heating help and utility discounts look at the whole household. Enter 0 if none.", optional:true, none:true,
+  {id:"hhOtherInc", type:"currency", period:"yr",
+    // Ryan 2026-09-30: "not counting them or their spouse" was confusing (who is "them"? and a spouse was named even for a
+    // widow). Now names the person, mentions a spouse only when married, and gives an example.
+    q:n=>n.marital==="married" ? `Income of the other people who live with ${who(n)} and their spouse?` : `Income of the other people who live with ${who(n)}?`,
+    hint:n=>(n.marital==="married" ? `Don't include ${who(n)} or their spouse — we ask about their own income later.` : `Don't include ${who(n)} — we ask about ${who(n)}'s own income later.`)
+      + ` Example: if a grown son lives there and earns $30,000 a year, put in $30,000. Heating help and utility discounts look at the whole household. If no one else has income, tap None.`,
+    optional:true, none:true,
     help:"Add up wages, Social Security, pensions and other income of the other people who live there. A rough number is fine.",
     showIf:a=>num(a.hhSize) > (a.marital==="married"?2:1)},
   {id:"ownYears", type:"number", q:"About how many years owned?", hint:"Some senior exemptions require owning ~5 years.", suffix:"years",
@@ -59,7 +65,7 @@ const Q = [
     help:"Check the deed or the top of the tax bill. \"In a trust\" = a family/living trust owns the home. \"Life estate\" is a legal arrangement (often for Medicaid planning). Don't know? Tap \"I'm not sure.\"",
     opts:[{v:"own_name",l:"In their own name"},{v:"trust",l:"In a trust"},{v:"life_estate",l:"Life estate"},{v:"multi",l:"Shared with others on the deed"}],
     showIf:a=>a.housing==="own"},
-  {id:"incomeSS", type:"currency", period:"mo", q:n=>n.marital==="married"?`Social Security income for ${who(n)==="this person"?"them":who(n)} and their spouse, combined?`:`${whoC(n)} Social Security income?`, hint:"Just Social Security, before Medicare is taken out. If married, add both spouses together. Pick per month or per year. Enter 0 if none.",
+  {id:"incomeSS", type:"currency", period:"mo", q:n=>n.marital==="married"?`Social Security income for ${who(n)==="this person"?"them":who(n)} and their spouse, combined?`:`${whoC(n)} Social Security income?`, hint:"Just Social Security, before Medicare is taken out. If married, add both spouses together. Pick per month or per year. If none, tap None.", none:true,
     help:"The yearly Social Security total BEFORE the Medicare premium comes out — it's on the annual Social Security letter (Social Security benefit statement, Form SSA-1099). If you only know the monthly deposit, add about $203/month for Medicare Part B, then × 12. A rough number is fine."},
   {id:"incomeOther", type:"currency", period:"yr", q:n=>n.marital==="married"?"Other income — both spouses combined?":"Other income?", hint:"Everything except Social Security — pensions, wages, individual retirement account (IRA) withdrawals, interest. If married, include the spouse's income too, even if the spouse still works. Pick per month or per year.", none:true,
     help:"Add up pensions, any wages, IRA/401(k) withdrawals, interest & dividends, and rental income — everything EXCEPT Social Security. A close estimate is fine."},
@@ -905,7 +911,7 @@ function render(){
                         : `Question ${i+1} of ${vis.length} &middot; <span>${doWhat}</span>`;
   // Audit F7 (2026-09-29): the question is a heading and names its answer group / text box; the hint describes them.
   inner += `<div class="card"><div class="qstep">${stepTxt}</div><h2 class="q" id="qtext" tabindex="-1">${qt}</h2>`;
-  if(q.hint) inner += `<p class="hint" id="qhint">${q.hint}</p>`;
+  if(q.hint) inner += `<p class="hint" id="qhint">${typeof q.hint==="function"?q.hint(A):q.hint}</p>`;
   if(q.help) inner += `<details class="help"><summary>ⓘ What's this? Where do I find it?</summary><div class="hbox">${q.help}</div></details>`;
   if(q.noLetter) inner += `<details class="help noletter"><summary>📄 Can't find the letter? How to check without it</summary><div class="hbox">${NO_LETTER_HTML}</div></details>`;
 
