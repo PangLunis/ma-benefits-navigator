@@ -857,6 +857,7 @@ function playEngine(done){
 }
 function esc(x){ return String(x).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
 let renderedAt = -1e9, renderCount = 0;
+let lastQid = null;   // which question was on screen last render (audit F6)
 /* Each new question must open with its first line on screen (Ryan 2026-09-28: "sometimes you have to slide the screen to see the
    top part of the question"). The page keeps its scroll position between questions, so after tapping an answer low on a long
    question — or when the phone keyboard pushes the page up — the next question's top ended up under the sticky header. */
@@ -887,14 +888,15 @@ function render(){
   // Question 1 carries the length that used to sit in the page intro (2026-09-29, "Question first" start)
   const stepTxt = i===0 ? `Question 1 of about ${vis.length} &middot; <span>5–10 minutes</span>`
                         : `Question ${i+1} of ${vis.length} &middot; <span>${doWhat}</span>`;
-  inner += `<div class="card"><div class="qstep">${stepTxt}</div><div class="q">${qt}</div>`;
-  if(q.hint) inner += `<p class="hint">${q.hint}</p>`;
+  // Audit F7 (2026-09-29): the question is a heading and names its answer group / text box; the hint describes them.
+  inner += `<div class="card"><div class="qstep">${stepTxt}</div><h2 class="q" id="qtext" tabindex="-1">${qt}</h2>`;
+  if(q.hint) inner += `<p class="hint" id="qhint">${q.hint}</p>`;
   if(q.help) inner += `<details class="help"><summary>ⓘ What's this? Where do I find it?</summary><div class="hbox">${q.help}</div></details>`;
   if(q.noLetter) inner += `<details class="help noletter"><summary>📄 Can't find the letter? How to check without it</summary><div class="hbox">${NO_LETTER_HTML}</div></details>`;
 
   const isInput = (q.type==="number"||q.type==="currency"||q.type==="text");
   if(q.type==="single"||q.type==="multi"){
-    inner += `<div class="opts ${q.type==='multi'?'ms':''}" role="${q.type==='multi'?'group':'radiogroup'}">`;
+    inner += `<div class="opts ${q.type==='multi'?'ms':''}" role="${q.type==='multi'?'group':'radiogroup'}" aria-labelledby="qtext"${q.hint?' aria-describedby="qhint"':''}>`;
     const role = q.type==="multi"?"checkbox":"radio";
     q.opts.forEach(o=>{
       const cur = q.type==="multi" ? (A[q.id]||[]).includes(o.v) : A[q.id]===o.v;
@@ -917,7 +919,7 @@ function render(){
     }
     inner += `<div class="ipwrap ${isCur?'cur':''}">${isCur?'<span class="pre">$</span>':''}
       <input id="ip" type="${q.type==='text'?'text':'number'}" inputmode="${q.type==='text'?'text':'decimal'}"
-      value="${val}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}"${q.id==="town"?' autocomplete="off" autocapitalize="words" aria-autocomplete="list" aria-controls="townsug"':''}></div>${q.id==="town"?'<div id="townsug" class="townsug" role="listbox" aria-label="Matching Massachusetts towns"></div>':''}`;
+      value="${val}" placeholder="${q.placeholder||''}" aria-label="${(NAV[q.id]||'Answer')}" aria-labelledby="qtext"${q.hint?' aria-describedby="qhint"':''}${q.id==="town"?' autocomplete="off" autocapitalize="words" aria-autocomplete="list" aria-controls="townsug"':''}></div>${q.id==="town"?'<div id="townsug" class="townsug" role="listbox" aria-label="Matching Massachusetts towns"></div>':''}`;
     if(per) inner += `<p class="hint" style="margin:8px 0 0" id="perhint">${per==='mo'?'dollars per month':'dollars per year'}</p>`;
     else if(q.suffix) inner += `<p class="hint" style="margin:8px 0 0">in ${q.suffix}</p>`;
   }
@@ -947,6 +949,7 @@ function render(){
       if(excl.includes(v)){ set = set.has(v)?new Set():new Set([v]); }     // exclusive choice
       else { excl.forEach(e=>set.delete(e)); set.has(v)?set.delete(v):set.add(v); }
       A[q.id]=[...set]; render();
+      const nb=document.querySelector('#app .opt[data-v="'+v+'"]'); if(nb) try{ nb.focus({preventScroll:true}); }catch(e){ nb.focus(); }   // keep focus on the ticked box
     });
   } else {
     const ip=document.getElementById("ip"); try{ ip.focus({preventScroll:true}); }catch(e){ ip.focus(); }
@@ -958,6 +961,12 @@ function render(){
       ip.focus();
     });
   }
+  // Audit F6 (2026-09-29): after an answer, move focus to the new question. The answer button that had focus is destroyed
+  // by the re-render, which dropped keyboard and screen-reader users back to the top of the page (23 Tab presses to get
+  // back on a desktop). Not on first load; text-box screens already focus their box.
+  if((q.type==="single"||q.type==="multi") && renderCount>1 && q.id!==lastQid){ const qh=document.getElementById("qtext"); if(qh){ try{ qh.focus({preventScroll:true}); }catch(e){ qh.focus(); } } }
+  lastQid=q.id;
+  const qst=document.getElementById("qstatus"); if(qst) qst.textContent=`Question ${i+1} of ${vis.length}`;   // the live region is now just this line (F7)
   const back=document.getElementById("back"); if(back) back.onclick=()=>{ if(tapTooSoon()) return; i=Math.max(0,i-1);render();};
   const skip=document.getElementById("skip"); if(skip) skip.onclick=()=>{ if(tapTooSoon()) return; A[q.id]="unknown"; i++; render();};
   if(q.id==="town"){
@@ -1939,6 +1948,7 @@ function programs(){
 
 /* ---------- Results screen ---------- */
 function results(){
+  { const qst=document.getElementById("qstatus"); if(qst) qst.textContent="Your results are ready."; }
   if(!statFinished){ statFinished=true; stat("finish",{qn:furthestN, qt:visible().length}); }
   document.getElementById("bar").style.width="100%";
   document.getElementById("privacy").style.display="none";

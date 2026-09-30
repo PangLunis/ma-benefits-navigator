@@ -66,7 +66,8 @@
     .tool .card::after { content: none; }
     .tool .qstep { font-size: 14px; font-weight: 800; color: var(--clay); letter-spacing: .02em; margin-bottom: 8px; }
     .tool .qstep span { color: var(--ink-soft); font-weight: 600; letter-spacing: 0; }
-    .tool .q { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.25; margin: 2px 0 6px; color: var(--pine-deep); }
+    .tool .q { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.25; margin: 2px 0 6px; color: var(--pine-deep); letter-spacing: normal; }
+    .tool .q:focus { outline: none; }   /* focused by script after each answer (F6), not a control */
     .tool .hint { color: var(--t-muted); font-size: 16px; margin: 0 0 18px; }
     .tool .opts { display: flex; flex-direction: column; gap: 11px; }
     .tool button.opt { appearance: none; text-align: left; width: 100%; background: #fff; border: 2px solid var(--t-line); border-radius: 13px; padding: 16px; font-size: 19px; font-weight: 600; color: var(--ink); cursor: pointer; transition: .12s; display: flex; align-items: center; gap: 12px; font-family: var(--sans); }
@@ -426,7 +427,8 @@
     </div>
 
     <div class="bar" aria-hidden="true"><i id="bar"></i></div>
-    <div id="app" aria-live="polite"></div>
+    <p id="qstatus" class="sr-only" aria-live="polite"></p>
+    <div id="app"></div>
     <div class="checkfacts">
       <label class="remember"><input type="checkbox" id="rememberBox" checked> Remember my answers on this device, so I can stop and come back later</label>
       <script>(function(){var b=document.getElementById("rememberBox");try{b.checked=localStorage.getItem("bf_remember")!=="0";}catch(e){b.checked=false;b.disabled=true;}
