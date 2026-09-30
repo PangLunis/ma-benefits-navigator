@@ -907,3 +907,19 @@ img { max-width: 100%; display: block; }
   .brand-sub.brand-tag { display: block; position: absolute; left: 0; top: calc(100% + 7px); font-size: 13px; line-height: 1.2; white-space: nowrap; margin: 0; }
   .header-inner.wrap { padding-bottom: 26px; }
 }
+
+/* Audit F8 (2026-09-29): with the browser's text size at 200%, the header button could not fit beside the logo and pushed
+   the page sideways (153px on a phone, 244px on a desktop). The header may now wrap the button onto a second row; on
+   phones the row gap leaves room for the slogan line, which sits under the logo. And the skip link is hidden with a
+   transform, so a taller (enlarged) link no longer hangs down over the logo. */
+.header-inner { flex-wrap: wrap; row-gap: 10px; }
+@media (max-width: 430px) { .header-inner.wrap { row-gap: 2.6rem; } }
+/* The phone nav is an empty item (its links are hidden below 900px) that cost a gap; without it the header still fits on
+   one row at 320px with normal text (measured 320-1440px: heights unchanged). */
+@media (max-width: 900px) { .site-header .nav { display: none; } .header-cta, .site-header .tsize { margin-left: auto; } }
+@media (max-width: 360px) { .header-inner.wrap { padding-inline: 10px; } }
+.skip-link { top: 0; transform: translateY(-130%); transition: transform .15s ease; }
+.skip-link:focus { transform: none; }
+/* Same audit item: at 200% text "Massachusetts" (54px) is wider than a phone column and pushed the page 34px sideways.
+   Long words in headings may now break instead. No effect at normal sizes (measured). */
+h1, h2, h3 { overflow-wrap: break-word; }
