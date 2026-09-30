@@ -913,7 +913,7 @@ img { max-width: 100%; display: block; }
    phones the row gap leaves room for the slogan line, which sits under the logo. And the skip link is hidden with a
    transform, so a taller (enlarged) link no longer hangs down over the logo. */
 .header-inner { flex-wrap: wrap; row-gap: 10px; }
-@media (max-width: 430px) { .header-inner.wrap { row-gap: 2.6rem; } }
+@media (max-width: 430px) { .header-inner.wrap { row-gap: 30px; } }   /* just room for the 13px slogan line; rem made it a 61px hole at 200% text */
 /* The phone nav is an empty item (its links are hidden below 900px) that cost a gap; without it the header still fits on
    one row at 320px with normal text (measured 320-1440px: heights unchanged). */
 @media (max-width: 900px) { .site-header .nav { display: none; } .header-cta, .site-header .tsize { margin-left: auto; } }
@@ -923,3 +923,7 @@ img { max-width: 100%; display: block; }
 /* Same audit item: at 200% text "Massachusetts" (54px) is wider than a phone column and pushed the page 34px sideways.
    Long words in headings may now break instead. No effect at normal sizes (measured). */
 h1, h2, h3 { overflow-wrap: break-word; }
+
+/* Ryan 2026-09-30: at 200% browser text the floating 'Start the free check' pill grew to 146px (22% of the screen) and
+   covered the headline. It floats over content, so its size is capped: grows with text up to 20px, then stops. */
+@media (max-width: 720px) { .sticky-cta { font-size: min(1.08rem, 20px); } }
