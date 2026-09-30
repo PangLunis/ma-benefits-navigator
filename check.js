@@ -823,6 +823,31 @@ function answerChips(){
   if(A.disability==="yes") c.push("Has a disability");
   return c.slice(0,8);
 }
+// Results reveal (Ryan 2026-09-30, "a big unveil"): right after the checking animation, the yearly total counts up
+// from $0 while each strong match drops in underneath with its amount. Only after finishing the questions in this
+// visit (never when saved answers reopen, never with reduced motion); any tap, key or scroll shows the end state.
+let revealPending=false, revealStop=null;
+function runReveal(items, total, delay){
+  const hl=document.querySelector("#app .headline"); if(!hl) return;
+  const odo=hl.querySelector(".odo"), lis=[...hl.querySelectorAll(".rv-item")];
+  const n=Math.max(1,lis.length), step=Math.max(260, Math.min(520, 2600/n));
+  const fmt=v=>"≈ "+money(v)+"/yr";
+  const marks=[]; items.reduce((acc,p)=>{ acc+=(p.val||0); marks.push(acc); return acc; }, 0);
+  let raf=0, stopped=false; const timers=[];
+  const EVS=["pointerdown","keydown","wheel","touchmove"];
+  const end=()=>{ if(stopped) return; stopped=true; cancelAnimationFrame(raf); timers.forEach(clearTimeout);
+    lis.forEach(li=>li.classList.add("in")); if(odo) odo.textContent=fmt(total);
+    hl.classList.remove("rv-anim"); if(total>0) hl.classList.add("rv-done");
+    EVS.forEach(ev=>removeEventListener(ev,end,true)); revealStop=null; };
+  revealStop=end;
+  const tween=(from,to,ms)=>{ cancelAnimationFrame(raf); const t0=performance.now();
+    const f=now=>{ if(stopped) return; const x=Math.min(1,(now-t0)/ms), e=1-Math.pow(1-x,3); if(odo) odo.textContent=fmt(from+(to-from)*e); if(x<1) raf=requestAnimationFrame(f); };
+    raf=requestAnimationFrame(f); };
+  lis.forEach((li,k)=>timers.push(setTimeout(()=>{ li.classList.add("in"); const from=k?marks[k-1]:0;
+    if(total>0 && marks[k]>from) tween(from, marks[k], step*0.9); }, delay+k*step)));
+  timers.push(setTimeout(end, delay+n*step+350));
+  EVS.forEach(ev=>addEventListener(ev,end,{capture:true,passive:true}));
+}
 function playEngine(done){
   const app=document.getElementById("app");
   const ps=programs();
@@ -892,7 +917,7 @@ function render(){
   if(TOUCH){ const ae=document.activeElement; if(ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName)) ae.blur(); }   // close the phone keyboard first
   saveProgress();
   const vis = visible();
-  if(i>=vis.length){ editMode=false; if(!engineShown && engineWanted()){ engineShown=true; return playEngine(results); } return results(); }
+  if(i>=vis.length){ editMode=false; if(!engineShown && engineWanted()){ engineShown=true; revealPending=true; return playEngine(results); } return results(); }
   const q = vis[i];
   statProgress(vis);
   const doneN = vis.filter(x=>ansState(x)!=="empty").length;
@@ -2031,62 +2056,67 @@ function results(){
   const formsReady = nForms ? `<div class="formsready"><div class="fr-t">📄 ${nForms} official form${nForms>1?"s are":" is"} ready for ${nm==="this person"?"you":nm}, already filled in from these answers</div>
       <button type="button" class="btn prim fr-guide">✍️ Fill in my forms — ${nQ} quick questions</button>
       <a class="fr-see" href="#packet">See the forms ↓</a></div>` : "";
-  const shPool = likely.filter(p=>!EXEMPT.includes(p.id) || (p.val||0)===exMax);   // one property-tax exemption at most (they don't stack)
-  let shPick = shPool.slice(0,3);
-  if(shPick.length<3) shPick = shPick.concat(maybes.filter(p=>(p.val||0)>0).sort((a,b)=>b.val-a.val).slice(0,3-shPick.length));
-  const startHere = shPick.length ? `<div class="starthere"><h3>👉 Start here: ${shPick.length===1?"the one worth the most":`the ${shPick.length} worth the most`}</h3><ol>${
-      shPick.map(p=>`<li><a href="#prog-${p.id}">${p.name}</a> <span class="sh-v">${p.valTxt}</span></li>`).join("")}</ol>
-      <p class="sh-note">Tap one to jump to it — each card shows the form, what to bring, and where to file. Already getting one? Tap "I already get this" on its card.</p></div>` : "";
-  let h=`<div class="headline">
+  // The reveal list = exactly what the headline total is made of: every strong match that isn't a property-tax
+  // exemption, plus the single largest exemption (they don't stack). With no strong matches, the ones worth verifying.
+  const exTop = likely.filter(p=>EXEMPT.includes(p.id)).sort((a,b)=>(b.val||0)-(a.val||0))[0];
+  const rvItems = (total>0 ? likely.filter(p=>!EXEMPT.includes(p.id)).concat(exTop?[exTop]:[]) : maybes.slice())
+                    .sort((a,b)=>(b.val||0)-(a.val||0));
+  if(revealStop) revealStop();
+  const rvAnim = revealPending && rvItems.length>0; revealPending=false;
+  const whoO = nm==="this person"?"them":nm;
+  let h=`<div class="headline${rvAnim?" rv-anim":""}">
       <h2 class="sr-only">Your results</h2>
       <div class="pill" style="color:#fff;background:rgba(255,255,255,.18)">${String((townLookup(A.town)||{}).name||A.town||"Massachusetts").replace(/[<>&"]/g,"")}</div>
-      <div class="big">${total>0?"≈ "+money(total)+"/yr":"Let's dig in"}</div>
-      ${total>0 ? `<div class="lbl">in benefits ${nm==="this person"?"they":nm} may be leaving on the table — estimated, if approved for the strong matches</div>
-      ${maybeTotal>0?`<div class="lbl" style="opacity:.9;margin-top:4px;">+ up to ~${money(maybeTotal)}/yr more in programs worth verifying</div>`:""}`
+      <div class="big">${total>0?`<span class="odo" aria-hidden="true">≈ ${money(rvAnim?0:total)}/yr</span><span class="sr-only">About ${money(total)} a year</span>`:"Let's dig in"}</div>
+      ${total>0 ? `<div class="lbl">in benefits ${nm==="this person"?"they":nm} may be leaving on the table — estimated, if approved for the strong matches</div>`
       /* no strong matches (2026-09-30): "Let's dig in" used to run straight into "in benefits ... leaving on the table" */
-      : `<div class="lbl">${maybeTotal>0 ? `Up to ~${money(maybeTotal)}/yr in programs worth verifying for ${nm==="this person"?"them":nm}`
-          : maybeN ? `No strong matches yet, but ${maybeN} program${maybeN>1?"s":""} worth a closer look for ${nm==="this person"?"them":nm}`
-          : `No strong matches for ${nm==="this person"?"them":nm} right now`}</div>`}
-      <div class="sub">${likely.length} to apply for now &middot; ${maybeN} worth verifying${haveN?` &middot; ${haveN} already active`:""}. Tap any card for the exact form, documents, and where to file.</div>
+      : `<div class="lbl">${maybeTotal>0 ? `Up to ~${money(maybeTotal)}/yr in programs worth verifying for ${whoO}`
+          : maybeN ? `No strong matches yet, but ${maybeN} program${maybeN>1?"s":""} worth a closer look for ${whoO}`
+          : `No strong matches for ${whoO} right now`}</div>`}
+      ${rvItems.length?`<ol class="rv-list">${rvItems.map(p=>`<li class="rv-item"><a href="#prog-${p.id}"><span class="rv-nm">${p.name}</span><span class="rv-v">${p.valTxt}</span></a></li>`).join("")}</ol>`:""}
+      ${total>0 && maybeTotal>0?`<div class="lbl" style="opacity:.9;margin-top:10px;">+ up to ~${money(maybeTotal)}/yr more in programs worth verifying</div>`:""}
+      <div class="sub">${likely.length} to apply for now &middot; ${maybeN} worth verifying${haveN?` &middot; ${haveN} already active`:""}. Tap any one for the exact form, documents, and where to file.</div>
+      <div class="rv-est">Estimates, not guarantees — each program must be applied for and confirmed.</div>
     </div>
-    ${startHere}
     ${formsReady}
     ${Math.max(num(A.age)||0, A.marital==="married"?(num(A.spouseAge)||0):0)<60 && A.disability!=="yes" ? `<div class="estnote" style="background:#FFF6E0;border-color:#EFD891"><b>Note:</b> most programs here are for people 60 and older (many start at 65). ${nm==="this person"?"They are":nm+" is"} ${num(A.age)||"under 60"}, so only programs with no age requirement are shown as possible matches.</div>`:""}
-    <div class="estnote">These are <b>estimates, not guarantees</b> — each program must be applied for and confirmed, and amounts vary by income and town. This tool finds what to chase; it doesn't approve anything.</div>
     <div class="legend">
       <span><i style="background:var(--green)"></i>Apply now</span>
       <span><i style="background:var(--amber)"></i>Verify / need info</span>
       ${haveN?`<span><i style="background:#0a5"></i>Already have</span>`:""}
       <span><i style="background:var(--blue)"></i>See a pro</span>
-    </div>
-    <div class="nextsteps">
+    </div>`;
+  // Ryan 2026-09-30: the money and the benefit cards come first; the guidance, fine print, town notes, forms and the
+  // answer review follow the cards (they used to be ~1,500 words between the total and the first card on a phone).
+  let tail=`<div class="nextsteps">
       <h3>What to do next</h3>
       <ol>
         ${townTaxRows(townLookup(A.town), ps).length?`<li><b>Call the ${townLookup(A.town)?.name||"town"} assessor's office</b> about senior property-tax breaks — see <b>"Your town"</b> just below for what to ask. This is the one people most often miss.</li>`:""}
-        <li><b>Start with the green "Apply for these" cards below.</b> Tap <b>How to claim it</b> on each one to see the exact form, what to gather, and where to file.</li>
+        <li><b>Start with the green "Apply for these" cards above.</b> Tap <b>How to claim it</b> on each one to see the exact form, what to gather, and where to file.</li>
         ${unknownN?`<li><b>Track down the ${unknownN} answer${unknownN>1?"s":""} you weren't sure about</b> — the yellow box explains where to find each one.</li>`:""}
         <li><b>Print or save this page</b> with the button at the bottom, so you have the list when you make calls.</li>
       </ol>
-    </div>`;
-  h+=townCard(ps);
-  h+=pkHtml;
+    </div>
+    <div class="estnote">These are <b>estimates, not guarantees</b> — each program must be applied for and confirmed, and amounts vary by income and town. This tool finds what to chase; it doesn't approve anything.</div>`;
+  tail+=townCard(ps);
+  tail+=pkHtml;
   // Review / change answers — tap "Change" to jump back to any question, then return here.
   const visQ=visible();
-  h+=`<details class="answers"><summary>✏️ Review or change your answers (${visQ.length})</summary><ul>`;
-  visQ.forEach((q,k)=>{ h+=`<li><span class="a-q">${NAV[q.id]||q.id}</span><span class="a-v">${fmtAns(q)}</span><button type="button" class="a-edit" data-k="${k}">Change</button></li>`; });
-  h+=`</ul></details>`;
+  tail+=`<details class="answers"><summary>✏️ Review or change your answers (${visQ.length})</summary><ul>`;
+  visQ.forEach((q,k)=>{ tail+=`<li><span class="a-q">${NAV[q.id]||q.id}</span><span class="a-v">${fmtAns(q)}</span><button type="button" class="a-edit" data-k="${k}">Change</button></li>`; });
+  tail+=`</ul></details>`;
 
   // "I'm not sure" checklist — resurface every skipped answer with how-to-find-it help
   const unknownQs = Q.filter(q=>A[q.id]==="unknown");
   if(unknownQs.length){
     const many=unknownQs.length>1;
-    h+=`<div class="gaps"><h3>⚠️ ${unknownQs.length} answer${many?"s":""} to track down</h3>
+    tail+=`<div class="gaps"><h3>⚠️ ${unknownQs.length} answer${many?"s":""} to track down</h3>
       <p class="lead">You marked ${many?"these":"this"} "not sure." Find ${many?"them":"it"} and re-run — ${many?"they":"it"} can change what ${nm==="this person"?"they"  : nm} qualif${nm==="this person"?"y":"ies"} for.</p>`;
-    unknownQs.forEach(q=>{ const qt=typeof q.q==="function"?q.q(A):q.q; h+=`<div class="gitem"><div class="gq">${qt}</div>${q.help?`<div class="gh">${q.help}</div>`:""}</div>`; });
-    h+=`</div>`;
+    unknownQs.forEach(q=>{ const qt=typeof q.q==="function"?q.q(A):q.q; tail+=`<div class="gitem"><div class="gq">${qt}</div>${q.help?`<div class="gh">${q.help}</div>`:""}</div>`; });
+    tail+=`</div>`;
   }
   if((A.already||[]).includes("unsure")){
-    h+=`<div class="gaps" style="background:#e6effb;border-color:#bcd0f5"><h3 style="color:#1551a8">ℹ️ First, check what's already in place</h3>
+    tail+=`<div class="gaps" style="background:#e6effb;border-color:#bcd0f5"><h3 style="color:#1551a8">ℹ️ First, check what's already in place</h3>
       <p class="lead" style="color:#33507e">You weren't sure which of these ${nm==="this person"?"they"  : nm} already gets. Here's how to check each, so you don't re-apply for something already active:</p>
       <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Circuit Breaker credit</div><div class="gh">Last year's MA state tax return — a "Schedule CB" credit line.</div></div>
       <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Property-tax exemption</div><div class="gh">The town property tax bill — an "exemption"/"senior" line lowering the amount owed.</div></div>
@@ -2125,6 +2155,7 @@ function results(){
     });
     if(collapse){ h+=`</details>`; }
   });
+  h+=tail;
 
   if(SHOW_OFFER){
     h+=`<div class="offer">
@@ -2136,13 +2167,13 @@ function results(){
         <li>We help complete the paperwork we're allowed to (exemptions, fuel assistance, SNAP) and connect you to the <b>free</b> experts for the rest</li>
         <li><b>Guarantee:</b> if we don't find at least $500/yr you aren't already getting, you pay nothing</li>
       </ul>
-      <a class="offer-btn" href="${CHECKOUT_URL||'#'}"${CHECKOUT_URL?'':' onclick="return false"'}>Get my audit &rarr;</a>
+      <a class="offer-btn" href="${CHECKOUT_URL||'#'}">Get my audit &rarr;</a>
       <div class="offer-fine">Optional paid help — everything here can also be done yourself for free. We are not a government agency and are not affiliated with one. We do <b>not</b> prepare VA claims or tax returns for a fee; those are referred to free, accredited experts. By continuing you agree to our <a href="terms.html" target="_blank">Terms</a> &amp; <a href="privacy.html" target="_blank">Privacy Policy</a>.</div>
     </div>`;
   }
   h+=`
     <div class="acts">
-      <button class="btn prim" onclick="window.print()">Print or save this plan</button>
+      <button type="button" class="btn prim" id="printPlan">Print or save this plan</button>
     </div>
     <div class="disc"><b>Important:</b> This tool gives general information based on public Massachusetts and federal program rules (2026 figures). It is <b>not</b> legal, tax, or financial advice. Dollar amounts and eligibility shown are estimates — income limits, exemption amounts, and town rules change and must be confirmed with each program or a licensed professional before you rely on them. Figures last checked September 2026. Property-tax exemptions usually can't be combined — take the one that saves the most. MassHealth/long-term-care planning should go to a licensed elder-law attorney.</div>`;
   h+=`<p class="forget"><button type="button" id="forgetBtn">🗑 Forget my answers on this device</button></p>`;
@@ -2158,6 +2189,10 @@ function results(){
     t.textContent = b.classList.contains("undo") ? "Moved back to the list to apply for." : "Moved to “Already receiving”.";
     document.body.appendChild(t); setTimeout(()=>t.remove(), 2600);
   });
+  // 2026-09-30: this was onclick="window.print()", which the page's Content-Security-Policy blocks (no inline handlers),
+  // so the button did nothing on the live site since 2026-09-28. Wired here instead.
+  const pp=document.getElementById("printPlan"); if(pp) pp.onclick=()=>window.print();
+  const ob=document.querySelector(".offer-btn"); if(ob && !CHECKOUT_URL) ob.onclick=e=>e.preventDefault();
   const fg=document.getElementById("forgetBtn"); if(fg) fg.onclick=()=>{ forgetProgress(); fg.textContent="✓ Forgotten — nothing is saved on this device"; fg.disabled=true; try{ localStorage.setItem("bf_remember","0"); }catch(e){} };
   wirePacket();
   document.querySelectorAll(".a-edit").forEach(b=>b.onclick=()=>{ editMode=true; i=parseInt(b.dataset.k,10); render(); window.scrollTo(0,0); });
@@ -2168,6 +2203,7 @@ function results(){
     a.href=u;a.download=`benefits-audit-${(A.name||"profile").replace(/\W+/g,"_")}.json`;a.click();URL.revokeObjectURL(u);
   };
   window.scrollTo(0,0);
+  if(rvAnim) runReveal(rvItems, total, 650);   // starts as the checking animation fades out
 }
 
 /* ---------- Save progress on THIS device (2026-09-26) ----------

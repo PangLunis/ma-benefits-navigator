@@ -167,6 +167,21 @@
     .tool .headline .big { font-family: var(--serif); font-size: 44px; font-weight: 700; letter-spacing: -.5px; line-height: 1; color: var(--honey); }
     .tool .headline .lbl { font-size: 16px; font-weight: 700; opacity: .95; margin-top: 9px; }
     .tool .headline .sub { font-size: 14px; opacity: .88; margin-top: 10px; }
+    /* Results reveal (Ryan 2026-09-30): the total counts up and each strong match drops in under it with its amount. */
+    .tool .headline .odo { font-variant-numeric: tabular-nums; display: inline-block; transform-origin: left center; }
+    .tool .headline.rv-done .odo { animation: rvPop .7s ease-out; }
+    @keyframes rvPop { 0% { transform: scale(1); text-shadow: none; } 35% { transform: scale(1.07); text-shadow: 0 0 18px rgba(228,161,38,.55); } 100% { transform: scale(1); text-shadow: none; } }
+    .tool .rv-list { list-style: none; margin: 16px 0 2px; padding: 0; border-top: 1px solid rgba(255,255,255,.2); }
+    .tool .rv-item a { display: grid; grid-template-columns: 1fr auto; column-gap: 10px; align-items: center; padding: 11px 2px; border-bottom: 1px solid rgba(255,255,255,.14); color: #fff; text-decoration: none; }
+    .tool .rv-item a::after { content: "›"; grid-column: 2; grid-row: 1 / span 2; font-size: 26px; line-height: 1; opacity: .7; }
+    .tool .rv-item .rv-nm { grid-column: 1; font-size: 17px; font-weight: 700; line-height: 1.3; }
+    .tool .rv-item .rv-v { grid-column: 1; font-size: 16px; font-weight: 800; color: var(--honey); margin-top: 2px; line-height: 1.3; }
+    .tool .headline.rv-anim .rv-item { opacity: 0; transform: translateY(-12px); }
+    .tool .headline .rv-item.in { opacity: 1; transform: none; transition: opacity .4s ease-out, transform .4s cubic-bezier(.2,.8,.2,1.2); }
+    .tool .headline .rv-est { font-size: 15px; opacity: .85; margin-top: 10px; line-height: 1.4; }
+    body.lg .tool .rv-item .rv-nm { font-size: 20px; } body.xl .tool .rv-item .rv-nm { font-size: 22px; }
+    body.lg .tool .rv-item .rv-v { font-size: 18px; } body.xl .tool .rv-item .rv-v { font-size: 20px; }
+    @media (prefers-reduced-motion: reduce) { .tool .headline.rv-anim .rv-item { opacity: 1; transform: none; } .tool .headline.rv-done .odo { animation: none; } }
     .tool .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 99px; margin-bottom: 12px; text-transform: none; letter-spacing: 0; }
     .tool .sech { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--t-muted); margin: 24px 4px 10px; }
     .tool .prog { background: #fff; border: 1px solid var(--t-line); border-radius: 15px; padding: 17px; margin-bottom: 12px; }
