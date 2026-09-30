@@ -319,6 +319,13 @@
     /* ---- Question list with answered dots (Dad's test, 2026-09-25) ---- */
     .tool { max-width: 1040px; }
     .tool-intro, .tool .bar, .tool .note { max-width: 720px; }
+    /* Audit F5 (2026-09-29): #app is empty until check.js renders question 1, so on a slow phone the notes, the phone
+       line and the footer painted first and then jumped down (layout shift 0.408, slow 4G + 4x CPU). Reserve the height
+       question 1 takes, measured per width (320:592 390:525 430:504 768:457 1440:801), only while #app is still empty. */
+    #app:empty { min-height: 590px; }
+    @media (min-width: 360px) { #app:empty { min-height: 515px; } }
+    @media (min-width: 480px) { #app:empty { min-height: 455px; } }
+    @media (min-width: 900px) { #app:empty { min-height: 800px; } }
     .qwrap { display: grid; grid-template-columns: 1fr; gap: 14px; }
     @media (max-width: 899px) {
       .qwrap { display: flex; flex-direction: column; }
