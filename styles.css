@@ -717,7 +717,9 @@ img { max-width: 100%; display: block; }
 .footer-top { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 32px; margin-bottom: 30px; }
 .footer-brand .brand-name { color: #fff; }
 .footer-brand p { color: #A9C3B5; max-width: 34ch; }
-.footer-col h4 { color: #fff; font-family: var(--sans); font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; }
+/* Audit O1 (2026-09-29): the footer headings are h3 in the HTML, so this rule (h4 only) never applied and they were
+   pine on pine, 1.00:1. */
+.footer-col h3, .footer-col h4 { color: #fff; font-family: var(--sans); font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; }
 .footer-col ul { list-style: none; padding: 0; margin: 0; }
 .footer-col li { margin-bottom: 8px; }
 .footer-col a { color: #CBDDD2; text-decoration: none; }
