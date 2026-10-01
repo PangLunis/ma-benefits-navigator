@@ -125,32 +125,23 @@ const Q = [
   // Added 2026-09-28 (Ryan: "add the assisted-living question"). Only renters who need daily help are asked.
   {id:"alRes", type:"single", q:n=>`Does ${who(n)} live in an assisted living residence?`, hint:"Assisted living changes a few answers: MassHealth can pay for daily help there, Supplemental Security Income (SSI) pays more, and the Circuit Breaker counts only the rent part of the fee.",
     opts:[{v:"yes",l:"Yes, assisted living"},{v:"no",l:"No, a regular apartment or house"}], showIf:a=>a.housing==="rent" && a.adl==="yes"},
-  {id:"already", type:"multi", noLetter:true, q:n=>`Is ${who(n)} ALREADY getting any of these?`, hint:"It's totally normal not to know. If you can't tell, pick \"I'm not sure\" at the bottom — we'll help you check.", noSkip:true, exclusive:["none","unsure"],
-    help:"Where to look for each: 1) Circuit Breaker — last year's MA state tax return, a line called \"Schedule CB\" / Circuit Breaker credit. 2) Property-tax exemption — the town property tax bill, a line lowering the amount (often labeled \"exemption\" or \"senior\"). 3) Fuel Assistance — did they apply for winter heating help at a local agency? 4) Food assistance (SNAP) — do they have an EBT card (the state benefits debit card)? 5) Medicare Part B help — is the ~$203/mo premium NOT coming out of their Social Security check? 6) MassHealth — do they carry a MassHealth card that pays for doctor visits? (MassHealth has several programs. If it only pays the Part B premium, that's #5, not #6.) 7) Prescription Advantage — a Prescription Advantage card, or a letter showing a category such as S3 (it isn't MassHealth, even though its letters mention MassHealth). If you can't check any of these right now, just pick \"I'm not sure.\"",
-    opts:[
-      {v:"cb",l:"Senior Circuit Breaker tax credit",d:"A refund on the MA state tax return (look for \"Schedule CB\") — often $1,000–$2,800/yr."},
-      {v:"exemption",l:"A property-tax exemption",d:"A discount line on the town property tax bill that lowers what's owed."},
-      {v:"liheap",l:"Fuel Assistance (heating-bill help)",d:"Winter heating help, also called LIHEAP (Low Income Home Energy Assistance Program)."},
-      {v:"snap",l:"Food assistance (SNAP)",d:"Food benefits on an EBT card — Electronic Benefit Transfer, a debit-style card (used to be \"food stamps\")."},
-      {v:"msp",l:"Help paying the Medicare Part B premium",d:"The Medicare Savings Program — it used to be called MassHealth Buy-In (levels: Qualified Medicare Beneficiary (QMB), Specified Low-Income Medicare Beneficiary (SLMB), Qualifying Individual (QI)). The ~$203/mo Part B premium is NOT taken out of their Social Security check."},
-      {v:"masshealth",l:"MassHealth health coverage",d:"A MassHealth card that pays for doctor visits and prescriptions (like MassHealth Standard). If MassHealth ONLY pays the Part B premium, pick the Part B choice above instead. Have both? Pick both."},
-      {v:"rxadv",l:"Prescription Advantage",d:"The state's help with prescription costs — its own member card, and letters that show a category like S1, S2 or S3."},
-      {v:"vacomp",l:"Veterans Affairs (VA) disability compensation",d:"A monthly VA payment for a service-connected condition."},
-      {v:"homecare",l:"State Home Care services",d:"In-home help arranged by the local Aging Services Access Point (ASAP)."},
-      {v:"none",l:"None of these"},
-      {v:"unsure",l:"🤔 I'm not sure — help me check"}
-    ]},
+  // The "Is <name> ALREADY getting any of these?" checklist was removed 2026-09-30 (Ryan: "I don't think anyone even knows if
+  // they're getting it"). What they already get is now marked on the results with each card's "I already get this" button
+  // (counted exactly like the old checklist answers -- see alreadyList), plus the Medicare question below for Medicare users.
   // Added 2026-09-28 (Ryan's dad, on "tier 3" MassHealth, didn't know which box to tick). MassHealth has no tiers; a
   // Medicare member can have full MassHealth (a card used at the doctor), the Medicare Savings Program (mass.gov: "previously
   // known as MassHealth Buy-In"; QMB, SLMB/QI levels; MassHealth pays the Part B premium), or both. These are things a person
   // can SEE without the letter. Only asked when they ticked MassHealth or "not sure".
-  {id:"mhType", type:"single", noLetter:true, q:n=>`Quick check on MassHealth — which fits ${who(n)}?`, hint:"No letter needed — just what you notice day to day.",
-    help:"MassHealth runs two different kinds of help for people on Medicare. Full MassHealth coverage comes with a MassHealth card that's used at the doctor and pharmacy. The Medicare Savings Program (it used to be called MassHealth Buy-In) pays the Medicare Part B premium, so the ~$203 a month stops coming out of the Social Security check. Some people have both.",
-    opts:[{v:"full",l:"MassHealth pays for doctor visits and prescriptions",d:"They show a MassHealth card at the doctor or pharmacy."},
-          {v:"partb",l:"MassHealth only pays the Medicare Part B premium",d:"The ~$203 a month is NOT taken out of their Social Security check, but they don't use a MassHealth card at the doctor."},
-          {v:"both",l:"Both",d:"A MassHealth card at the doctor, AND the Part B premium isn't taken out of their check."},
-          {v:"neither",l:"Neither — they pay the Part B premium themselves",d:"The ~$203 comes out of their Social Security check (or they pay a Medicare bill), and there's no MassHealth card."}],
-    showIf:a=>a.medicare==="yes" && (a.already||[]).some(x=>x==="masshealth"||x==="unsure")},
+  // 2026-09-30: asked of EVERY Medicare user (it used to follow only a "MassHealth" or "not sure" tick on the checklist), in
+  // things they can see: the Social Security deposit and the cards in their wallet. Values are unchanged (neither / partb /
+  // full / both), so alreadyList() reads them exactly as before.
+  {id:"mhType", type:"single", noLetter:true, q:n=>`Medicare costs: which of these fits ${who(n)}?`, hint:"No letter needed. Look at the Social Security deposit (or the yearly benefit letter) and the cards in their wallet.",
+    help:"MassHealth runs two different kinds of help for people on Medicare. The Medicare Savings Program (it used to be called MassHealth Buy-In) pays the Medicare Part B premium, so the ~$203 a month stops coming out of the Social Security check. Full MassHealth coverage comes with a MassHealth card that's used at the doctor and pharmacy. Some people have both.",
+    opts:[{v:"neither",l:"About $203 a month comes out of their Social Security for Medicare",d:"Or they pay a Medicare bill themselves. No MassHealth card."},
+          {v:"partb",l:"Nothing comes out for Medicare",d:"No Medicare bill either, and no MassHealth card. A state program is probably already paying the premium."},
+          {v:"both",l:"Nothing comes out for Medicare, and they have a MassHealth card",d:"They show the MassHealth card at the doctor or pharmacy."},
+          {v:"full",l:"They have a MassHealth card, but the ~$203 still comes out",d:"Less common. Pick this if both are true."}],
+    showIf:a=>a.medicare==="yes"},
   {id:"working", type:"single", q:"Still earning wages from a job?", hint:"Affects Social Security timing.",
     opts:[{v:"yes",l:"Yes, still working"},{v:"no",l:"No / retired"}], showIf:a=>num(a.age)<70}
 ];
@@ -194,6 +185,11 @@ function alreadyList(){
     if((t==="full"||t==="both") && !has.includes("masshealth")) has.push("masshealth");
     if((t==="partb"||t==="both") && !has.includes("msp")) has.push("msp");
   }
+  // "I already get this" on a results card (2026-09-30: the only way to say so now that the checklist is gone) counts exactly
+  // like ticking the matching checklist box did. Applied after the Medicare question, so an explicit tap always wins.
+  const TAP_KEY={cb:"cb",ex41c:"exemption",ex17d:"exemption",vet22:"exemption",blind37a:"exemption",liheap:"liheap",snap:"snap",
+                 msp:"msp",masshealth:"masshealth",mhcommunity:"masshealth",rxadv:"rxadv",vacomp:"vacomp",homecare:"homecare"};
+  (Array.isArray(A.haveAlso)?A.haveAlso:[]).forEach(id=>{ const k=TAP_KEY[id]; if(k && !has.includes(k)) has.push(k); });
   return has;
 }
 // mass.gov "New work and education requirements for MassHealth members" (checked 2026-09-28)
@@ -1533,7 +1529,7 @@ function programs(){
 
   // 20a. MassHealth Standard for 65+ living at home (added 2026-09-27; found by the independent answer key). mass.gov senior guide:
   // Standard is for people "with income at or below 100% of the federal poverty level"; countable assets $2,000 single / $3,000 couple.
-  if(A.adl!=="yes" && age>=65 && !alreadyList().includes("masshealth") && A.healthCov!=="masshealth" && inc <= fplFor(hh)){
+  if(A.adl!=="yes" && age>=65 && (!alreadyList().includes("masshealth") || (A.haveAlso||[]).includes("mhcommunity")) && A.healthCov!=="masshealth" && inc <= fplFor(hh)){
     const assetsKnown = A.assets!=null && A.assets!=="" && A.assets!=="unknown";
     const cap = hh===2 ? 3000 : 2000;
     if(!assetsKnown || assets <= cap){
@@ -2068,7 +2064,8 @@ function results(){
       : `<div class="lbl">${maybeTotal>0 ? `Up to ~${money(maybeTotal)}/yr in programs worth verifying for ${whoO}`
           : maybeN ? `No strong matches yet, but ${maybeN} program${maybeN>1?"s":""} worth a closer look for ${whoO}`
           : `No strong matches for ${whoO} right now`}</div>`}
-      ${rvItems.length?`<ol class="rv-list">${rvItems.map(p=>`<li class="rv-item"><a href="#prog-${p.id}"><span class="rv-nm">${p.name}</span><span class="rv-v">${p.valTxt}</span></a></li>`).join("")}</ol>`:""}
+      ${rvItems.length?`<ol class="rv-list">${rvItems.map(p=>`<li class="rv-item"><a href="#prog-${p.id}"><span class="rv-nm">${p.name}</span><span class="rv-v">${p.valTxt}</span></a></li>`).join("")}</ol>
+      <div class="rv-have">Already getting one of these? Tap it, then tap “I already get this”. The total updates.</div>`:""}
       ${total>0 && maybeTotal>0?`<div class="lbl" style="opacity:.9;margin-top:10px;">+ up to ~${money(maybeTotal)}/yr more in programs worth verifying</div>`:""}
       <div class="sub">${likely.length} to apply for now &middot; ${maybeN} worth verifying${haveN?` &middot; ${haveN} already active`:""}. Tap any one for the exact form, documents, and where to file.</div>
       <div class="rv-est">Estimates, not guarantees — each program must be applied for and confirmed.</div>
@@ -2110,7 +2107,7 @@ function results(){
     unknownQs.forEach(q=>{ const qt=typeof q.q==="function"?q.q(A):q.q; tail+=`<div class="gitem"><div class="gq">${qt}</div>${q.help?`<div class="gh">${q.help}</div>`:""}</div>`; });
     tail+=`</div>`;
   }
-  if((A.already||[]).includes("unsure")){
+  if((A.already||[]).includes("unsure") || A.mhType==="unknown"){
     tail+=`<div class="gaps" style="background:#e6effb;border-color:#bcd0f5"><h3 style="color:#1551a8">ℹ️ First, check what's already in place</h3>
       <p class="lead" style="color:#33507e">You weren't sure which of these ${nm==="this person"?"they"  : nm} already gets. Here's how to check each, so you don't re-apply for something already active:</p>
       <div class="gitem" style="border-color:#cfe0fb"><div class="gq">Circuit Breaker credit</div><div class="gh">Last year's MA state tax return — a "Schedule CB" credit line.</div></div>
