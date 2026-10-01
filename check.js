@@ -850,13 +850,10 @@ function runReveal(items, total, delay){
 }
 function playEngine(done){
   const app=document.getElementById("app");
-  const ps=programs();
-  const rank={likely:0,maybe:1};
-  const outs=ps.filter(p=>p.status==="likely"||(p.status==="maybe"&&(p.val||0)>0)).sort((a,b)=>(rank[a.status]-rank[b.status])||((b.val||0)-(a.val||0))).slice(0,5);
+  // Ryan 2026-09-30 ("slim the checking part"): this layer only shows the CHECKING -- answers flowing into the sun and
+  // the program count. It used to also list the top matches and a total, so the money appeared twice; now the money is
+  // shown once, by the count-up reveal on the results page (runReveal).
   const chips=answerChips();
-  // same headline total as the results page: strong matches, with property-tax exemptions not stacked
-  const EXEMPT=["ex41c","ex17d","vet22","blind37a"], lk=ps.filter(p=>p.status==="likely");
-  const engTotal=lk.filter(p=>!EXEMPT.includes(p.id)).reduce((s2,p)=>s2+(p.val||0),0)+Math.max(0,...lk.filter(p=>EXEMPT.includes(p.id)).map(p=>p.val||0));
   const SUN=`<svg viewBox="0 0 42 42" aria-hidden="true"><rect width="42" height="42" rx="10" fill="#1E4E3C"/><circle cx="21" cy="26" r="9" fill="#E4A126"/><rect x="7" y="26" width="28" height="3.6" rx="1.8" fill="#FBF6EC"/><g class="rays" stroke="#E4A126" stroke-width="2.4" stroke-linecap="round"><line x1="21" y1="7" x2="21" y2="12"/><line x1="11" y1="10" x2="14" y2="14"/><line x1="31" y1="10" x2="28" y2="14"/></g></svg>`;
   // a full-screen layer, so it's on screen wherever the page was scrolled
   const host=document.querySelector(".tool")||document.body;
@@ -867,8 +864,6 @@ function playEngine(done){
     <div class="eng-in">${chips.map((c,k)=>`<span class="eng-chip" style="--k:${k}">${esc(c)}</span>`).join("")}</div>
     <div class="eng-core"><div class="eng-sun">${SUN}</div>
       <div class="eng-count">Checking <b id="engN">0</b> of ${PROGRAM_TOTAL} Massachusetts programs…</div></div>
-    <div class="eng-out">${outs.map((p,k)=>`<div class="eng-res ${p.status}" style="--k:${k}"><span class="eng-ic">${p.status==="likely"?"✅":"🔎"}</span><span class="eng-nm">${esc(p.name)}</span>${/^[~≈]?\$|^up to \$/i.test(p.valTxt||"")?`<span class="eng-v">${esc(String(p.valTxt).replace(/\s*\(.*\)\s*$/,""))}</span>`:""}</div>`).join("")}</div>
-    ${engTotal>0?`<div class="eng-total" style="--k:${outs.length}">≈ ${money(engTotal)} a year found</div>`:""}
   </div>`;
   let finished=false; const timers=[];
   const finish=()=>{ if(finished) return; finished=true; timers.forEach(clearTimeout); done();
@@ -884,8 +879,8 @@ function playEngine(done){
     root.classList.add("s2"); }, 1100));
   const n=document.getElementById("engN"), t0=1300, dur=1400;
   for(let k=1;k<=20;k++) timers.push(setTimeout(()=>{ if(n) n.textContent=Math.round(PROGRAM_TOTAL*k/20); }, t0+dur*k/20));
-  timers.push(setTimeout(()=>root.classList.add("s3"), 2800));    // matches drop out
-  timers.push(setTimeout(finish, 2800 + 350*Math.max(1,outs.length) + (engTotal>0?1700:1100)));
+  timers.push(setTimeout(()=>{ root.classList.add("s3"); const c=root.querySelector(".eng-count"); if(c) c.innerHTML=`Checked all <b>${PROGRAM_TOTAL}</b> Massachusetts programs.`; }, 2800));
+  timers.push(setTimeout(finish, 3500));   // then the results open with the reveal
 }
 function esc(x){ return String(x).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
 let renderedAt = -1e9, renderCount = 0;

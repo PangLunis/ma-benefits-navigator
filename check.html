@@ -136,16 +136,7 @@
     .tool .eng-count { margin-top: 12px; font-size: 17px; color: var(--t-muted); font-weight: 600; opacity: 0; transition: opacity .3s; }
     .tool .eng.s2 .eng-count { opacity: 1; }
     .tool .eng-count b { color: var(--ink); font-variant-numeric: tabular-nums; }
-    .tool .eng-out { display: flex; flex-direction: column; gap: 8px; max-width: 460px; margin: 0 auto; }
-    .tool .eng-res { display: flex; align-items: center; gap: 10px; text-align: left; background: #fff; border: 2px solid var(--t-line); border-radius: 14px; padding: 10px 14px;
-      font-weight: 700; font-size: 16px; opacity: 0; transform: translateY(-40px) scale(.85); transition: opacity .4s ease, transform .45s cubic-bezier(.2,1.4,.4,1); transition-delay: calc(var(--k) * 350ms); }
-    .tool .eng-res.likely { border-color: #9BC9A8; background: #F1F8F3; }
-    .tool .eng.s3 .eng-res { opacity: 1; transform: none; }
-    .tool .eng-nm { flex: 1; }
-    .tool .eng-v { font-size: 14px; font-weight: 700; color: var(--t-muted); white-space: nowrap; }
-    .tool .eng-total { margin-top: 16px; font-family: var(--serif, Georgia, serif); font-weight: 700; font-size: 28px; color: var(--pine-deep, #143829);
-      opacity: 0; transform: scale(.9); transition: opacity .45s ease, transform .45s cubic-bezier(.2,1.4,.4,1); transition-delay: calc(var(--k) * 350ms + 250ms); }
-    .tool .eng.s3 .eng-total { opacity: 1; transform: none; }
+    /* .eng-out / .eng-res / .eng-total removed 2026-09-30: the checking layer no longer previews matches or a total */
     @media (prefers-reduced-motion: reduce) { .tool .eng * { transition: none !important; animation: none !important; } }
     .tool .skip { display: block; width: 100%; text-align: center; background: none; border: none; color: var(--t-muted); font-size: 15px; font-weight: 700; padding: 14px 0 2px; cursor: pointer; text-decoration: underline; font-family: var(--sans); }
     .tool details.help { margin: 2px 0 16px; border: none; padding: 0; }
