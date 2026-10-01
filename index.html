@@ -28,27 +28,19 @@
   </script>
   <meta name="theme-color" content="#1E4E3C" />
   <link rel="stylesheet" href="styles.css" />
-  <!-- Inline SVG favicon: a small dawn/beacon mark, no external request -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E4E3C'/%3E%3Ccircle cx='16' cy='20' r='6.5' fill='%23E4A126'/%3E%3Crect x='6' y='20' width='20' height='3' rx='1.5' fill='%23FBF6EC'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="home.css" />
+  <!-- Inline SVG favicon: the shield-and-check mark (2026-10-01), no external request -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cpath d='M22 3.5 37.5 8.8V21.2c0 9.6-6.6 16.6-15.5 19.6C13.1 37.8 6.5 30.8 6.5 21.2V8.8Z' fill='%23FFFFFF' stroke='%231E4E3C' stroke-width='3.2' stroke-linejoin='round'/%3E%3Cpath d='M14.5 22.3l5.3 5.3 10.4-11' fill='none' stroke='%23E4A126' stroke-width='4.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 </head>
-<body>
+<body class="home-v4">
   <a class="skip-link" href="#main">Skip to main content</a>
 
   <!-- ============================= HEADER ============================= -->
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="#top" aria-label="Benefighter — home">
-        <!-- Beacon/sunrise mark -->
-        <svg width="42" height="42" viewBox="0 0 42 42" role="img" aria-hidden="true">
-          <rect width="42" height="42" rx="10" fill="#1E4E3C"/>
-          <circle cx="21" cy="26" r="9" fill="#E4A126"/>
-          <rect x="7" y="26" width="28" height="3.6" rx="1.8" fill="#FBF6EC"/>
-          <g stroke="#E4A126" stroke-width="2.4" stroke-linecap="round">
-            <line x1="21" y1="7" x2="21" y2="12"/>
-            <line x1="11" y1="10" x2="14" y2="14"/>
-            <line x1="31" y1="10" x2="28" y2="14"/>
-          </g>
-        </svg>
+        <!-- Shield-and-check mark (design #4, 2026-10-01) -->
+        <svg width="42" height="42" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M22 3.5 37.5 8.8V21.2c0 9.6-6.6 16.6-15.5 19.6C13.1 37.8 6.5 30.8 6.5 21.2V8.8Z" fill="#FFFFFF" stroke="#1E4E3C" stroke-width="3.2" stroke-linejoin="round"/><path d="M14.5 22.3l5.3 5.3 10.4-11" fill="none" stroke="#E4A126" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>
           <span class="brand-name">Benefighter</span>
           <span class="brand-sub brand-tag">We fight for your benefits</span>
@@ -56,7 +48,7 @@
       </a>
 
       <nav class="nav" aria-label="Primary">
-        <a class="navlink" href="#forms-demo">Forms we fill</a>
+        <a class="navlink" href="#forms">Forms we fill</a>
         <a class="navlink" href="#programs">What we check</a>
         <a class="navlink" href="check.html">Free check</a>
         <a class="navlink" href="#faq">Questions</a>
@@ -68,312 +60,200 @@
     </div>
   </header>
 
-  <main id="main">
+  <!-- Icons used on this page (Feather, MIT), inline so no extra request -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol><symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></symbol><symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></symbol><symbol id="i-dollar-sign" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></symbol><symbol id="i-thermometer" viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></symbol><symbol id="i-shopping-cart" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></symbol><symbol id="i-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></symbol><symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol><symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></symbol></defs></svg>
+
+  <main id="main" class="hv4">
     <span id="top"></span>
 
-    <!-- ============================== HERO ============================== -->
-    <!-- Full Benefits Check card lives in its own band below (see FULL CHECK
-         SUMMARY) so nothing overlaps the boxer/building artwork on the right. -->
-    <section class="hero hero-photo" aria-labelledby="hero-h">
-      <div class="wrap hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow">For Massachusetts residents · free check + forms filled in for you</p>
-          <h1 id="hero-h">Find the benefits you're missing — and get the forms filled in, <span class="free-mark">free.<svg class="free-circle" viewBox="0 0 200 90" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M168 12C118-3 38 3 15 31C-3 54 22 81 92 85C162 89 197 66 191 38C186 18 158 8 124 7" /></svg></span></h1>
-          <svg class="h1-swash" width="120" height="14" viewBox="0 0 120 14" aria-hidden="true">
-            <path d="M2 9c14-7 26-7 38-2 13 5 26 5 38-1 11-5 24-5 38 1" fill="none" stroke="#E4A126" stroke-width="3" stroke-linecap="round"/>
-          </svg>
-          <p class="subhead">Answer a few questions. We show what you qualify for — then fill in the state application forms for you, ready to sign and send.</p>
-          <p class="lede">Heating help, tax credits, Medicare savings and 50+ more Massachusetts programs. Your mom or dad may be leaving thousands on the table.</p>
-          <div class="hero-cta">
-            <div class="hero-cta-primary">
-              <span class="sparkle-wrap">
-                <a class="btn btn-primary btn-xl cta-glow" href="check.html">Start the free benefits check</a>
-                <span class="spark s1" aria-hidden="true"></span><span class="spark s2" aria-hidden="true"></span><span class="spark s3" aria-hidden="true"></span><span class="spark s4" aria-hidden="true"></span><span class="spark s5" aria-hidden="true"></span>
-              </span>
-              <span class="cta-note">No card · no sign-up · results right away</span>
-              <span class="cta-note">📍 For Massachusetts residents only, for now</span>
+    <!-- ============ HERO (design #4 "Form as hero", 2026-10-01): the headline, then the filled-in form as the picture ============ -->
+    <section class="hv4-hero" aria-labelledby="hero-h">
+      <div class="hv4-wide hv4-hero-grid">
+        <h1 id="hero-h">Find the benefits you're missing — and get the forms filled in, <span class="free">free.<svg viewBox="0 0 200 90" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M168 12C118-3 38 3 15 31C-3 54 22 81 92 85C162 89 197 66 191 38C186 18 158 8 124 7"/></svg></span></h1>
+
+        <figure class="form-hero">
+          <div class="paper" role="img" aria-label="Example: a filled-in State Tax Form 96-1, senior exemption, ready to sign">
+            <div class="f-head"><span>State Tax Form 96-1</span><b>Senior exemption</b></div>
+            <div class="f-grid">
+              <div class="cell"><span class="lab">City or town</span><span class="val">Worcester</span></div>
+              <div class="cell"><span class="lab">Fiscal year</span><span class="val">2027</span></div>
+              <div class="cell"><span class="lab">Marital status</span><span class="val">Married</span></div>
+              <div class="cell"><span class="lab">Social Security</span><span class="val">$26,400</span></div>
+              <div class="cell tick"><span class="xbox"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></span><span class="lab">Senior 65 or older</span></div>
+              <div class="cell tick"><span class="xbox"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></span><span class="lab">Owned the home July 1</span></div>
+              <div class="cell wide"><span class="lab">Assessed value</span><span class="val">$450,000</span></div>
             </div>
+            <span class="stamp">Ready to sign ✓</span>
           </div>
-          <div class="free-promise" aria-labelledby="free-h">
-            <p class="free-promise-h" id="free-h">100% free. Here's what that means:</p>
-            <ul class="rotator" data-interval="3800">
-              <li><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#E4A126"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#143829" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>You will <strong>never be asked for a card or payment</strong> to use the free check.</span></li>
-              <li><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#E4A126"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#143829" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>No sign-up, no email, no phone call.</span></li>
-              <li><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#E4A126"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#143829" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>We never receive anything you enter.</strong> Your answers stay on your own device.</span></li>
-              <li><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#E4A126"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#143829" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>The check does the work behind the scenes — it compares your answers against 50+ Massachusetts programs for you.</span></li>
-              <li><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11" fill="#E4A126"/><path d="M6.5 11.4l3 3L15.8 8" stroke="#143829" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Your results show up on the screen the moment you finish — with the state forms <strong>already filled in</strong> from your answers.</span></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================== HOW THE CHECK WORKS (looping demo, home-demo.js) ===================== -->
-    <section class="section reveal hdemo-band" id="how-it-works" aria-labelledby="hd-h">
-      <div class="wrap hdemo-wrap">
-        <h2 id="hd-h" class="center">Your answers go in. Your programs come out.</h2>
-        <p class="center hd-lead">Answer about 20 questions. We check every one of 57 Massachusetts programs at once, and show which ones fit — with what each is worth.</p>
-        <div id="hdemo" class="hdemo"></div>
-        <div class="center" style="margin-top:18px"><a class="btn btn-primary" href="check.html">Start my free check &rarr;</a></div>
-      </div>
-    </section>
-
-    <!-- ===================== FORMS FILL THEMSELVES (demo) ===================== -->
-    <section class="section formsdemo-band reveal" id="forms-demo" aria-labelledby="fd-h">
-      <div class="wrap formsdemo">
-        <div class="fd-copy">
-          <p class="eyebrow">The part nobody else does</p>
-          <h2 id="fd-h">We fill in the state forms for you</h2>
-          <p class="fd-lead">From your answers, the official Massachusetts forms come out <strong>already filled in</strong> — right on your phone or computer. You add your signature and send them.</p>
-          <ul class="fd-list">
-            <li>Senior property-tax exemption</li>
-            <li>Medicare Savings Program application</li>
-            <li>Senior tax deferral</li>
-            <li>Veterans, blind &amp; surviving-spouse exemptions</li>
-          </ul>
-          <a class="btn btn-primary" href="check.html">Start the free check</a>
-        </div>
-        <div class="fd-form" aria-hidden="true">
-          <div class="fd-paper">
-            <div class="fd-head"><span>State Tax Form 96-1</span><b>Senior exemption</b></div>
-            <div class="fd-row"><span class="fd-lbl">City or town</span><span class="fd-val" data-type="Worcester"></span></div>
-            <div class="fd-row"><span class="fd-lbl">Fiscal year</span><span class="fd-val" data-type="2027"></span></div>
-            <div class="fd-row"><span class="fd-lbl">Marital status</span><span class="fd-val" data-type="Married"></span></div>
-            <div class="fd-row"><span class="fd-lbl">Senior 65 or older</span><span class="fd-box"></span></div>
-            <div class="fd-row"><span class="fd-lbl">Owned the home July 1</span><span class="fd-box"></span></div>
-            <div class="fd-row"><span class="fd-lbl">Social Security</span><span class="fd-val" data-type="$26,400"></span></div>
-            <div class="fd-row"><span class="fd-lbl">Assessed value</span><span class="fd-val" data-type="$450,000"></span></div>
-            <div class="fd-stamp">Ready to sign ✓</div>
-          </div>
-          <p class="fd-note">Example with made-up numbers</p>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ======================= WHO'S IN YOUR CORNER ==================== -->
-    <!-- Directly under the hero, single feature card (2026-09-25). -->
-    <!-- ========================= A REAL STORY ========================= -->
-    <!-- Our own story (not a testimonial): a family member, shown with his permission; no quote praising the product. -->
-    <section class="section reveal story-band" aria-labelledby="story-h">
-      <div class="wrap">
-        <figure class="story story--text">
-          <!-- Photo removed 2026-09-27 ("for now"). -->
-          <figcaption class="story-copy">
-            <p class="eyebrow" id="story-h">Why we built this</p>
-            <h2 class="story-quote">One of our own family members found $2,000 off his tax bill — by accident.</h2>
-            <p class="story-who">He's a Methuen homeowner. His town runs a senior program that takes up to $2,000 a year off the property tax bill, and nobody had ever told him about it. He found out by luck. We built Benefighter so nobody has to rely on luck.</p>
-            <p class="story-fact">We checked the 50 biggest towns in Massachusetts: <strong class="draw-u">37 run a program like it<svg viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 14c50-9 100-10 150-6s100 5 144-3"/></svg></strong> — and nobody signs you up automatically.</p>
-            <a class="btn btn-primary" href="check.html">See what your town offers</a>
-          </figcaption>
+          <figcaption class="f-note"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-info"/></svg>Example with made-up numbers</figcaption>
         </figure>
-      </div>
-    </section>
 
-<section class="section band-tint reveal" aria-labelledby="stats-h">
-      <div class="wrap">
-        <h2 id="stats-h" class="center">The money that goes unclaimed is real</h2>
-        <p class="lede center measure" style="margin-bottom:34px;">These are established Massachusetts programs. The problem isn't eligibility — it's that nobody hands older residents a clear, personal list of what they qualify for.</p>
-        <div class="stats rotator" data-mobile="1" data-interval="4200">
-          <div class="stat">
-            <span class="num"><span class="count" data-to="2820" data-prefix="$">$2,820</span><svg class="num-circle" viewBox="0 0 200 90" preserveAspectRatio="none" aria-hidden="true"><path d="M168 12C118-3 38 3 15 31C-3 54 22 81 92 85C162 89 197 66 191 38C186 18 158 8 124 7"/></svg></span>
-            <span class="lbl">Senior Circuit Breaker credit</span>
-            <span class="sub">Maximum per year, refundable — and it can be claimed up to 3 years back.</span>
-          </div>
-          <div class="stat">
-            <span class="num"><span class="count" data-to="2435" data-prefix="$">$2,435</span><svg class="num-circle" viewBox="0 0 200 90" preserveAspectRatio="none" aria-hidden="true"><path d="M168 12C118-3 38 3 15 31C-3 54 22 81 92 85C162 89 197 66 191 38C186 18 158 8 124 7"/></svg></span>
-            <span class="lbl">Medicare premium the state can pay</span>
-            <span class="sub">Per year (2026). No savings limit, for incomes up to about $35,900 for one person.</span>
-          </div>
-          <div class="stat">
-            <span class="num">1 in 10<svg class="num-circle" viewBox="0 0 200 90" preserveAspectRatio="none" aria-hidden="true"><path d="M168 12C118-3 38 3 15 31C-3 54 22 81 92 85C162 89 197 66 191 38C186 18 158 8 124 7"/></svg></span>
-            <span class="lbl">People with unclaimed money</span>
-            <span class="sub">The state Treasurer says 1 in 10 residents is owed money — forgotten accounts, uncashed checks, insurance. The state holds billions.</span>
-          </div>
+        <div class="hv4-hero-cta">
+          <a class="btn-go" href="check.html">Start the free benefits check <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
+          <p class="cta-note">No card · no sign-up · results right away</p>
         </div>
       </div>
     </section>
 
-    <section class="section reveal np-feature-band" id="about" aria-labelledby="who-h">
-      <div class="wrap">
-        <article class="np-feature">
-          <div class="portrait has-photo np-panel">
-              <!-- Decorative: our own benefits checklist (deliberately NOT an imitation of
-                   a government form or check — see PLAN.md 2026-09-25). -->
-
-              <svg class="np-sign" viewBox="0 0 340 260" aria-hidden="true" focusable="false">
-                <rect x="4" y="6" width="332" height="250" rx="10" fill="#FFFDF7" stroke="#D9CDB6" stroke-width="2"/>
-                <rect x="4" y="6" width="332" height="44" rx="10" fill="#1E4E3C"/><rect x="4" y="36" width="332" height="14" fill="#1E4E3C"/>
-                <text x="24" y="37" font-family="Georgia, serif" font-size="23" font-weight="700" fill="#FBF6EC">Benefits check</text>
-                <g font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#23201B"><g transform="translate(24,78)"><rect width="26" height="26" rx="5" fill="#E7EFE9" stroke="#1E4E3C" stroke-width="2.4"/><path class="tick" style="animation-delay:0.25s" d="M6 13.5l5 5L20.5 8" stroke="#1E4E3C" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="38" y="20">Tax credits</text></g><g transform="translate(24,112)"><rect width="26" height="26" rx="5" fill="#E7EFE9" stroke="#1E4E3C" stroke-width="2.4"/><path class="tick" style="animation-delay:0.55s" d="M6 13.5l5 5L20.5 8" stroke="#1E4E3C" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="38" y="20">Heating help</text></g><g transform="translate(24,146)"><rect width="26" height="26" rx="5" fill="#E7EFE9" stroke="#1E4E3C" stroke-width="2.4"/><path class="tick" style="animation-delay:0.85s" d="M6 13.5l5 5L20.5 8" stroke="#1E4E3C" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="38" y="20">Medicare savings</text></g><g transform="translate(24,180)"><rect width="26" height="26" rx="5" fill="#E7EFE9" stroke="#1E4E3C" stroke-width="2.4"/><path class="tick" style="animation-delay:1.15s" d="M6 13.5l5 5L20.5 8" stroke="#1E4E3C" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="38" y="20">Food help</text></g><g transform="translate(24,214)"><rect width="26" height="26" rx="5" fill="#E7EFE9" stroke="#1E4E3C" stroke-width="2.4"/><path class="tick" style="animation-delay:1.45s" d="M6 13.5l5 5L20.5 8" stroke="#1E4E3C" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="38" y="20">Home care</text></g></g>
-                <path d="M226 196l20 20 50-60" stroke="#E4A126" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
-              </svg>
-              <div class="np-figure np-headshot">
-                <picture>
-                  <source srcset="images/navigator.webp" type="image/webp" />
-                  <img class="cutout" src="images/navigator.png" width="732" height="900" alt="Our benefits navigator, a registered nurse" loading="lazy" />
-                </picture>
-              </div>
-              <span class="np-badge"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#1E4E3C"/><path d="M5.5 10.3l3 3L14.8 7" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Registered nurse · benefits navigator</span>
-            </div>
-          <div class="np-copy">
-            <p class="eyebrow">Who's in your corner</p>
-            <h2 id="who-h">A registered nurse as your benefits navigator</h2>
-            <p>Someone who knows the programs older adults rely on — and what it takes to actually get them — so your plan fits real life, not just the paperwork.</p>
-          </div>
-        </article>
+    <!-- what it is -->
+    <section class="hv4-sec" aria-label="What Benefighter does">
+      <div class="hv4-col">
+        <p class="eyebrow">For Massachusetts residents · free check + forms filled in for you</p>
+        <p class="lede">Answer a few questions. We show what you qualify for — then fill in the state application forms for you, ready to sign and send.</p>
+        <p class="body">Heating help, tax credits, Medicare savings and 50+ more Massachusetts programs. Your mom or dad may be leaving thousands on the table.</p>
+        <p class="place"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-map-pin"/></svg>For Massachusetts residents only, for now</p>
       </div>
     </section>
 
+    <!-- the forms (right after the hero, since the hero IS a form) -->
+    <section class="hv4-sec" id="forms" aria-labelledby="fd-h">
+      <div class="hv4-col">
+        <p class="eyebrow">The part nobody else does</p>
+        <h2 id="fd-h">We fill in the state forms for you</h2>
+        <p class="body">You add your signature and send them.</p>
+        <ul class="group">
+          <li class="frow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-file-text"/></svg>Senior property-tax exemption</li>
+          <li class="frow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-file-text"/></svg>Medicare Savings Program application</li>
+          <li class="frow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-file-text"/></svg>Senior tax deferral</li>
+          <li class="frow"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-file-text"/></svg>Veterans, blind &amp; surviving-spouse exemptions</li>
+        </ul>
+        <a class="btn-2" href="check.html">Start the free check</a>
+      </div>
+    </section>
 
+    <!-- how it works (the looping demo is drawn by home-demo.js; tests/interaction_test.py keeps it in step with the real check) -->
+    <section class="hv4-sec" id="how-it-works" aria-labelledby="hd-h">
+      <div class="hv4-col">
+        <h2 class="inout" id="hd-h"><span>Your answers go in.</span> <span>Your programs come out.</span></h2>
+        <p class="body">Answer about 20 questions. We check every one of 57 Massachusetts programs at once, and show which ones fit — with what each is worth.</p>
+        <div id="hdemo" class="hdemo"></div>
+        <a class="btn-2" href="check.html">Start my free check →</a>
+      </div>
+    </section>
 
-    <!-- ============================= STAT BAND ========================= -->
-    
-
-
-
-
-
-    <!-- ============================ PROGRAMS =========================== -->
-    <section class="section reveal" id="programs" aria-labelledby="prog-h">
-      <div class="wrap">
-        <p class="eyebrow center">What we check</p>
-        <h2 id="prog-h" class="center">Every Massachusetts program that could put money back in your pocket</h2>
-        <p class="lede center measure" style="margin-bottom:30px;">Checked against your situation and your town.</p>
-
-        <ul class="programs rotator" data-mobile="1" data-interval="3600">
-          <li>
-            <span class="pin" aria-hidden="true">$</span>
-            <span>
-              <span class="p-name">Senior Circuit Breaker tax credit <span class="p-worth">— up to ~$2,820/yr</span></span>
-              <span class="p-desc">A refundable state credit for eligible homeowners and renters. You can often amend up to 3 prior years and recover what you missed.</span>
-            </span>
-          </li>
-          <li>
-            <span class="pin" aria-hidden="true">🏠</span>
-            <span>
-              <span class="p-name">Property-tax exemptions &amp; deferral</span>
-              <span class="p-desc">Clauses 41C / 41C½, 17D, veterans, and blind exemptions — plus the 41A tax deferral — decided by your town.</span>
-            </span>
-          </li>
-          <li>
-            <span class="pin" aria-hidden="true">🔥</span>
-            <span>
-              <span class="p-name">Fuel Assistance (HEAP) &amp; utility discounts</span>
-              <span class="p-desc">Help with winter heating costs, plus the discounted utility rate many households qualify for and never sign up for.</span>
-            </span>
-          </li>
-          <li>
-            <span class="pin" aria-hidden="true">🛒</span>
-            <span>
-              <span class="p-name">SNAP food benefits</span>
-              <span class="p-desc">Monthly grocery support — eligibility rules for seniors are more generous than most people assume.</span>
-            </span>
-          </li>
-          <li>
-            <span class="pin" aria-hidden="true">⚕️</span>
-            <span>
-              <span class="p-name">Medicare Savings Programs + Extra Help</span>
-              <span class="p-desc">The state can pay the Medicare Part B premium — with no asset test — and Extra Help lowers prescription-drug costs.</span>
-            </span>
-          </li>
-          <li>
-            <span class="pin" aria-hidden="true">🚌</span>
-            <span>
-              <span class="p-name">SSI, reduced-fare transit, Lifeline &amp; more</span>
-              <span class="p-desc">Supplemental income, discounted senior transit, and reduced-cost phone/internet through the Lifeline program.</span>
-            </span>
-          </li>
-          <li>
-            <span class="pin" aria-hidden="true">🎖️</span>
-            <span>
-              <span class="p-name">VA Aid &amp; Attendance <span class="p-worth">— referred out, free</span></span>
-              <span class="p-desc">We flag what you may be owed, then connect you to a free, accredited Veterans Service Officer. By law, we never charge to prepare a VA claim.</span>
-            </span>
-          </li>
-          <li>
-            <span class="pin" aria-hidden="true">🤝</span>
-            <span>
-              <span class="p-name">Community MassHealth &amp; elder-law referrals</span>
-              <span class="p-desc">We flag community MassHealth and route nursing-home / asset-protection questions to a licensed Massachusetts elder-law attorney.</span>
-            </span>
-          </li>
+    <!-- what free means -->
+    <section class="band" aria-labelledby="free-h">
+      <div class="hv4-col hv4-sec">
+        <p class="free-h" id="free-h">100% free. Here's what that means:</p>
+        <ul class="freelist">
+          <li><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-check-circle"/></svg><span>You will <strong>never be asked for a card or payment</strong> to use the free check.</span></li>
+          <li><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-check-circle"/></svg><span>No sign-up, no email, no phone call.</span></li>
+          <li><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-check-circle"/></svg><span><strong>We never receive anything you enter.</strong> Your answers stay on your own device.</span></li>
+          <li><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-check-circle"/></svg><span>The check does the work behind the scenes — it compares your answers against 50+ Massachusetts programs for you.</span></li>
+          <li><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-check-circle"/></svg><span>Your results show up on the screen the moment you finish — with the state forms <strong>already filled in</strong> from your answers.</span></li>
         </ul>
       </div>
     </section>
 
+    <!-- why we built this (our own story, not a testimonial) -->
+    <section class="hv4-sec" aria-labelledby="story-h">
+      <div class="hv4-col">
+        <p class="eyebrow">Why we built this</p>
+        <h2 id="story-h">One of our own family members found $2,000 off his tax bill — by accident.</h2>
+        <p class="body">He's a Methuen homeowner. His town runs a senior program that takes up to $2,000 a year off the property tax bill, and nobody had ever told him about it. He found out by luck. We built Benefighter so nobody has to rely on luck.</p>
+        <p class="body">We checked the 50 biggest towns in Massachusetts: <span class="u">37 run a program like it</span> — and nobody signs you up automatically.</p>
+        <a class="btn-2" href="check.html">See what your town offers</a>
+      </div>
+    </section>
 
+    <!-- the money -->
+    <section class="hv4-sec" aria-labelledby="stats-h">
+      <div class="hv4-col">
+        <h2 id="stats-h">The money that goes unclaimed is real</h2>
+        <p class="body soft">These are established Massachusetts programs. The problem isn't eligibility — it's that nobody hands older residents a clear, personal list of what they qualify for.</p>
+        <div class="hv4-stats">
+          <div class="hv4-stat"><p class="num">$2,820</p><p class="lbl">Senior Circuit Breaker credit</p><p class="sub">Maximum per year, refundable — and it can be claimed up to 3 years back.</p></div>
+          <div class="hv4-stat"><p class="num">$2,435</p><p class="lbl">Medicare premium the state can pay</p><p class="sub">Per year (2026). No savings limit, for incomes up to about $35,900 for one person.</p></div>
+          <div class="hv4-stat"><p class="num">1 in 10</p><p class="lbl">People with unclaimed money</p><p class="sub">The state Treasurer says 1 in 10 residents is owed money — forgotten accounts, uncashed checks, insurance. The state holds billions.</p></div>
+        </div>
+      </div>
+    </section>
 
+    <!-- nurse navigator (as the live site had it) -->
+    <section class="hv4-sec" id="about" aria-labelledby="who-h">
+      <div class="hv4-col">
+        <div class="hv4-np">
+          <div class="np-photo">
+            <picture>
+              <source srcset="images/navigator.webp" type="image/webp" />
+              <img src="images/navigator.png" width="732" height="900" alt="Our benefits navigator, a registered nurse" loading="lazy" />
+            </picture>
+            <span class="badge"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-check-circle"/></svg>Registered nurse · benefits navigator</span>
+          </div>
+          <div class="hv4-np-copy">
+            <p class="eyebrow">Who's in your corner</p>
+            <h2 id="who-h">A registered nurse as your benefits navigator</h2>
+            <p class="body">Someone who knows the programs older adults rely on — and what it takes to actually get them — so your plan fits real life, not just the paperwork.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    
+    <!-- what we check -->
+    <section class="hv4-sec" id="programs" aria-labelledby="prog-h">
+      <div class="hv4-col">
+        <p class="eyebrow">What we check</p>
+        <h2 id="prog-h">Every Massachusetts program that could put money back in your pocket</h2>
+        <p class="body soft">Checked against your situation and your town.</p>
+      </div>
+      <div class="hv4-wide">
+        <ul class="group programs-grid">
+          <li class="prow"><span class="pin"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-dollar-sign"/></svg></span><span><span class="p-name">Senior Circuit Breaker tax credit</span><span class="p-worth">— up to ~$2,820/yr</span><span class="p-desc">A refundable state credit for eligible homeowners and renters. You can often amend up to 3 prior years and recover what you missed.</span></span></li>
+          <li class="prow"><span class="pin"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-home"/></svg></span><span><span class="p-name">Property-tax exemptions &amp; deferral</span><span class="p-desc">Clauses 41C / 41C½, 17D, veterans, and blind exemptions — plus the 41A tax deferral — decided by your town.</span></span></li>
+          <li class="prow"><span class="pin"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-thermometer"/></svg></span><span><span class="p-name">Fuel Assistance (HEAP) &amp; utility discounts</span><span class="p-desc">Help with winter heating costs, plus the discounted utility rate many households qualify for and never sign up for.</span></span></li>
+          <li class="prow"><span class="pin"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-shopping-cart"/></svg></span><span><span class="p-name">SNAP food benefits</span><span class="p-desc">Monthly grocery support — eligibility rules for seniors are more generous than most people assume.</span></span></li>
+          <li class="prow"><span class="pin"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-heart"/></svg></span><span><span class="p-name">Medicare Savings Programs + Extra Help</span><span class="p-desc">The state can pay the Medicare Part B premium — with no asset test — and Extra Help lowers prescription-drug costs.</span></span></li>
+          <li class="prow"><span class="pin"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-map"/></svg></span><span><span class="p-name">SSI, reduced-fare transit, Lifeline &amp; more</span><span class="p-desc">Supplemental income, discounted senior transit, and reduced-cost phone/internet through the Lifeline program.</span></span></li>
+          <li class="prow"><span class="pin"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-award"/></svg></span><span><span class="p-name">VA Aid &amp; Attendance</span><span class="p-worth">— referred out, free</span><span class="p-desc">We flag what you may be owed, then connect you to a free, accredited Veterans Service Officer. By law, we never charge to prepare a VA claim.</span></span></li>
+          <li class="prow"><span class="pin"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-users"/></svg></span><span><span class="p-name">Community MassHealth &amp; elder-law referrals</span><span class="p-desc">We flag community MassHealth and route nursing-home / asset-protection questions to a licensed Massachusetts elder-law attorney.</span></span></li>
+        </ul>
+      </div>
+    </section>
 
-
-
-    <!-- =============================== FAQ ============================= -->
-    <section class="section reveal band-tint" id="faq" aria-labelledby="faq-h">
-      <div class="wrap">
-        <p class="eyebrow center">Common questions</p>
-        <h2 id="faq-h" class="center" style="margin-bottom:32px;">Questions families ask us</h2>
-
-        <div class="faq">
+    <!-- questions (collapsed; the live answers word for word) -->
+    <section class="hv4-sec" id="faq" aria-labelledby="faq-h">
+      <div class="hv4-col">
+        <p class="eyebrow">Common questions</p>
+        <h2 id="faq-h">Questions families ask us</h2>
+        <div class="group">
           <details>
-            <summary>Isn't this stuff free? Can't I just do it myself?</summary>
-            <div class="answer">
-              <p>Yes — every one of these is a public program you can apply for yourself at no cost, and the check is free too. It finds everything that fits, fills in the state forms from your answers, and tells you exactly where to send them. Free local help is also available from your town's Council on Aging and SHINE counselors.</p>
-            </div>
+            <summary>Isn't this stuff free? Can't I just do it myself?<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></summary>
+            <div class="ans"><p>Yes — every one of these is a public program you can apply for yourself at no cost, and the check is free too. It finds everything that fits, fills in the state forms from your answers, and tells you exactly where to send them. Free local help is also available from your town's Council on Aging and SHINE counselors.</p></div>
           </details>
-
           <details>
-            <summary>What does the registered nurse on the team do?</summary>
-            <div class="answer">
-              <p>Our co-founder is a registered nurse who works with us as a benefits navigator. Years of working with older adults and their families help us spot the programs people miss and explain them plainly. To be clear: this is <strong>benefits navigation, not health care</strong>. Nothing we provide is medical advice, a diagnosis, or treatment, and no clinician-patient relationship is created. For medical questions, always talk to your own doctor or provider.</p>
-            </div>
+            <summary>What does the registered nurse on the team do?<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></summary>
+            <div class="ans"><p>Our co-founder is a registered nurse who works with us as a benefits navigator. Years of working with older adults and their families help us spot the programs people miss and explain them plainly. To be clear: this is <strong>benefits navigation, not health care</strong>. Nothing we provide is medical advice, a diagnosis, or treatment, and no clinician-patient relationship is created. For medical questions, always talk to your own doctor or provider.</p></div>
           </details>
-
           <details>
-            <summary>Do you handle VA benefits and taxes?</summary>
-            <div class="answer">
-              <p>The check points you to them, but we don't prepare VA claims or file tax returns. VA claims go through a free, VA-accredited Veterans Service Officer, and the Senior Circuit Breaker is claimed on your state tax return — the check gives you a worksheet with your numbers, and free help is available from AARP Foundation Tax-Aide.</p>
-            </div>
+            <summary>Do you handle VA benefits and taxes?<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></summary>
+            <div class="ans"><p>The check points you to them, but we don't prepare VA claims or file tax returns. VA claims go through a free, VA-accredited Veterans Service Officer, and the Senior Circuit Breaker is claimed on your state tax return — the check gives you a worksheet with your numbers, and free help is available from AARP Foundation Tax-Aide.</p></div>
           </details>
-
           <details>
-            <summary>My parent doesn't live with me, or is in another town. Is that a problem?</summary>
-            <div class="answer">
-              <p>Not at all — many people use the check for a parent. Enter your parent's details and town, and the results, local offices and pre-filled forms will all be for them.</p>
-            </div>
+            <summary>My parent doesn't live with me, or is in another town. Is that a problem?<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></summary>
+            <div class="ans"><p>Not at all — many people use the check for a parent. Enter your parent's details and town, and the results, local offices and pre-filled forms will all be for them.</p></div>
           </details>
-
           <details>
-            <summary>Are you a law firm or a government agency?</summary>
-            <div class="answer">
-              <p>No to both. Benefighter is an independent information and document-research service. We are <strong>not</strong> a government agency, and being contacted by us is not an official notice about your benefits. We are <strong>not</strong> a law firm — we provide factual information and clerical help, not legal, tax, financial, or medical advice. For legal questions (especially nursing-home MassHealth or asset protection), we'll refer you to a licensed Massachusetts elder-law attorney.</p>
-            </div>
+            <summary>Are you a law firm or a government agency?<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></summary>
+            <div class="ans"><p>No to both. Benefighter is an independent information and document-research service. We are <strong>not</strong> a government agency, and being contacted by us is not an official notice about your benefits. We are <strong>not</strong> a law firm — we provide factual information and clerical help, not legal, tax, financial, or medical advice. For legal questions (especially nursing-home MassHealth or asset protection), we'll refer you to a licensed Massachusetts elder-law attorney.</p></div>
           </details>
-
-          
-
           <details>
-            <summary>What happens to my personal information?</summary>
-            <div class="answer">
-              <p>The free benefits check runs entirely in your browser — your answers are never sent to us. The forms are filled in on your device too. We don't sell anything and we don't track you for marketing. See our <a href="privacy.html">privacy policy</a>.</p>
-            </div>
+            <summary>What happens to my personal information?<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></summary>
+            <div class="ans"><p>The free benefits check runs entirely in your browser — your answers are never sent to us. The forms are filled in on your device too. We don't sell anything and we don't track you for marketing. See our <a href="privacy.html">privacy policy</a>.</p></div>
           </details>
         </div>
       </div>
     </section>
 
-    <!-- ============================ FINAL CTA ========================== -->
-    <section class="section reveal final-cta" aria-labelledby="final-h">
-      <div class="wrap measure center">
-        <h2 id="final-h">Find out what your family is owed — <span class="draw-u">and get the forms filled in.<svg viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 14c50-9 100-10 150-6s100 5 144-3"/></svg></span></h2>
-        <p class="lede center" style="margin-bottom:8px;">Answer a few questions. See every program that fits, with the state forms already filled in. Free, private, about 5–10 minutes.</p>
-        <div class="hero-cta" style="justify-content:center;">
-          <a class="btn btn-primary btn-lg" href="check.html">Start the free check</a>
+    <!-- closing: the bottom of a form -->
+    <section class="hv4-sec hv4-last" aria-labelledby="final-h">
+      <div class="hv4-col">
+        <div class="close-sheet">
+          <h2 id="final-h">Find out what your family is owed — and get the forms filled in.</h2>
+          <p class="body soft">Free, private, about 5–10 minutes.</p>
+          <a class="btn-go" href="check.html">Start the free check <svg class="ic" aria-hidden="true" focusable="false"><use href="#i-arrow-right"/></svg></a>
         </div>
       </div>
     </section>
-    <a class="sticky-cta" href="check.html" aria-label="Start the free benefits check">Start the free check →</a>
   </main>
 
   <!-- ============================== FOOTER =========================== -->
@@ -381,14 +261,14 @@
     <div class="wrap">
       <div class="footer-top">
         <div class="footer-brand">
-          <span class="brand-name" style="font-family:var(--serif);font-size:1.4rem;">Benefighter</span>
+          <span class="brand-name" style="font-family:var(--serif);font-size:1.4rem;"><svg viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M22 3.5 37.5 8.8V21.2c0 9.6-6.6 16.6-15.5 19.6C13.1 37.8 6.5 30.8 6.5 21.2V8.8Z" fill="none" stroke="#FBF6EC" stroke-width="3.2" stroke-linejoin="round"/><path d="M14.5 22.3l5.3 5.3 10.4-11" fill="none" stroke="#E4A126" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Benefighter</span>
           <p style="margin-top:10px;">Helping older Massachusetts residents and the families who care for them claim the benefits they've earned.</p>
           <p style="margin-top:10px;"><a href="mailto:hello@benefighter.com">hello@benefighter.com</a></p>
         </div>
         <div class="footer-col">
           <h3>The service</h3>
           <ul>
-            <li><a href="#forms-demo">Forms we fill in</a></li>
+            <li><a href="#forms">Forms we fill in</a></li>
             <li><a href="#programs">What we check</a></li>
             <li><a href="check.html">Free benefits check</a></li>
             <li><a href="circuit-breaker-tax-credit.html">Circuit Breaker credit guide</a></li>

@@ -850,7 +850,7 @@ function playEngine(done){
   // the program count. It used to also list the top matches and a total, so the money appeared twice; now the money is
   // shown once, by the count-up reveal on the results page (runReveal).
   const chips=answerChips();
-  const SUN=`<svg viewBox="0 0 42 42" aria-hidden="true"><rect width="42" height="42" rx="10" fill="#1E4E3C"/><circle cx="21" cy="26" r="9" fill="#E4A126"/><rect x="7" y="26" width="28" height="3.6" rx="1.8" fill="#FBF6EC"/><g class="rays" stroke="#E4A126" stroke-width="2.4" stroke-linecap="round"><line x1="21" y1="7" x2="21" y2="12"/><line x1="11" y1="10" x2="14" y2="14"/><line x1="31" y1="10" x2="28" y2="14"/></g></svg>`;
+  const SUN = `<svg viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M22 3.5 37.5 8.8V21.2c0 9.6-6.6 16.6-15.5 19.6C13.1 37.8 6.5 30.8 6.5 21.2V8.8Z" fill="#FFFFFF" stroke="#1E4E3C" stroke-width="3.2" stroke-linejoin="round"/><path d="M14.5 22.3l5.3 5.3 10.4-11" fill="none" stroke="#E4A126" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;   // shield-and-check mark (2026-10-01; was the sun)
   // a full-screen layer, so it's on screen wherever the page was scrolled
   const host=document.querySelector(".tool")||document.body;
   const ov=document.createElement("div"); ov.className="eng-ov"; host.appendChild(ov);
