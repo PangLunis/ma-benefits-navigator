@@ -2008,9 +2008,10 @@ function programs(){
   // Marked on the results page with "I already get this" (added 2026-09-28): only 12 of 57 programs are on the "already getting" question.
   const mine = Array.isArray(A.haveAlso) ? A.haveAlso : [];
   out.forEach(p=>{
-    if(mine.includes(p.id) && p.status!=="no" && p.status!=="have"){
-      p.status="have"; p.val=0; p.userHave=true;
-      p.why="✓ Marked as something they already get. Re-confirm it stays active — most programs must be renewed every year.";
+    if(mine.includes(p.id) && p.status!=="no"){
+      if(p.status!=="have"){ p.status="have"; p.val=0;
+        p.why="✓ Marked as something they already get. Re-confirm it stays active — most programs must be renewed every year."; }
+      p.userHave=true;   // 2026-09-30: a tap now also feeds alreadyList(), which can mark the card "have" first; it still needs its Undo
     }
   });
 
