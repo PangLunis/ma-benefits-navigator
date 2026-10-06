@@ -205,8 +205,40 @@ const NO_LETTER_HTML = `<ul style="margin:6px 0 0;padding-left:20px">
   <li><b>Call MassOptions:</b> <a href="tel:+18002434636">(800) 243-4636</a> for a free Medicare counselor (SHINE) — press 3 for Prescription Advantage.</li>
 </ul>`;
 /* Tap-to-call: every phone number on screen becomes a link (2026-09-28: 17 of 27 numbers on a results page could not be tapped). */
+// "Keeping it" help on an Already-have card (added 2026-10-05). Setting up DTA Connect for a real SNAP household showed what
+// someone who ALREADY gets SNAP needs: how to check the balance, the chip-card deadline, PIN safety, and that the online
+// account needs an email code and may need a phone call. The card used to say only "no action needed".
+// Chip card: DTA Connect home-page banner, read 2026-10-05: "All Chip/Tap cards have been mailed to clients. Activate your new
+// card by 11/29 by making a purchase or call 1-800-997-2555 to set a new PIN." The line hides itself from Nov 30, 2026.
+const CHIP_CARD_DEADLINE = new Date(2026, 10, 30);
+function keepTips(id){
+  if(id!=="snap") return null;
+  const chip = new Date() < CHIP_CARD_DEADLINE;
+  return {
+    why: "✓ Already receiving." + (chip ? " One thing to do by <b>November 29</b>: activate the new chip EBT card DTA mailed out — see “Keeping it” below." : " Answer DTA's renewal letter on time so it doesn't stop."),
+    items: [
+      ...(chip ? ["<b>New chip card:</b> DTA has mailed new chip/tap EBT cards. Activate it by <b>November 29, 2026</b>: make any purchase with it, or call 1-800-997-2555 to set a new PIN."] : []),
+      "<b>Check the balance:</b> call 1-800-997-2555, the number on the back of the EBT card. A store receipt also shows it.",
+      "<b>Keep the PIN private:</b> never give the PIN or card number to anyone who calls, texts or emails asking for it.",
+      "<b>See the case online:</b> DTA Connect (DTAConnect.com or the DTA Connect app). Signing up needs an email address you can open right then, for a code. For someone already on SNAP it may then ask you to call the DTA Assistance Line, (877) 382-2363, to connect the account to the case.",
+      "<b>Renewals:</b> DTA mails a letter when it's time to renew. Answer it by the date on the letter so benefits don't stop."
+    ]
+  };
+}
+// Hours next to phone numbers (added 2026-10-05): a number with no hours sends people to a line nobody answers (we called
+// DTA at 8:40pm). Keyed by the 11-digit number; each value checked on the organization's own page, list + sources in
+// ~/dispatch/benefighter/tests/out/adhoc/phone_hours.json. A number missing here simply shows no hours.
+const PHONE_HOURS = {};
+const HOURS_NEAR = /24\/7|\bMon|\ba\.m\.|\bp\.m\.|\bhours\b/i;
+function hoursSpan(d){ const sp=document.createElement("span"); sp.className="hrs"; sp.textContent=" ("+PHONE_HOURS[d]+")"; return sp; }
 function linkifyPhones(root){
   if(!root) return;
+  // hand-written tel: links in the page HTML get their hours too
+  root.querySelectorAll('a[href^="tel:"]:not(.tel)').forEach(a=>{
+    a.classList.add("tel"); let d=a.getAttribute("href").replace(/[^0-9]/g,""); if(d.length===10) d="1"+d;
+    const nx=a.nextSibling, after=nx && nx.nodeType===3 ? nx.nodeValue.slice(0,40) : "";
+    if(PHONE_HOURS[d] && !HOURS_NEAR.test(after)) a.after(hoursSpan(d));
+  });
   const RE=/(?:\b1[-. ])?\(?\b\d{3}\)?[-. ]\d{3}[-. ]\d{4}\b|\b1-800-[A-Z]{3}-[A-Z]{4}\b/g;
   const map={A:2,B:2,C:2,D:3,E:3,F:3,G:4,H:4,I:4,J:5,K:5,L:5,M:6,N:6,O:6,P:7,Q:7,R:7,S:7,T:8,U:8,V:8,W:9,X:9,Y:9,Z:9};
   const tw=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode:n=>{
@@ -217,10 +249,16 @@ function linkifyPhones(root){
     const frag=document.createDocumentFragment(); let last=0, t=n.nodeValue, m;
     RE.lastIndex=0;
     while((m=RE.exec(t))){
+      // a fax number is not something to tap and call (2026-10-05: "fax (617) 887-8765" was a call link)
+      if(/fax(?: to)?:?\s*$/i.test(t.slice(Math.max(0,m.index-12),m.index))) continue;
       frag.appendChild(document.createTextNode(t.slice(last,m.index)));
       let d=m[0].toUpperCase().replace(/[A-Z]/g,c=>map[c]).replace(/[^0-9]/g,""); if(d.length===10) d="1"+d;
       const a=document.createElement("a"); a.href="tel:+"+d; a.textContent=m[0]; a.className="tel"; frag.appendChild(a);
       last=m.index+m[0].length;
+      const ext=t.slice(last).match(/^,?\s*ext\.?\s*\d+/i);   // keep "ext. 1" with its number, hours after it
+      if(ext){ frag.appendChild(document.createTextNode(ext[0])); last+=ext[0].length; }
+      if(PHONE_HOURS[d] && t[last]===")"){ frag.appendChild(document.createTextNode(")")); last+=1; }   // "1-800-MEDICARE (1-800-633-4227)" -> hours after the ")"
+      if(PHONE_HOURS[d] && !HOURS_NEAR.test(t.slice(last,last+40))) frag.appendChild(hoursSpan(d));
     }
     frag.appendChild(document.createTextNode(t.slice(last))); n.parentNode.replaceChild(frag,n);
   });
@@ -442,7 +480,7 @@ function readySheets(ps){
   let h="";
   if(open("liheap")) h+=heatSheet(t, ag, hh, homeInc);
   if(open("snap")) h+=`<details class="pk-ws"><summary>🛒 Food help (SNAP): have these ready</summary><div class="pk-body">
-    <p>${num(A.age)>=60?`At 60 and up, call the DTA <b>Senior Assistance Office</b> at <a href="tel:8337128027">(833) 712-8027</a> for help applying, or use the shorter <a href="https://www.mass.gov/lists/snap-application-for-seniors" target="_blank" rel="noopener">SNAP Application for Seniors</a>.`:"Apply online at DTAConnect.com, by phone, or at a local DTA office."}</p>
+    <p>${num(A.age)>=60?`At 60 and up, call the DTA <b>Senior Assistance Office</b> at <a href="tel:8337128027">(833) 712-8027</a> for help applying, or use the shorter <a href="https://www.mass.gov/lists/snap-application-for-seniors" target="_blank" rel="noopener">SNAP Application for Seniors</a>.`:"Apply online at DTAConnect.com (signing up online needs an email address you can open right then, for a code), by phone, or at a local DTA office."}</p>
     <p><b>Have ready:</b> photo ID · Social Security and other income letters · rent or mortgage statement and utility bills · out-of-pocket medical costs (these can raise the benefit for people 60+).</p>
   </div></details>`;
   if(A.medicare==="yes" || open("medicareoe")) h+=medicareSheet();
@@ -1291,7 +1329,7 @@ function programs(){
     out.push({id:"snap",name:"SNAP (Food Assistance)",status:s,val:s==="no"?0:1200,valTxt:s==="no"?"—":"varies with income",why:w+` Amount depends on income and costs (maximum $${SNAP_MAX1}/mo for 1 person from Oct 1, 2026).`+hip+shareNote,
       form:"Online via DTAConnect or paper application.",forml:"https://www.mass.gov/snap-benefits-formerly-food-stamps",
       docs:["Proof of income","Housing + utility costs","Out-of-pocket medical expenses (60+ deduction)"],
-      where:"Apply at DTAConnect.com or call DTA. Seniors can deduct medical expenses over $35/mo — push hard on this."});
+      where:"Apply at DTAConnect.com (signing up online needs an email address you can open right then, for a code) or call the DTA Assistance Line, (877) 382-2363. Seniors can deduct medical expenses over $35/mo — push hard on this."});
   })();
 
   // 8. Medicare Savings Program (MA Buy-In) — no asset test in MA
@@ -1905,7 +1943,7 @@ function programs(){
       why:`State cash help for people 65+ who aren't getting SSI. The gross income limit is $${(EAEDC_INC[hh]||EAEDC_INC[2]).toFixed(2)}/month ${hh===2?"for a couple":"for someone living alone"}, so it only fits very low incomes. If SSI is possible, apply for that first.${citizenNote()}`,
       form:"Apply with the Department of Transitional Assistance (DTA).",forml:"https://www.mass.gov/info-details/emergency-aid-to-the-elderly-disabled-and-children-eaedc",
       docs:["ID","Proof of income","Proof of rent or housing costs","Immigration papers, if not a citizen"],
-      where:"Apply online at DTA Connect or call the DTA Assistance Line at (877) 382-2363."});
+      where:"Apply online at DTA Connect (signing up online needs an email address you can open right then, for a code) or call the DTA Assistance Line at (877) 382-2363."});
   }
 
   // 40. Federal tax refund for people who don't file (added 2026-09-27, gap audit #12). IRS: "taxpayers usually have three years to file
@@ -2014,6 +2052,7 @@ function programs(){
       p.userHave=true;   // 2026-09-30: a tap now also feeds alreadyList(), which can mark the card "have" first; it still needs its Undo
     }
   });
+  out.forEach(p=>{ if(p.status!=="have") return; const k=keepTips(p.id); if(k){ p.why=k.why; p.keep=k.items; } });
 
   return out;
 }
@@ -2120,7 +2159,7 @@ function results(){
     </div>`;
   }
 
-  const groups=[["likely","✅ Apply for these"],["maybe","🔎 Worth verifying"],["have","✓ Already receiving — no action needed"],["refer","⚖️ Get professional help"],["no","Not a match right now"]];
+  const groups=[["likely","✅ Apply for these"],["maybe","🔎 Worth verifying"],["have","✓ Already receiving — keep these going"],["refer","⚖️ Get professional help"],["no","Not a match right now"]];
   groups.forEach(([st,label])=>{
     const g=ps.filter(p=>p.status===st);
     if(!g.length) return;
@@ -2136,7 +2175,10 @@ function results(){
         <p class="why">${p.why}</p>`;
       if(p.status==="likely"||p.status==="maybe"||p.status==="refer") h+=`<button type="button" class="gotit" data-pid="${p.id}">✓ I already get this</button>`;
       else if(p.userHave) h+=`<button type="button" class="gotit undo" data-pid="${p.id}">Undo — they don't get this</button>`;
-      if(p.status!=="no"){
+      if(p.status==="have" && p.keep){
+        h+=`<details class="keep" open><summary>Keeping it →</summary><div class="body"><ul>${p.keep.map(t=>`<li>${t}</li>`).join("")}</ul>
+          <a href="${p.forml}" target="_blank" rel="noopener">Official program page →</a></div></details>`;
+      } else if(p.status!=="no"){
         h+=`<details><summary>How to claim it →</summary><div class="body">
           <b>Form:</b> ${p.form}<br>
           <b>Bring / gather:</b><ul>${p.docs.map(d=>`<li>${d}</li>`).join("")}</ul>
