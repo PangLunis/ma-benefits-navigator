@@ -228,7 +228,25 @@ function keepTips(id){
 // Hours next to phone numbers (added 2026-10-05): a number with no hours sends people to a line nobody answers (we called
 // DTA at 8:40pm). Keyed by the 11-digit number; each value checked on the organization's own page, list + sources in
 // ~/dispatch/benefighter/tests/out/adhoc/phone_hours.json. A number missing here simply shows no hours.
-const PHONE_HOURS = {};
+const PHONE_HOURS = {
+  "16173588310":"Mon–Fri 8–4:30",
+  "16173670400":"Mon–Fri 8:45–3:30",
+  "16174321434":"Mon–Fri 8–5",
+  "16176366998":"Mon–Thu 9–7, Fri 9–4",
+  "18002434636":"Mon–Fri 9–5",
+  "18004007242":"Mon–Fri 8–7",
+  "18004311713":"Mon–Fri 7–6",
+  "18006334227":"24/7",
+  "18007721213":"Mon–Fri 8–7",
+  "18008412900":"Mon–Fri 8–5",
+  "18009972555":"24/7",
+  "18337128027":"Mon–Fri 8:15–4:45",
+  "18666162699":"Mon–Fri 8–6",
+  "18668349991":"Mon–Fri 7–7",
+  "18772116277":"24/7",
+  "18773822363":"Mon–Fri 8:15–4:45",
+  "18776236765":"Mon–Fri 8–6"
+};
 const HOURS_NEAR = /24\/7|\bMon|\ba\.m\.|\bp\.m\.|\bhours\b/i;
 function hoursSpan(d){ const sp=document.createElement("span"); sp.className="hrs"; sp.textContent=" ("+PHONE_HOURS[d]+")"; return sp; }
 function linkifyPhones(root){
@@ -1768,13 +1786,14 @@ function programs(){
   }
 
   // 28a. REquipment (catalog click-through #4). dmereuse.org: "Find free, gently used, durable home medical equipment and assistive
-  // technology ... delivered to people of all ages throughout Massachusetts. No prescription necessary." Call 1-800-261-9841.
+  // technology ... delivered to people of all ages throughout Massachusetts. No prescription necessary." Main office (508) 713-9690 (dmereuse.org/contact-us, read 2026-10-05; the 1-800-261-9841
+  // listed here before is not on either REquipment site, only third-party directories).
   if(A.adl==="yes" || disabled || A.blind==="yes"){
     out.push({id:"requip",name:"Free Medical Equipment (REquipment)",status:"likely",val:0,valTxt:"free, gently used",
       why:"Anyone in Massachusetts can get free, cleaned and refurbished home medical equipment — wheelchairs, walkers, shower chairs, big-button phones and more. No prescription is needed. Handy for things Medicare doesn't cover, like shower chairs. There may be a fee for delivery or pickup.",
       form:"Search the inventory online or call.",forml:"https://dmereuse.org/",
       docs:["None — just what's needed"],
-      where:"REquipment: dmereuse.org or 1-800-261-9841."});
+      where:"REquipment: dmereuse.org or (508) 713-9690."});
   }
 
   // 28b. Community group meals (added 2026-09-27, gap audit #20) — any adult 60+, no income limit, 325+ sites (mass.gov Senior Nutrition Program)
@@ -1852,10 +1871,10 @@ function programs(){
     const lim60 = HEAP_SMI60[homeHH]||HEAP_SMI60[10], lim80 = MASSSAVE_ENH80[homeHH]||MASSSAVE_ENH80[10];
     if(homeInc>lim60 && homeInc<=lim80){
       out.push({id:"energy6080",name:"Energy Help Just Above the Fuel-Assistance Limit",status:"maybe",val:0,valTxt:"one-time grant + low/no-cost upgrades",
-        why:`Household income is a little over the Fuel Assistance limit, but between 60% and 80% of state median income. That opens: (1) the Salvation Army's Good Neighbor Energy Fund — a one-time grant when a month's energy bill is a hardship (call 800-334-3047); and (2) Mass Save's moderate-income offers — insulation, air-sealing and heating upgrades for up to no cost. A Mass Save Home Energy Assessment is free for any 1–4 unit home.`,
+        why:`Household income is a little over the Fuel Assistance limit, but between 60% and 80% of state median income. That opens: (1) the Salvation Army's Good Neighbor Energy Fund — a one-time grant when a month's energy bill is a hardship (call 800-334-3047, or 800-262-1320 in area code 413); and (2) Mass Save's moderate-income offers — insulation, air-sealing and heating upgrades for up to no cost. A Mass Save Home Energy Assessment is free for any 1–4 unit home.`,
         form:"Good Neighbor: through the Salvation Army. Mass Save: book a free Home Energy Assessment.",forml:"https://www.mass.gov/info-details/learn-about-home-energy-assistance-heap-0",
         docs:["Proof of household income","A recent energy bill"],
-        where:"Good Neighbor Energy Fund: 800-334-3047. Mass Save: book online at masssave.com."});
+        where:"Good Neighbor Energy Fund: 800-334-3047 (area code 413: 800-262-1320). Mass Save: book online at masssave.com."});
     }
   }
 
