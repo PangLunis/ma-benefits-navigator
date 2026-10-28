@@ -1154,7 +1154,11 @@ const MSP_QMB = {1:30324, 2:41124};             // 190% of 2026 FPL — QMB tier
 const FPL = {1:15960, 2:21640};                 // 2026 HHS poverty guidelines (91 FR 1797)
 const FPL135 = {1:21546, 2:29214};              // 135% of 2026 FPL — Lifeline income gate (usac.org)
 const PARTB = 202.90;                           // 2026 standard Part B premium / month (CMS)
-const SSI_FBR = {1:994, 2:1491};                // 2026 SSI federal benefit rate / month (ssa.gov)
+// SSI federal benefit rate / month (ssa.gov/oact/cola/SSI.html). 2027 = +3.6% COLA, announced Oct 2026,
+// effective Jan 1 2027: the page switches itself in the visitor's browser, no deploy needed that day.
+// SSI_SSP below (federal + MA supplement) stays 2026 until mass.gov publishes CY2027 levels.
+const SSI_YEAR = (new Date() >= new Date(2027, 0, 1)) ? 2027 : 2026;
+const SSI_FBR = SSI_YEAR === 2027 ? {1:1029, 2:1544} : {1:994, 2:1491};
 const SSI_SSP = {1:1122.82, 2:1692.72};         // 2026 SSI + MA State Supplement, aged, living independently (SLA A): $994+$128.82; couple $846.36 x 2 (mass.gov CY2026 payment levels PDF)
 const VA_MAPR = {vet1:17441, vet2:22839, spouse:11699}; // VA basic pension MAPR (no Housebound/A&A), eff. 12/1/2025 (va.gov pension + survivors pension rates)
 const EAEDC_INC = {1:441.10, 2:573.90};          // EAEDC gross monthly income limit, living alone / with spouse, with shelter costs (mass.gov EAEDC page)
@@ -1472,7 +1476,7 @@ function programs(){
     out.push({id:"ssi",name:"Supplemental Security Income (SSI)",status:s,
       val: s==="no"?0:Math.round(12*Math.max(0, ssiSsp - Math.max(0, inc/12 - 20))),
       valTxt: s==="no"?"—":`~${money(Math.max(0, ssiSsp - Math.max(0, inc/12 - 20)))}/mo (federal + MA supplement)`,
-      why: citizenOK()?`Income and assets look low enough to be worth a hard look. SSI has a STRICT countable-asset limit (~$${ssiAssetCap.toLocaleString()}) and pays up to ~$${ssiFbr.toLocaleString()}/mo federal (2026), and Massachusetts adds a State Supplement — ~${money(ssiSsp)}/mo in total for ${hh===2?"a couple":"someone"} ${ssiAL?"in assisted living (the state's assisted-living rate — ask the residence whether it qualifies)":"living independently"}. Some people with income a bit too high for federal SSI still qualify for the state supplement alone. Confirm exact countable assets & income — these limits are unforgiving, so this is a "verify," not a sure thing.${A.citizen==="qualified"?" Green-card holders generally also need 40 work quarters (plus a 5-year wait if they arrived after 8/22/1996), or a veteran connection.":""}`:"SSI needs U.S. citizen or qualified-immigrant status.",
+      why: citizenOK()?`Income and assets look low enough to be worth a hard look. SSI has a STRICT countable-asset limit (~$${ssiAssetCap.toLocaleString()}) and pays up to ~$${ssiFbr.toLocaleString()}/mo federal (${SSI_YEAR}), and Massachusetts adds a State Supplement — ~${money(ssiSsp)}/mo in total for ${hh===2?"a couple":"someone"} ${ssiAL?"in assisted living (the state's assisted-living rate — ask the residence whether it qualifies)":"living independently"}. Some people with income a bit too high for federal SSI still qualify for the state supplement alone. Confirm exact countable assets & income — these limits are unforgiving, so this is a "verify," not a sure thing.${A.citizen==="qualified"?" Green-card holders generally also need 40 work quarters (plus a 5-year wait if they arrived after 8/22/1996), or a veteran connection.":""}`:"SSI needs U.S. citizen or qualified-immigrant status.",
       form:"Apply with the Social Security Administration.",forml:"https://www.ssa.gov/ssi/",
       docs:["Bank statements (asset limit is strict — ~$2,000 single / $3,000 couple)","Proof of income","ID & citizenship/immigration docs"],
       where:"Apply at ssa.gov or 1-800-772-1213. SSI in MA usually opens MassHealth automatically."});
