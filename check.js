@@ -153,9 +153,12 @@ function num(x){const v=parseFloat(String(x).replace(/[^0-9.]/g,"")); return isN
 function money(x){return "$"+Math.round(x).toLocaleString();}
 function isUnknown(id){ return A[id]==="unknown"; }
 /* text-size toggle (a11y) — pinch-zoom is also enabled via the viewport meta */
+/* 2026-10-29: the choice is remembered on this device (bf_text, shared with a11y.js on the other pages) */
 let tIdx=0; const tClasses=["","lg","xl"];
-function applyTextSize(){ document.body.className=tClasses[tIdx]; }
+try{ const n=parseInt(localStorage.getItem("bf_text")||"0",10); if(n>=0&&n<=2) tIdx=n; }catch(e){}
+function applyTextSize(){ document.body.className=tClasses[tIdx]; try{ localStorage.setItem("bf_text",String(tIdx)); }catch(e){} }
 window.addEventListener("DOMContentLoaded",()=>{
+  if(tIdx) applyTextSize();
   const up=document.getElementById("tup"), dn=document.getElementById("tdown");
   if(up) up.onclick=()=>{ tIdx=Math.min(2,tIdx+1); applyTextSize(); };
   if(dn) dn.onclick=()=>{ tIdx=Math.max(0,tIdx-1); applyTextSize(); };
