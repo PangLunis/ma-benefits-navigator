@@ -928,44 +928,11 @@ h1, h2, h3 { overflow-wrap: break-word; }
    covered the headline. It floats over content, so its size is capped: grows with text up to 20px, then stops. */
 @media (max-width: 720px) { .sticky-cta { font-size: min(1.08rem, 20px); } }
 
-/* ---------- Help bar: a person to call + reading options (2026-10-29; one line since 2026-10-31) ---------- */
+/* ---------- Help bar: a person to call (2026-10-29; phone line only since 2026-10-31) ---------- */
 .helpbar { background: var(--pine-deep); color: #fff; font-size: 15px; line-height: 1.35; }
-.helpbar-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 14px; padding-top: 4px; padding-bottom: 4px; }
-.hb-call { margin: 0; flex: 1 1 auto; }
+.helpbar-inner { padding-top: 8px; padding-bottom: 8px; }
+.hb-call { margin: 0; }
 .helpbar a { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .hb-nw { white-space: nowrap; }
-.hb-narrow, .hb-more, .hb-note { display: none; }
-.hb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; flex: 0 0 auto; }
-.hb-size { display: inline-flex; gap: 6px; }
-.helpbar button { font: inherit; font-weight: 700; color: var(--pine-deep); background: #fff; border: 2px solid #fff; border-radius: 999px; min-height: 40px; min-width: 44px; padding: 0 12px; cursor: pointer; }
-.helpbar button:disabled { opacity: .45; cursor: default; }
-.helpbar button[aria-pressed="true"] { background: var(--honey); border-color: var(--honey); color: #000; }
-.helpbar button:focus-visible { outline: 3px solid var(--honey); outline-offset: 2px; }
-/* Phones and small tablets: one line ("Talk to a person: (800) 243-4636" + Aa); Aa opens the options and the hours */
-@media (max-width: 1099px) {
-  .hb-wide { display: none; }
-  .hb-narrow, .hb-more { display: inline; }
-  .hb-more { flex: 0 0 auto; min-height: 44px; }
-  .hb-call { flex: 1 1 0; min-width: 0; }
-  html.js .hb-tools { display: none; }
-  html.js .helpbar.open .hb-tools { display: flex; }
-  .hb-tools { width: 100%; padding: 4px 0 6px; }
-  .hb-note { display: block; width: 100%; margin: 0 0 4px; }
-  .helpbar.open .hb-more { background: var(--honey); border-color: var(--honey); color: #000; }
-}
-
-/* Larger text on the home and program pages (the check page has its own lg/xl sizes in check.html) */
-html.bf-t1 body { zoom: 1.15; }
-html.bf-t2 body { zoom: 1.3; }
-
-/* High contrast: pure white and black, dark links underlined, no soft shadows */
-html.bf-hc {
-  --paper: #fff; --paper-2: #fff; --paper-3: #fff; --white: #fff;
-  --ink: #000; --ink-soft: #000; --line: #000;
-  --pine: #06301f; --pine-deep: #000; --pine-soft: #06301f; --pine-tint: #fff;
-  --honey-tint: #fff; --clay: #6b2408; --clay-tint: #fff;
-  --shadow: none; --shadow-soft: none;
-}
-html.bf-hc body { background: #fff; color: #000; }
-html.bf-hc main a:not(.btn), html.bf-hc footer a { color: #00008b; text-decoration: underline; }
-html.bf-hc :focus-visible { outline: 3px solid #000 !important; outline-offset: 2px; }
+.hb-narrow { display: none; }
+@media (max-width: 899px) { .hb-wide { display: none; } .hb-narrow { display: inline; } }
