@@ -36,14 +36,18 @@
 <body class="guide-page">
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <!-- Help bar (2026-10-29): a real person to call + reading options. Numbers checked on massoptions.org
-       (Call Center 1-800-243-4636, Mon-Fri 9:00 AM-5:00 PM) and mass211.org ("Dial 2-1-1, Available 24/7"). -->
+  <!-- Help bar (2026-10-29, slimmed 2026-10-31 after Ryan: "too tall"). Numbers checked on massoptions.org
+       (Call Center 1-800-243-4636, Mon-Fri 9:00 AM-5:00 PM) and mass211.org ("Dial 2-1-1, Available 24/7").
+       Phones: one line + an Aa button that opens the reading options; wider screens: all on one line. -->
   <div class="helpbar" role="region" aria-label="Phone help and reading options">
     <div class="wrap helpbar-inner">
-      <p class="hb-call">Rather talk to a person? Call <a href="tel:+18002434636">MassOptions at <span class="hb-nw">(800)&nbsp;243-4636</span></a>, the state's free help line <span class="hb-nw">(Mon&ndash;Fri, 9&ndash;5)</span>, or dial <a href="tel:211">2-1-1</a> any time.</p>
-      <div class="hb-tools">
-      <span class="hb-size" role="group" aria-label="Text size"><button type="button" data-bf-size="-1" aria-label="Smaller text">A&minus;</button><button type="button" data-bf-size="1" aria-label="Larger text">A+</button></span>
-      <button type="button" class="hb-hc" data-bf-hc aria-pressed="false">High contrast</button></div>
+      <p class="hb-call">Talk to a person<span class="hb-wide">: MassOptions, the state's free help line,</span><span class="hb-narrow">:</span> <a href="tel:+18002434636" class="hb-nw">(800)&nbsp;243-4636</a><span class="hb-wide"> <span class="hb-nw">(Mon&ndash;Fri, 9&ndash;5)</span> or <a href="tel:211">2-1-1</a> any time</span></p>
+      <button type="button" class="hb-more" aria-expanded="false" aria-controls="hb-panel">Aa<span class="sr-only"> Text size, contrast and more phone help</span></button>
+      <div class="hb-tools" id="hb-panel">
+        <p class="hb-note">MassOptions is the state's free help line (Mon&ndash;Fri, 9&ndash;5). Any time, dial <a href="tel:211">2-1-1</a>.</p>
+        <span class="hb-size" role="group" aria-label="Text size"><button type="button" data-bf-size="-1" aria-label="Smaller text">A&minus;</button><button type="button" data-bf-size="1" aria-label="Larger text">A+</button></span>
+        <button type="button" class="hb-hc" data-bf-hc aria-pressed="false">High contrast</button>
+      </div>
     </div>
   </div>
 

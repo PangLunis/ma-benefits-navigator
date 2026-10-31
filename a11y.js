@@ -33,6 +33,7 @@
   }
 
   // Before first paint
+  root.classList.add("js");   // lets the CSS fold the options behind the Aa button on phones (no JS = always shown)
   applySize(level());
   applyContrast(get("bf_contrast") === "1");
 
@@ -43,6 +44,14 @@
         var on = !root.classList.contains("bf-hc");
         put("bf_contrast", on ? "1" : "0");
         applyContrast(on); sync();
+      });
+    }
+    var more = document.querySelectorAll(".hb-more");
+    for (var m = 0; m < more.length; m++) {
+      more[m].addEventListener("click", function () {
+        var bar = this.closest(".helpbar"), open = !bar.classList.contains("open");
+        bar.classList.toggle("open", open);
+        this.setAttribute("aria-expanded", open ? "true" : "false");
       });
     }
     var sb = document.querySelectorAll("[data-bf-size]");
