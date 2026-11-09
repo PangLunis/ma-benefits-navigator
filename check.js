@@ -1614,11 +1614,14 @@ function programs(){
   }
 
   // 21. Reduced-fare senior transit (NOT income-based — universal for 65+/disabled)
+  // 2026-11-09: MBTA "Car-Free Seniors CharlieCard": 75+ with an RMV-issued Mass ID ride subway/bus/Commuter Rail/ferry free,
+  // cards valid 8 years (mbta.com/fares/reduced/senior-charliecard). Mass ID only if "You do not hold a valid driver's license"
+  // (mass.gov types-of-identification-cards). 75+ without a Mass ID "will be considered for a Senior CharlieCard".
   if(age>=65 || disabled){
     out.push({id:"transit",name:"Reduced-Fare Senior Transit",status:"likely",val:0,valTxt:"half-fare or free rides",
-      why:`Not income-based — anyone 65+ gets reduced fares (MBTA Senior CharlieCard; regional transit authorities have their own senior fares).${A.blind==="yes"?" Legally blind riders ride the MBTA free (Blind Access Card).":""} The RIDE paratransit is based on disability, not age, and has its own application.`,
+      why:`Not income-based — anyone 65+ gets reduced fares (MBTA Senior CharlieCard; regional transit authorities have their own senior fares).${A.blind==="yes"?" Legally blind riders ride the MBTA free (Blind Access Card).":""} The RIDE paratransit is based on disability, not age, and has its own application.${age>=75?" On the MBTA, riders 75 and older who no longer drive can ride free: the Car-Free Seniors CharlieCard covers the subway, bus, Commuter Rail and ferry, and lasts 8 years. It needs an RMV Mass ID card, which the RMV only gives to people without a driver's license. Without one, they get the regular Senior CharlieCard.":""}`,
       form:"Apply to the local transit authority for a senior/disabled fare card.",forml:"https://www.mbta.com/fares/reduced/senior-charliecard",
-      docs:["Proof of age (ID) or disability","A photo for the card"],
+      docs:["Proof of age (ID) or disability","A photo for the card"].concat(age>=75?["For free MBTA fares: an RMV Mass ID card (not a driver's license)"]:[]),
       where:"MBTA Senior CharlieCard office, or your regional transit authority (RTA). The RIDE needs a separate application."});
   }
 
