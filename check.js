@@ -2087,6 +2087,8 @@ function programs(){
 }
 
 /* ---------- Results screen ---------- */
+// Programs whose renewal letters renewal-letters.html covers (MassHealth senior renewal, MSP, HSN, SNAP recertification).
+const RENEW_GUIDE_IDS = ["snap","msp","masshealth","mhcommunity","hsn"];
 function results(){
   { const qst=document.getElementById("qstatus"); if(qst) qst.textContent="Your results are ready."; }
   if(!statFinished){ statFinished=true; stat("finish",{qn:furthestN, qt:visible().length}); }
@@ -2202,6 +2204,8 @@ function results(){
         <div class="top"><h3>${p.name}</h3><span class="val">${p.valTxt}</span></div>
         <span class="badge ${bc}">${bt}</span>
         <p class="why">${p.why}</p>`;
+      // 2026-11-17 (Ryan): programs that come up for renewal link to the renewal-letters guide, once, at the one place every card is drawn.
+      if(p.status==="have" && RENEW_GUIDE_IDS.includes(p.id)) h+=`<p class="why"><a href="renewal-letters.html" target="_blank" rel="noopener">Got a renewal letter? What to do and how to send it back →</a></p>`;
       if(p.status==="likely"||p.status==="maybe"||p.status==="refer") h+=`<button type="button" class="gotit" data-pid="${p.id}">✓ I already get this</button>`;
       else if(p.userHave) h+=`<button type="button" class="gotit undo" data-pid="${p.id}">Undo — they don't get this</button>`;
       if(p.status==="have" && p.keep){
