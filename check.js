@@ -2289,4 +2289,19 @@ let RESTORED=false;
 }catch(e){} })();
 function startFresh(){ forgetProgress(); A={}; i=0; Object.keys(PK).forEach(k=>PK[k]=""); RESTORED=false; editMode=false; render(); window.scrollTo(0,0); }
 
+/* Stable hooks for the Benefighter phone app, which runs this same file (benefighter-app: app-src/app/bridge.js
+   and call.js). The app's build refuses a check.js without them, so keep these names; bump version if a name or
+   shape changes. The website itself does not use them. */
+window.BFEngine = Object.freeze({
+  version: 1,
+  programs: () => programs(),
+  visible: () => visible(),
+  render: () => render(),
+  get answers(){ return A; }, set answers(v){ A = v; },
+  get profile(){ return PK; },
+  get index(){ return i; }, set index(v){ i = v; },
+  get editMode(){ return editMode; }, set editMode(v){ editMode = v; },
+  get ssiYear(){ return SSI_YEAR; }
+});
+
 render();
