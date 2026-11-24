@@ -2281,9 +2281,12 @@ function results(){
    older user can stop and come back. Nothing is sent anywhere. "Remember" is on by default,
    can be switched off on the first screen, and "Forget my answers" wipes it. */
 const SAVE_KEY="bf_check_v1";
-function remembering(){ try{ return localStorage.getItem("bf_remember")!=="0"; }catch(e){ return false; } }
+// The Benefighter app's hidden re-check frame sets window.BFEngineOptions = {noRemember: true} before this file runs:
+// it re-runs the check for each person saved in the app and must not restore, overwrite or clear the answers saved here.
+const NO_REMEMBER=(()=>{ try{ return !!(window.BFEngineOptions && window.BFEngineOptions.noRemember); }catch(e){ return false; } })();
+function remembering(){ if(NO_REMEMBER) return false; try{ return localStorage.getItem("bf_remember")!=="0"; }catch(e){ return false; } }
 function saveProgress(){ if(!remembering()) return; try{ localStorage.setItem(SAVE_KEY, JSON.stringify({A, i, PK, ts:Date.now()})); }catch(e){} }
-function forgetProgress(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+function forgetProgress(){ if(NO_REMEMBER) return; try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 let RESTORED=false;
 (function(){ try{ const sv=JSON.parse(localStorage.getItem(SAVE_KEY)||"null");
   if(sv && sv.A && Object.keys(sv.A).length && remembering() && (Date.now()-(sv.ts||0)) < 1000*60*60*24*120){
@@ -2306,6 +2309,7 @@ window.BFEngine = Object.freeze({
   get ssiYear(){ return SSI_YEAR; },
   startFresh: () => startFresh(),                     // also fires a "bfengine:fresh" event, from the button too
   phoneHours: () => PHONE_HOURS,
+  get noRemember(){ return NO_REMEMBER; },             // true only when the app's hidden frame asked for it
   setSaver(fn){ SAVER = typeof fn === "function" ? fn : null; }   // fn(blob, name); return false to download as usual
 });
 
