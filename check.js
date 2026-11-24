@@ -231,6 +231,15 @@ function keepTips(id){
 // Hours next to phone numbers (added 2026-10-05): a number with no hours sends people to a line nobody answers (we called
 // DTA at 8:40pm). Keyed by the 11-digit number; each value checked on the organization's own page, list + sources in
 // ~/dispatch/benefighter/tests/out/adhoc/phone_hours.json. A number missing here simply shows no hours.
+/* 2026-11-24: every file the check makes (filled forms, cover letters, calendar reminders) goes through saveFile.
+   On the website it's a normal download. The phone app sets BFEngine.setSaver so the file goes to the phone's
+   share sheet or its Reminders instead, without patching the browser. */
+let SAVER = null;
+function saveFile(blob, name){
+  if(SAVER){ try{ if(SAVER(blob, name) !== false) return; }catch(e){} }
+  const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 60000);
+}
 const PHONE_HOURS = {
   "16173588310":"Mon–Fri 8–4:30",
   "16173670400":"Mon–Fri 8:45–3:30",
@@ -468,9 +477,7 @@ async function downloadForm(kind, btn){
     const town=(townLookup(A.town)||{}).name||A.town;
     let out = await BFForms[F.fn](PDFLib, bytes, A, PK, town, F.year);
     if(BFForms.signMarks) out = await BFForms.signMarks(PDFLib, out, kind, A.marital==="married");
-    const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
-    const a=document.createElement("a"); a.href=url; a.download = F.out;
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    saveFile(new Blob([out],{type:"application/pdf"}), F.out);
     btn.innerHTML="✓ Downloaded — tap again for a fresh copy";
   }catch(e){ btn.innerHTML="Couldn't build the form — try again"; console.error(e); }
   finally{ btn.disabled=false; setTimeout(()=>{ if(btn.innerHTML.startsWith("✓")||btn.innerHTML.startsWith("Couldn't")) btn.innerHTML=old; }, 8000); }
@@ -634,8 +641,7 @@ async function downloadMailingSheet(){
     L("[ ]  Heating help (no paper form)",{bold:true,size:13});
     L(`Apply online from October 1 at toapply.org/MassHEAP, or call ${a?a.n+(a.p?" at "+a.p:""):"your local agency (Cold Relief Heatline (800) 632-8175)"}. Bring the heating help worksheet from your packet.`,{x:72}); y-=6; }
   L("Questions? SHINE (free Medicare help): (800) 243-4636. MassHealth: (800) 841-2900.",{size:10});
-  const out=await doc.save(); const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
-  const a=document.createElement("a"); a.href=url; a.download="Where-each-form-goes.pdf"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+  const out=await doc.save(); saveFile(new Blob([out],{type:"application/pdf"}), "Where-each-form-goes.pdf");
 }
 function heatICS(){
   const now=new Date(), y=(now.getMonth()>9||(now.getMonth()===9&&now.getDate()>1))?now.getFullYear()+1:now.getFullYear();
@@ -644,8 +650,7 @@ function heatICS(){
     `DTSTART;VALUE=DATE:${y}1001`,"SUMMARY:Apply for heating help (HEAP) - applications open today",
     "DESCRIPTION:Apply online at toapply.org/MassHEAP or call your local agency. Households must apply every year.",
     "BEGIN:VALARM","TRIGGER:-PT0M","ACTION:DISPLAY","DESCRIPTION:Heating help applications open","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
-  const url=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
-  const a=document.createElement("a"); a.href=url; a.download="Heating-help-Oct-1.ics"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+  saveFile(new Blob([ics],{type:"text/calendar"}), "Heating-help-Oct-1.ics");
 }
 function medicareSheet(){
   const v=k=>String(PK[k]||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
@@ -696,8 +701,7 @@ async function downloadLetter(kind){
   L(`Please find enclosed my completed ${F.title}${F.to==="assessor"?` for Fiscal Year ${fyr}`:""}. I have included copies of the documents listed below. Please contact me${PK.phone?` at ${PK.phone}`:""} if you need anything else to process my application.`);
   gap(8); L("Enclosed:",{bold:true}); F.docs.forEach(d=>L("•  "+d)); gap(18);
   L("Sincerely,"); gap(34); L("______________________________"); L(PK.fullName||"[Your name]");
-  const out=await doc.save(); const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
-  const a=document.createElement("a"); a.href=url; a.download=`Cover-letter-${kind}.pdf`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+  const out=await doc.save(); saveFile(new Blob([out],{type:"application/pdf"}), `Cover-letter-${kind}.pdf`);
 }
 function downloadICS(kind){
   const F=FORM_INFO[kind]; const t=townLookup(A.town)||{}, town=t.name||A.town||"your town";
@@ -708,8 +712,7 @@ function downloadICS(kind){
     `DTSTART;VALUE=DATE:${due}`,`SUMMARY:Deadline: ${F.title} to the ${town} assessor`,
     `DESCRIPTION:File with the ${town} Board of Assessors by April 1 (or within 3 months after the actual tax bills are mailed\\, whichever is later). Late applications can't be accepted.`,
     "BEGIN:VALARM","TRIGGER:-P14D","ACTION:DISPLAY","DESCRIPTION:Two weeks until the deadline","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
-  const url=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
-  const a=document.createElement("a"); a.href=url; a.download=`Deadline-${kind}.ics`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+  saveFile(new Blob([ics],{type:"text/calendar"}), `Deadline-${kind}.ics`);
 }
 function quickLinks(ps){
   const open=id=>{ const p=(ps||[]).find(x=>x.id===id); return p && p.status!=="no" && p.status!=="have"; };
@@ -2267,8 +2270,7 @@ function results(){
   const dl=document.getElementById("dl");
   if(dl) dl.onclick=()=>{
     const blob=new Blob([JSON.stringify({answers:A,generated:"client-side",programs:ps},null,2)],{type:"application/json"});
-    const u=URL.createObjectURL(blob);const a=document.createElement("a");
-    a.href=u;a.download=`benefits-audit-${(A.name||"profile").replace(/\W+/g,"_")}.json`;a.click();URL.revokeObjectURL(u);
+    saveFile(blob, `benefits-audit-${(A.name||"profile").replace(/\W+/g,"_")}.json`);
   };
   window.scrollTo(0,0);
   if(rvAnim) runReveal(rvItems, total, 650);   // starts as the checking animation fades out
@@ -2287,7 +2289,7 @@ let RESTORED=false;
   if(sv && sv.A && Object.keys(sv.A).length && remembering() && (Date.now()-(sv.ts||0)) < 1000*60*60*24*120){
     A=sv.A; i=Math.max(0, sv.i||0); if(sv.PK) PK=Object.assign(PK, sv.PK); RESTORED=true; }
 }catch(e){} })();
-function startFresh(){ forgetProgress(); A={}; i=0; Object.keys(PK).forEach(k=>PK[k]=""); RESTORED=false; editMode=false; render(); window.scrollTo(0,0); }
+function startFresh(){ try{ document.dispatchEvent(new CustomEvent("bfengine:fresh")); }catch(e){} forgetProgress(); A={}; i=0; Object.keys(PK).forEach(k=>PK[k]=""); RESTORED=false; editMode=false; render(); window.scrollTo(0,0); }
 
 /* Stable hooks for the Benefighter phone app, which runs this same file (benefighter-app: app-src/app/bridge.js
    and call.js). The app's build refuses a check.js without them, so keep these names; bump version if a name or
@@ -2301,7 +2303,10 @@ window.BFEngine = Object.freeze({
   get profile(){ return PK; },
   get index(){ return i; }, set index(v){ i = v; },
   get editMode(){ return editMode; }, set editMode(v){ editMode = v; },
-  get ssiYear(){ return SSI_YEAR; }
+  get ssiYear(){ return SSI_YEAR; },
+  startFresh: () => startFresh(),                     // also fires a "bfengine:fresh" event, from the button too
+  phoneHours: () => PHONE_HOURS,
+  setSaver(fn){ SAVER = typeof fn === "function" ? fn : null; }   // fn(blob, name); return false to download as usual
 });
 
 render();
